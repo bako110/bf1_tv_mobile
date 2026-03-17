@@ -1,0 +1,8 @@
+{
+  "name": "bf1-web",
+  "version": "1.0.0",
+  "description": "BF1 Web Application",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

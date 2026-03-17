@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="d-none" id="home-page">
+  <div style="color:#FFFFFF; padding: 8px 0 0;">
+
+    <!-- LIVE BF1 -->
+    <div id="live-section" style="margin-bottom: 24px;">
+      <div id="live-content" style="min-height: 180px; display:flex; align-items:center; justify-content:center;">
+        <div class="spinner-border text-danger" role="status"></div>
+      </div>
+    </div>
+
+    <!-- FLASH INFO -->
+    <div id="flashInfo-section" style="margin-bottom: 24px;">
+      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
+        <h3 style="font-size:14px; font-weight:700; color:#FFFFFF; margin:0;">Flash Info</h3>
+        <a href="#/news" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+      </div>
+      <div id="flashInfo-content" class="scroll-row"></div>
+    </div>
+
+    <!-- JT ET MAG -->
+    <div id="jtMag-section" style="margin-bottom: 24px;">
+      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
+        <h3 style="font-size:14px; font-weight:700; color:#FFFFFF; margin:0;">JT et Mag</h3>
+        <a href="#/jtandmag" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+      </div>
+      <div id="jtMag-content" class="scroll-row"></div>
+    </div>
+
+    <!-- DIVERTISSEMENT -->
+    <div id="divertissements-section" style="margin-bottom: 24px;">
+      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
+        <h3 style="font-size:14px; font-weight:700; color:#FFFFFF; margin:0;">Divertissement</h3>
+        <a href="#/divertissement" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+      </div>
+      <div id="divertissements-content" class="scroll-row"></div>
+    </div>
+
+    <!-- SPORT -->
+    <div id="sports-section" style="margin-bottom: 24px;">
+      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
+        <h3 style="font-size:14px; font-weight:700; color:#FFFFFF; margin:0;">Sport</h3>
+        <a href="#/sports" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+      </div>
+      <div id="sports-content" class="scroll-row"></div>
+    </div>
+
+    <!-- REPORTAGES -->
+    <div id="reportages-section" style="margin-bottom: 24px;">
+      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
+        <h3 style="font-size:14px; font-weight:700; color:#FFFFFF; margin:0;">Reportages</h3>
+        <a href="#/reportages" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+      </div>
+      <div id="reportages-content" class="scroll-row"></div>
+    </div>
+
+    <!-- ARCHIVES VIDEO -->
+    <div id="archives-section" style="margin-bottom: 0;">
+      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h3 style="font-size:14px; font-weight:700; color:#FFFFFF; margin:0;">Archives Video</h3>
+          <span style="background:#E23E3E; color:#fff; font-size:0.6rem; font-weight:600; padding:2px 7px; border-radius:10px;">Premium</span>
+        </div>
+        <a href="#/archive" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+      </div>
+      <div id="archives-content" class="scroll-row"></div>
+    </div>
+
+  </div>
+
+  <style>
+    .see-more-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
+      /* background: rgba(226,62,62,0.25); */
+      color: #E23E3E;
+      font-size: 22px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .see-more-btn:hover { background: rgba(226,62,62,0.45); color: #E23E3E; }
+    .scroll-row {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding: 0 16px 10px;
+      scrollbar-width: none;
+    }
+    .scroll-row::-webkit-scrollbar { display: none; }
+    @keyframes liveDot { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  </style>
+</body>
+</html>
