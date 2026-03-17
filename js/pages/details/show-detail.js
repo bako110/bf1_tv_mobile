@@ -113,7 +113,7 @@ export async function loadShowDetail(id, type) {
 
       ${videoUrl ? `
       <div style="position:relative;width:100%;background:#000;">
-        <video id="sd-video" controls playsinline preload="metadata"
+        <video id="sd-video" controls autoplay muted playsinline preload="auto"
                style="width:100%;max-height:280px;display:block;object-fit:contain;"
                ${img ? `poster="${esc(img)}"` : ''}>
           <source src="${esc(videoUrl)}" type="video/mp4">

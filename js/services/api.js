@@ -155,6 +155,11 @@ export async function getFavorites() {
   return http.get('/favorites') || [];
 }
 
+export async function getMyFavorites(contentType = null) {
+  const url = contentType ? `/favorites/me?content_type=${contentType}` : '/favorites/me';
+  return http.get(url).catch(() => []);
+}
+
 // ===== COMMENTAIRES =====
 export async function getComments(contentType, contentId) {
   return http.get(`/comments/content/${contentType}/${contentId}?limit=50`).catch(() => []);
@@ -206,4 +211,30 @@ export async function addFavorite(contentType, contentId) {
 
 export async function removeFavorite(contentType, contentId) {
   return http.delete(`/favorites/content/${contentType}/${contentId}`);
+}
+
+// ===== RECHERCHE =====
+export async function searchContent(q, limit = 10) {
+  return http.get(`/search?q=${encodeURIComponent(q)}&limit=${limit}`).catch(() => ({ items: [] }));
+}
+
+// ===== NOTIFICATIONS =====
+export async function getNotifications() {
+  return http.get('/notifications/me').catch(() => []);
+}
+
+export async function markNotificationRead(notifId) {
+  return http.patch(`/notifications/${notifId}/read`);
+}
+
+export async function markAllNotificationsRead() {
+  return http.patch('/notifications/mark-all-read');
+}
+
+export async function deleteNotification(notifId) {
+  return http.delete(`/notifications/${notifId}`);
+}
+
+export async function deleteAllNotifications() {
+  return http.delete('/notifications/delete-all');
 }

@@ -119,6 +119,9 @@ async function loadPageScript(route, detailParams = null) {
     '#/programs':       () => import('./pages/programs.js').then(m => m.loadPrograms()),
     '#/login':          () => import('./pages/login.js').then(m => m.loadLogin()),
     '#/register':       () => import('./pages/register.js').then(m => m.loadRegister()),
+    '#/favorites':      () => import('./pages/favorites.js').then(m => m.loadFavorites()),
+    '#/search':         () => import('./pages/search.js').then(m => m.loadSearch()),
+    '#/notifications':  () => import('./pages/notifications.js').then(m => m.loadNotifications()),
   };
 
   try {
