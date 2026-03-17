@@ -55,7 +55,7 @@ function buildGridCard(item) {
   const host = item.host || '';
 
   return `
-    <div style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;">
+    <div style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;" onclick="window.location.hash='#/show/jtandmag/${item.id||item._id}'">
       <div style="position:relative;">
         ${img
           ? `<img src="${esc(img)}" alt="" style="width:100%;height:140px;object-fit:cover;display:block;">`
@@ -82,7 +82,7 @@ function buildListCard(item) {
   const time = formatTime(item.created_at || item.published_at);
 
   return `
-    <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;">
+    <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.location.hash='#/show/jtandmag/${item.id||item._id}'">
       <div style="flex-shrink:0;">
         ${img
           ? `<img src="${esc(img)}" alt="" style="width:120px;height:90px;object-fit:cover;">`

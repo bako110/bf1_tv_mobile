@@ -71,19 +71,24 @@ export async function loadLive() {
     if (videoContainer) {
       if (isLive && streamUrl) {
         videoContainer.innerHTML = `
-          <div class="position-relative w-100" style="background:#000;">
-            <div class="ratio ratio-16x9">
+          <div class="position-relative w-100" style="background:#000;" id="live-player-wrapper">
+            <div class="ratio ratio-16x9" id="live-ratio-box">
               <video id="live-video" autoplay muted playsinline
                      style="object-fit:contain;background:#000;"
                      onerror="this.parentElement.parentElement.parentElement.querySelector('.live-error')?.classList.remove('d-none')">
               </video>
             </div>
 
-
-
             <div class="live-error d-none text-center p-3">
               <p class="text-secondary mb-0" style="font-size:13px;">Impossible de charger le flux</p>
             </div>
+
+            <!-- Bouton plein écran -->
+            <button id="live-fs-btn" onclick="window.toggleLiveFullscreen()"
+                    style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.55);
+                           border:none;border-radius:8px;padding:7px 9px;color:#fff;z-index:20;cursor:pointer;">
+              <i class="bi bi-fullscreen" id="live-fs-icon"></i>
+            </button>
           </div>`;
 
         // Afficher le compteur de spectateurs dans le header
@@ -93,6 +98,80 @@ export async function loadLive() {
           viewersCount.textContent = formatCount(viewers);
           viewersHeader.style.display = 'inline-flex';
         }
+
+        // Plein écran paysage (rotation)
+        function enterCssFallback() {
+          const container = document.getElementById('live-video-container');
+          const icon = document.getElementById('live-fs-icon');
+          const appHeader = document.querySelector('.app-header');
+          const bottomNav = document.querySelector('.bottom-nav');
+          const liveHeader = document.querySelector('.sticky-top');
+          container.classList.add('live-fullscreen');
+          if (icon) icon.className = 'bi bi-fullscreen-exit';
+          if (appHeader) appHeader.style.display = 'none';
+          if (bottomNav) bottomNav.style.display = 'none';
+          if (liveHeader) liveHeader.style.display = 'none';
+        }
+        function exitCssFallback() {
+          const container = document.getElementById('live-video-container');
+          const icon = document.getElementById('live-fs-icon');
+          const appHeader = document.querySelector('.app-header');
+          const bottomNav = document.querySelector('.bottom-nav');
+          const liveHeader = document.querySelector('.sticky-top');
+          container.classList.remove('live-fullscreen');
+          if (icon) icon.className = 'bi bi-fullscreen';
+          if (appHeader) appHeader.style.display = '';
+          if (bottomNav) bottomNav.style.display = '';
+          if (liveHeader) liveHeader.style.display = '';
+        }
+
+        // Écouter la sortie native du fullscreen (bouton retour, etc.)
+        document.addEventListener('fullscreenchange', () => {
+          if (!document.fullscreenElement) {
+            screen.orientation?.unlock?.();
+            exitCssFallback();
+          }
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+          if (!document.webkitFullscreenElement) {
+            exitCssFallback();
+          }
+        });
+
+        window.toggleLiveFullscreen = function () {
+          const container = document.getElementById('live-video-container');
+          const video = document.getElementById('live-video');
+          const isFs = !!document.fullscreenElement || !!document.webkitFullscreenElement
+                       || container.classList.contains('live-fullscreen');
+
+          if (!isFs) {
+            // Essayer le fullscreen natif (déclenche la rotation auto du système)
+            const target = container;
+            const fsPromise = target.requestFullscreen
+              ? target.requestFullscreen()
+              : target.webkitRequestFullscreen
+                ? (target.webkitRequestFullscreen(), Promise.resolve())
+                : video?.webkitEnterFullscreen
+                  ? (video.webkitEnterFullscreen(), Promise.resolve())
+                  : Promise.reject();
+
+            fsPromise
+              .then(() => {
+                // Forcer le paysage après fullscreen natif
+                screen.orientation?.lock?.('landscape').catch(() => {});
+                enterCssFallback(); // cache nav bars
+              })
+              .catch(() => {
+                // Pas de fullscreen natif → fallback CSS rotate
+                enterCssFallback();
+              });
+          } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            screen.orientation?.unlock?.();
+            exitCssFallback();
+          }
+        };
 
         // Affecter la source vidéo
         requestAnimationFrame(() => {

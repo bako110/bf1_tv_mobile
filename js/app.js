@@ -39,14 +39,26 @@ async function renderRoute(route) {
     return;
   }
 
-  const pagePath = routes[route];
+  // Résoudre chemin HTML + params des routes paramétrées
+  let pagePath = routes[route];
+  let detailParams = null;
+
   if (!pagePath) {
-    renderNotFound();
-    return;
+    if (route.startsWith('#/news/')) {
+      pagePath = 'pages/details/news-detail.html';
+      detailParams = { id: decodeURIComponent(route.slice(7)), type: 'news' };
+    } else if (route.startsWith('#/show/')) {
+      const parts = route.slice(7).split('/');
+      pagePath = 'pages/details/show-detail.html';
+      detailParams = { type: parts[0], id: decodeURIComponent(parts.slice(1).join('/')) };
+    } else {
+      renderNotFound();
+      return;
+    }
   }
 
   const appContent = document.getElementById('app-content');
-  
+
   // Afficher le loader avec snakeLoader
   const loader = document.getElementById('page-loader');
   if (loader) {
@@ -59,11 +71,11 @@ async function renderRoute(route) {
     // Charger et parser le HTML
     const response = await fetch(pagePath);
     if (!response.ok) throw new Error('404');
-    
+
     const html = await response.text();
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Extraire le contenu du body
     const content = doc.body.innerHTML;
     appContent.innerHTML = content;
@@ -73,7 +85,7 @@ async function renderRoute(route) {
     updateTopNav();
 
     // Charger le script spécifique de la page
-    await loadPageScript(route);
+    await loadPageScript(route, detailParams);
 
     // Cacher le loader
     if (loader) {
@@ -91,7 +103,7 @@ async function renderRoute(route) {
   }
 }
 
-async function loadPageScript(route) {
+async function loadPageScript(route, detailParams = null) {
   const pageScripts = {
     '#/home':           () => import('./pages/home.js').then(m => m.loadHome()),
     '#/news':           () => import('./pages/news.js').then(m => m.loadNews()),
@@ -112,6 +124,15 @@ async function loadPageScript(route) {
   try {
     if (pageScripts[route]) {
       await pageScripts[route]();
+    } else if (detailParams) {
+      // Routes paramétrées
+      if (route.startsWith('#/news/')) {
+        const { loadNewsDetail } = await import('./pages/details/news-detail.js');
+        await loadNewsDetail(detailParams.id);
+      } else if (route.startsWith('#/show/')) {
+        const { loadShowDetail } = await import('./pages/details/show-detail.js');
+        await loadShowDetail(detailParams.id, detailParams.type);
+      }
     }
   } catch (error) {
     console.error(`Erreur chargement script page ${route}:`, error);
@@ -132,7 +153,9 @@ function renderNotFound() {
 }
 
 function updateBottomNav(route) {
-  // Mapping: route → [id_tab, icône_inactive, icône_active]
+  // Si pas de route passée, utiliser le hash courant
+  if (!route) route = window.location.hash || '#/home';
+
   const tabMap = [
     ['tab-home',      '#/home',      'bi-house',         'bi-house-fill'],
     ['tab-emissions', '#/emissions', 'bi-tv',             'bi-tv-fill'],
@@ -199,6 +222,34 @@ document.addEventListener('submit', async (e) => {
   }
 });
 
+// ===== SPLASH SCREEN =====
+function startSplash() {
+  const splash = document.getElementById('splash-screen');
+  const textEl = document.getElementById('splash-text');
+  const cursor = document.getElementById('splash-cursor');
+  if (!splash) return;
+
+  // Typewriter tagline
+  const tagline = "La chaîne au cœur de nos défis";
+  let i = 0;
+  const typeInterval = setInterval(() => {
+    if (i <= tagline.length) {
+      textEl.textContent = tagline.slice(0, i);
+      i++;
+    } else {
+      clearInterval(typeInterval);
+      if (cursor) cursor.style.display = 'none';
+    }
+  }, 60);
+}
+
+function hideSplash() {
+  const splash = document.getElementById('splash-screen');
+  if (!splash) return;
+  splash.classList.add('hiding');
+  setTimeout(() => splash.remove(), 520);
+}
+
 // Router
 window.addEventListener('hashchange', () => {
   const route = window.location.hash || '#/home';
@@ -207,6 +258,14 @@ window.addEventListener('hashchange', () => {
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', async () => {
+  // Marquer Accueil actif immédiatement (avant le splash)
+  updateBottomNav('#/home');
+
+  // Démarrer le splash immédiatement
+  startSplash();
+  const splashStart = Date.now();
+
+  // Restaurer le token
   try {
     const token = localStorage.getItem('bf1_token');
     if (token) {
@@ -217,11 +276,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.warn('⚠️ Accès localStorage bloqué (tracking prevention):', err.message);
   }
 
+  // Health check backend en parallèle (timeout 5s)
+  let backendReady = false;
+  const healthCheck = fetch('https://bf1.fly.dev/api/v1/health', { signal: AbortSignal.timeout(5000) })
+    .then(() => { backendReady = true; })
+    .catch(() => { backendReady = true; }); // ne pas bloquer si fail
+
+  await healthCheck;
+
+  // Minimum 3 secondes de splash (comme React Native)
+  const elapsed = Date.now() - splashStart;
+  const remaining = Math.max(0, 3000 - elapsed);
+  await new Promise(r => setTimeout(r, remaining));
+
+  // Charger la page puis cacher le splash
   const hash = window.location.hash;
   if (!hash || hash === '#' || hash === '#/') {
     history.replaceState(null, '', '#/home');
-    renderRoute('#/home');
+    await renderRoute('#/home');
   } else {
-    renderRoute(hash);
+    await renderRoute(hash);
   }
+
+  hideSplash();
 });

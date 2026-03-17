@@ -1,0 +1,447 @@
+﻿import * as api from '../../services/api.js';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  catch { return ''; }
+}
+
+function formatRelative(d) {
+  if (!d) return 'Récemment';
+  try {
+    const diff = Date.now() - new Date(d).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "À l'instant";
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    const j = Math.floor(h / 24);
+    if (j < 7) return `${j}j`;
+    return formatDate(d);
+  } catch { return 'Récemment'; }
+}
+
+// ─── Config par type ──────────────────────────────────────────────────────────
+
+const TYPE_CONFIG = {
+  sport:         { label: 'Sport',         icon: 'bi-trophy-fill',        color: '#1DA1F2', apiType: 'sport' },
+  jtandmag:      { label: 'JT & Magazine', icon: 'bi-camera-video-fill',  color: '#E23E3E', apiType: 'jtandmag' },
+  divertissement:{ label: 'Divertissement',icon: 'bi-music-note-beamed',  color: '#A855F7', apiType: 'divertissement' },
+  reportage:     { label: 'Reportage',     icon: 'bi-film',               color: '#F59E0B', apiType: 'reportage' },
+  archive:       { label: 'Archive',       icon: 'bi-archive-fill',       color: '#6B7280', apiType: 'archive' },
+  show:          { label: 'Émission',      icon: 'bi-tv-fill',            color: '#10B981', apiType: 'show' },
+};
+
+// ─── Rendu commentaires ───────────────────────────────────────────────────────
+
+function renderComments(comments, currentUserId) {
+  if (!comments.length) {
+    return `<p style="color:#666;font-size:14px;text-align:center;padding:20px 0;">Aucun commentaire pour l'instant. Soyez le premier !</p>`;
+  }
+  return comments.map(c => {
+    const isOwn = currentUserId && String(c.user_id) === String(currentUserId);
+    const username = c.username || c.user?.username || 'Utilisateur';
+    const avatar = (username[0] || 'U').toUpperCase();
+    return `
+    <div class="sd-comment" data-id="${esc(c.id || c._id)}" style="display:flex;gap:10px;margin-bottom:16px;">
+      <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#E23E3E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;">
+        ${esc(avatar)}
+      </div>
+      <div style="flex:1;background:#1a1a1a;border-radius:12px;border-top-left-radius:4px;padding:10px 12px;">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span style="font-size:13px;font-weight:600;color:#fff;">${esc(username)}</span>
+          <div class="d-flex align-items-center gap-2">
+            <span style="font-size:11px;color:#555;">${formatRelative(c.created_at)}</span>
+            ${isOwn ? `<button onclick="deleteSdComment('${esc(c.id || c._id)}')" style="background:none;border:none;color:#E23E3E;cursor:pointer;padding:0;font-size:13px;" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}
+          </div>
+        </div>
+        <p style="font-size:14px;color:#ccc;margin:0;line-height:1.5;">${esc(c.text)}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Export principal ─────────────────────────────────────────────────────────
+
+export async function loadShowDetail(id, type) {
+  const container = document.getElementById('sd-container');
+  const headerTitle = document.getElementById('sd-header-title');
+  if (!container) return;
+
+  const cfg = TYPE_CONFIG[type] || { label: 'Programme', icon: 'bi-play-circle', color: '#E23E3E', apiType: type };
+  const CONTENT_TYPE = cfg.apiType;
+
+  try {
+    const [show, related, comments, likesCount] = await Promise.all([
+      api.getShowById(id, type).catch(() => null),
+      api.getRelatedByType(type, id).catch(() => []),
+      api.getComments(CONTENT_TYPE, id).catch(() => []),
+      api.getLikesCount(CONTENT_TYPE, id).catch(() => 0),
+    ]);
+
+    if (!show) {
+      container.innerHTML = `<div class="d-flex flex-column align-items-center justify-content-center py-5"><i class="bi bi-exclamation-circle text-danger" style="font-size:3rem;"></i><p class="mt-3 text-secondary">Contenu introuvable</p><button onclick="history.back()" style="background:#E23E3E;color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;margin-top:8px;">Retour</button></div>`;
+      return;
+    }
+
+    let userLiked = false;
+    let userFavorited = false;
+    const user = (() => { try { return JSON.parse(localStorage.getItem('bf1_user') || 'null'); } catch { return null; } })();
+    if (user) {
+      [userLiked, userFavorited] = await Promise.all([
+        api.checkLiked(CONTENT_TYPE, id).catch(() => false),
+        api.checkFavorite(CONTENT_TYPE, id).catch(() => false),
+      ]);
+    }
+
+    if (headerTitle) headerTitle.textContent = show.title || cfg.label;
+
+    const videoUrl = show.video_url || show.stream_url || show.url || '';
+    const img      = show.image_url || show.thumbnail || show.image || show.poster || '';
+    const title    = show.title || 'Sans titre';
+    const desc     = show.description || show.content || '';
+    const date     = formatDate(show.created_at || show.date || show.published_at);
+    const duration = show.duration ? `${Math.floor(show.duration / 60)}min` : '';
+
+    container.innerHTML = `
+
+      ${videoUrl ? `
+      <div style="position:relative;width:100%;background:#000;">
+        <video id="sd-video" controls playsinline preload="metadata"
+               style="width:100%;max-height:280px;display:block;object-fit:contain;"
+               ${img ? `poster="${esc(img)}"` : ''}>
+          <source src="${esc(videoUrl)}" type="video/mp4">
+          Votre navigateur ne supporte pas la lecture vidéo.
+        </video>
+        <button onclick="toggleSdFullscreen()"
+                style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);border:none;border-radius:6px;padding:5px 10px;color:#fff;cursor:pointer;font-size:17px;">
+          <i class="bi bi-fullscreen"></i>
+        </button>
+      </div>` : img ? `
+      <div style="position:relative;width:100%;max-height:260px;overflow:hidden;">
+        <img src="${esc(img)}" alt="" style="width:100%;object-fit:cover;display:block;max-height:260px;" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(transparent 40%,#000 100%);"></div>
+        <div style="position:absolute;top:12px;left:12px;">
+          <span style="display:inline-flex;align-items:center;gap:4px;background:${cfg.color};color:#fff;border-radius:4px;padding:3px 9px;font-size:11px;font-weight:700;">
+            <i class="bi ${cfg.icon}" style="font-size:10px;"></i>${esc(cfg.label.toUpperCase())}
+          </span>
+        </div>
+        ${duration ? `<div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.7);color:#fff;border-radius:4px;padding:2px 7px;font-size:11px;"><i class="bi bi-clock me-1"></i>${esc(duration)}</div>` : ''}
+      </div>` : ''}
+
+      <div class="px-3 pt-3">
+
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+          <span style="background:${cfg.color};color:#fff;border-radius:4px;padding:3px 9px;font-size:12px;font-weight:600;">
+            <i class="bi ${cfg.icon} me-1" style="font-size:10px;"></i>${esc(cfg.label)}
+          </span>
+          ${date ? `<span style="font-size:12px;color:#666;">${date}</span>` : ''}
+          ${duration ? `<span style="font-size:12px;color:#666;"><i class="bi bi-clock me-1"></i>${esc(duration)}</span>` : ''}
+        </div>
+
+        <h1 style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;">${esc(title)}</h1>
+
+        ${show.channel ? `<div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-tv" style="color:#555;"></i><span style="font-size:13px;color:#888;">${esc(show.channel)}</span></div>` : ''}
+        ${show.category ? `<div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-tag" style="color:#555;"></i><span style="font-size:13px;color:#888;">${esc(show.category)}</span></div>` : ''}
+
+        <div class="d-flex align-items-center gap-3 mb-3 pb-3" style="border-bottom:1px solid #1e1e1e;">
+          <button id="sd-like-btn" onclick="toggleSdLike()"
+                  style="display:inline-flex;align-items:center;gap:6px;background:${userLiked ? '#E23E3E' : '#1a1a1a'};
+                         border:none;border-radius:20px;padding:7px 14px;color:${userLiked ? '#fff' : '#888'};cursor:pointer;font-size:13px;">
+            <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+            <span id="sd-like-count">${likesCount}</span>
+          </button>
+          <button onclick="openSdComments()"
+                  style="display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;border:none;border-radius:20px;padding:7px 14px;color:#888;cursor:pointer;font-size:13px;">
+            <i class="bi bi-chat-dots"></i>
+            <span id="sd-cm-count-btn">${comments.length} commentaire${comments.length !== 1 ? 's' : ''}</span>
+          </button>
+          <button id="sd-fav-btn" onclick="toggleSdFavorite()"
+                  style="display:inline-flex;align-items:center;gap:6px;background:${userFavorited ? '#F59E0B' : '#1a1a1a'};
+                         border:none;border-radius:20px;padding:7px 14px;color:${userFavorited ? '#fff' : '#888'};cursor:pointer;font-size:13px;" title="Favoris">
+            <i class="bi ${userFavorited ? 'bi-bookmark-fill' : 'bi-bookmark'}"></i>
+          </button>
+        </div>
+
+        ${desc ? `<div style="margin-bottom:24px;"><p style="font-size:15px;color:#d0d0d0;line-height:1.75;white-space:pre-wrap;">${esc(desc)}</p></div>` : ''}
+
+        <div style="margin-bottom:28px;">
+          <p style="font-size:12px;font-weight:600;color:#555;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px;">Partager</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <button onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),'_blank')"
+                    style="display:inline-flex;align-items:center;gap:6px;background:#1877F2;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
+              <i class="bi bi-facebook"></i> Facebook
+            </button>
+            <button onclick="window.open('https://wa.me/?text='+encodeURIComponent(document.title+' '+location.href),'_blank')"
+                    style="display:inline-flex;align-items:center;gap:6px;background:#25D366;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
+              <i class="bi bi-whatsapp"></i> WhatsApp
+            </button>
+            <button onclick="navigator.share ? navigator.share({title:document.title,url:location.href}) : navigator.clipboard?.writeText(location.href)"
+                    style="display:inline-flex;align-items:center;gap:6px;background:#333;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
+              <i class="bi bi-share-fill"></i> Plus
+            </button>
+          </div>
+        </div>
+
+        ${related.length > 0 ? `
+        <div style="margin-bottom:28px;">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="bi ${cfg.icon}" style="color:${cfg.color};font-size:16px;"></i>
+            <h3 style="font-size:15px;font-weight:700;color:#fff;margin:0;">Voir aussi (${related.length})</h3>
+          </div>
+          ${related.map(rItem => {
+            const rImg = rItem.image_url || rItem.thumbnail || rItem.image || '';
+            const rId  = rItem.id || rItem._id;
+            const rDur = rItem.duration ? `${Math.floor(rItem.duration/60)}min` : '';
+            return `
+            <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;"
+                 onclick="window.location.hash='#/show/${type}/${rId}'">
+              <div style="position:relative;flex-shrink:0;">
+                ${rImg ? `<img src="${esc(rImg)}" alt="" style="width:110px;height:80px;object-fit:cover;">` : `<div style="width:110px;height:80px;background:#2a2a2a;display:flex;align-items:center;justify-content:center;"><i class="bi bi-image text-secondary"></i></div>`}
+                ${rDur ? `<span style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.75);color:#fff;font-size:9px;border-radius:3px;padding:1px 4px;">${esc(rDur)}</span>` : ''}
+              </div>
+              <div class="p-2" style="flex:1;overflow:hidden;">
+                <p style="font-size:13px;font-weight:600;color:#fff;margin:0 0 5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(rItem.title || '')}</p>
+                <span style="font-size:11px;color:#555;"><i class="bi bi-clock"></i> ${formatRelative(rItem.created_at || rItem.date)}</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+
+      </div>`;
+
+    // Toggle favori
+    let currentlyFavorited = userFavorited;
+    window.toggleSdFavorite = async function() {
+      if (!localStorage.getItem('bf1_token')) { window.location.hash = '#/login'; return; }
+      const btn = document.getElementById('sd-fav-btn');
+      if (!btn) return;
+      btn.disabled = true;
+      try {
+        if (currentlyFavorited) {
+          await api.removeFavorite(CONTENT_TYPE, id);
+          currentlyFavorited = false;
+        } else {
+          await api.addFavorite(CONTENT_TYPE, id);
+          currentlyFavorited = true;
+        }
+        btn.style.background = currentlyFavorited ? '#F59E0B' : '#1a1a1a';
+        btn.style.color      = currentlyFavorited ? '#fff' : '#888';
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = 'bi ' + (currentlyFavorited ? 'bi-bookmark-fill' : 'bi-bookmark');
+      } catch(e) { console.error('Erreur favori:', e); }
+      btn.disabled = false;
+    };
+
+    // Toggle like
+    let currentlyLiked = userLiked;
+    let currentLikesCount = likesCount;
+    window.toggleSdLike = async function() {
+      if (!localStorage.getItem('bf1_token')) { window.location.hash = '#/login'; return; }
+      const btn = document.getElementById('sd-like-btn');
+      const countEl = document.getElementById('sd-like-count');
+      if (!btn) return;
+      btn.disabled = true;
+      try {
+        const res = await api.toggleLike(CONTENT_TYPE, id);
+        currentlyLiked = res?.liked ?? !currentlyLiked;
+        currentLikesCount = res?.count ?? (currentlyLiked ? currentLikesCount + 1 : Math.max(0, currentLikesCount - 1));
+        btn.style.background = currentlyLiked ? '#E23E3E' : '#1a1a1a';
+        btn.style.color      = currentlyLiked ? '#fff' : '#888';
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = 'bi ' + (currentlyLiked ? 'bi-heart-fill' : 'bi-heart');
+        if (countEl) countEl.textContent = Math.max(0, currentLikesCount);
+      } catch(e) { console.error('Erreur like:', e); }
+      btn.disabled = false;
+    };
+
+    // ─── Modal Commentaires ─────────────────────────────────────────────────
+    const _sdCmOrig = {};
+
+    function renderSdCmList(cmts) {
+      const listEl = document.getElementById('sd-cm-list');
+      if (!listEl) return;
+      if (!cmts.length) {
+        listEl.innerHTML = `<p style="color:#666;font-size:14px;text-align:center;padding:30px 0;"><i class="bi bi-chat-dots" style="font-size:28px;display:block;color:#333;margin-bottom:10px;"></i>Aucun commentaire. Soyez le premier !</p>`;
+        return;
+      }
+      listEl.innerHTML = cmts.map(c => {
+        const isOwn = user && String(c.user_id) === String(user.id);
+        const uname = c.username || c.user?.username || 'Utilisateur';
+        const cid = esc(String(c.id || c._id));
+        return `
+        <div class="sd-cm-comment" data-id="${cid}" style="display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #1a0000;">
+          <div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:#E23E3E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;">${esc((uname[0]||'U').toUpperCase())}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:4px;">
+              <span style="font-size:13px;font-weight:600;color:#fff;">${esc(uname)}</span>
+              <div class="sd-cm-actions" style="display:flex;gap:6px;flex-shrink:0;align-items:center;">
+                <span style="font-size:11px;color:#555;">${formatRelative(c.created_at)}</span>
+                ${isOwn ? `
+                <button onclick="editSdCmComment('${cid}')" style="background:none;border:none;color:#888;cursor:pointer;padding:2px;font-size:14px;line-height:1;" title="Modifier"><i class="bi bi-pencil"></i></button>
+                <button onclick="deleteSdCmComment('${cid}')" style="background:none;border:none;color:#E23E3E;cursor:pointer;padding:2px;font-size:14px;line-height:1;" title="Supprimer"><i class="bi bi-trash"></i></button>
+                ` : ''}
+              </div>
+            </div>
+            <p class="sd-cm-text" style="font-size:14px;color:#ccc;margin:0;line-height:1.5;word-break:break-word;">${esc(c.text)}</p>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    window.openSdComments = async function() {
+      const existing = document.getElementById('sd-comments-modal');
+      if (existing) existing.remove();
+      const modal = document.createElement('div');
+      modal.id = 'sd-comments-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end;';
+      modal.innerHTML = `
+        <style>#sd-comments-modal .sd-cm-sheet{animation:sdSlideUp 0.3s ease}@keyframes sdSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+        <div class="sd-cm-sheet" style="background:#000;border-radius:20px 20px 0 0;height:80vh;display:flex;flex-direction:column;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid #1a0000;">
+            <span style="color:#fff;font-size:17px;font-weight:700;">Commentaires (<span id="sd-cm-count">...</span>)</span>
+            <button onclick="closeSdComments()" style="background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;padding:0 4px;">✕</button>
+          </div>
+          <div id="sd-cm-list" style="flex:1;overflow-y:auto;padding:0 16px;">
+            <div style="text-align:center;padding:30px;"><i class="bi bi-hourglass-split" style="color:#E23E3E;font-size:28px;"></i></div>
+          </div>
+          ${user ? `
+          <div style="padding:10px 16px;border-top:1px solid #1a0000;background:#000;display:flex;align-items:flex-end;gap:10px;">
+            <textarea id="sd-cm-input" maxlength="1000" placeholder="Ajouter un commentaire..."
+                      style="flex:1;background:#1a0000;border-radius:20px;border:none;padding:10px 16px;color:#fff;font-size:14px;resize:none;height:42px;max-height:100px;outline:none;line-height:1.4;"></textarea>
+            <button onclick="submitSdCmComment()"
+                    style="flex-shrink:0;background:#1a0000;border:none;border-radius:50%;width:42px;height:42px;color:#E23E3E;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">
+              <i class="bi bi-send-fill"></i>
+            </button>
+          </div>` : `
+          <div style="padding:14px 16px;border-top:1px solid #1a0000;text-align:center;">
+            <button onclick="closeSdComments();window.location.hash='#/login';" style="background:#E23E3E;border:none;border-radius:8px;padding:9px 24px;color:#fff;cursor:pointer;font-size:14px;font-weight:600;">Se connecter pour commenter</button>
+          </div>`}
+        </div>`;
+      document.body.appendChild(modal);
+      document.body.style.overflow = 'hidden';
+      modal.addEventListener('click', e => { if (e.target === modal) closeSdComments(); });
+      const inp = document.getElementById('sd-cm-input');
+      if (inp) {
+        inp.addEventListener('input', function() { this.style.height='42px'; this.style.height=Math.min(this.scrollHeight,100)+'px'; });
+        inp.addEventListener('keydown', function(e) { if (e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); submitSdCmComment(); } });
+      }
+      try {
+        const cmts = await api.getComments(CONTENT_TYPE, id);
+        renderSdCmList(cmts);
+        const cEl = document.getElementById('sd-cm-count');
+        if (cEl) cEl.textContent = cmts.length;
+      } catch(e) {
+        const lEl = document.getElementById('sd-cm-list');
+        if (lEl) lEl.innerHTML = `<p style="color:#666;text-align:center;padding:30px;">Erreur de chargement</p>`;
+      }
+    };
+
+    window.closeSdComments = function() {
+      const m = document.getElementById('sd-comments-modal');
+      if (m) m.remove();
+      document.body.style.overflow = '';
+    };
+
+    window.submitSdCmComment = async function() {
+      const inp = document.getElementById('sd-cm-input');
+      if (!inp || !inp.value.trim()) return;
+      if (!localStorage.getItem('bf1_token')) { closeSdComments(); window.location.hash = '#/login'; return; }
+      const text = inp.value.trim();
+      inp.disabled = true;
+      try {
+        await api.addComment(CONTENT_TYPE, id, text);
+        inp.value = ''; inp.style.height = '42px';
+        const cmts = await api.getComments(CONTENT_TYPE, id);
+        renderSdCmList(cmts);
+        const cEl = document.getElementById('sd-cm-count');
+        if (cEl) cEl.textContent = cmts.length;
+        const btn = document.getElementById('sd-cm-count-btn');
+        if (btn) btn.textContent = `${cmts.length} commentaire${cmts.length !== 1 ? 's' : ''}`;
+      } catch(e) { console.error('Erreur envoi:', e); }
+      inp.disabled = false;
+    };
+
+    window.deleteSdCmComment = async function(commentId) {
+      if (!confirm('Supprimer ce commentaire ?')) return;
+      try {
+        await api.deleteComment(commentId);
+        const cmts = await api.getComments(CONTENT_TYPE, id);
+        renderSdCmList(cmts);
+        const cEl = document.getElementById('sd-cm-count');
+        if (cEl) cEl.textContent = cmts.length;
+        const btn = document.getElementById('sd-cm-count-btn');
+        if (btn) btn.textContent = `${cmts.length} commentaire${cmts.length !== 1 ? 's' : ''}`;
+      } catch(e) { console.error('Erreur suppression:', e); }
+    };
+
+    window.editSdCmComment = function(commentId) {
+      const el = document.querySelector(`#sd-cm-list .sd-cm-comment[data-id="${commentId}"]`);
+      if (!el) return;
+      const textEl = el.querySelector('.sd-cm-text');
+      const actEl = el.querySelector('.sd-cm-actions');
+      if (!textEl) return;
+      _sdCmOrig[commentId] = textEl.textContent.trim();
+      textEl.innerHTML = `<textarea id="sd-cm-edit-${commentId}" style="width:100%;background:#000;border:1px solid #E23E3E;border-radius:8px;padding:8px;color:#fff;font-size:14px;resize:none;min-height:60px;outline:none;">${esc(_sdCmOrig[commentId])}</textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
+          <button onclick="cancelSdCmEdit('${commentId}')" style="background:#1a1a1a;border:none;border-radius:8px;padding:6px 14px;color:#aaa;cursor:pointer;font-size:12px;">Annuler</button>
+          <button onclick="updateSdCmComment('${commentId}')" style="background:#E23E3E;border:none;border-radius:8px;padding:6px 14px;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Enregistrer</button>
+        </div>`;
+      if (actEl) actEl.style.display = 'none';
+      const ta = document.getElementById(`sd-cm-edit-${commentId}`);
+      if (ta) ta.focus();
+    };
+
+    window.cancelSdCmEdit = function(commentId) {
+      const el = document.querySelector(`#sd-cm-list .sd-cm-comment[data-id="${commentId}"]`);
+      if (!el) return;
+      const textEl = el.querySelector('.sd-cm-text');
+      const actEl = el.querySelector('.sd-cm-actions');
+      if (textEl) textEl.innerHTML = esc(_sdCmOrig[commentId] || '');
+      if (actEl) actEl.style.display = '';
+      delete _sdCmOrig[commentId];
+    };
+
+    window.updateSdCmComment = async function(commentId) {
+      const ta = document.getElementById(`sd-cm-edit-${commentId}`);
+      if (!ta || !ta.value.trim()) return;
+      const newText = ta.value.trim();
+      ta.disabled = true;
+      try {
+        await api.updateComment(commentId, newText);
+        const cmts = await api.getComments(CONTENT_TYPE, id);
+        renderSdCmList(cmts);
+        const cEl = document.getElementById('sd-cm-count');
+        if (cEl) cEl.textContent = cmts.length;
+      } catch(e) {
+        console.error('Erreur modification:', e);
+        if (ta) ta.disabled = false;
+        return;
+      }
+      delete _sdCmOrig[commentId];
+    };
+
+    // Plein écran vidéo
+    window.toggleSdFullscreen = function() {
+      const video = document.getElementById('sd-video');
+      if (!video) return;
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        video.requestFullscreen().then(() => {
+          if (screen.orientation?.lock) screen.orientation.lock('landscape').catch(() => {});
+        }).catch(() => {});
+      }
+    };
+
+  } catch (err) {
+    console.error('Erreur loadShowDetail:', err);
+    container.innerHTML = `<div class="d-flex flex-column align-items-center justify-content-center py-5"><i class="bi bi-exclamation-circle text-danger" style="font-size:3rem;"></i><p class="mt-3 text-secondary">Erreur lors du chargement</p><button onclick="history.back()" style="background:#E23E3E;color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;margin-top:8px;">Retour</button></div>`;
+  }
+}

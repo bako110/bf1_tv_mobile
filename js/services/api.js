@@ -102,6 +102,39 @@ export async function getJTandMag() {
   return http.get('/jtandmag') || [];
 }
 
+// ===== DÉTAILS PAR ID =====
+export async function getNewsById(id) {
+  return http.get(`/news/${id}`);
+}
+
+export async function getShowById(id, type) {
+  switch (type) {
+    case 'sport':         return http.get(`/sports/${id}`);
+    case 'jtandmag':      return http.get(`/jtandmag/${id}`);
+    case 'divertissement':return http.get(`/divertissement/${id}`);
+    case 'reportage':     return http.get(`/reportage/${id}`);
+    case 'archive':       return http.get(`/archives/${id}`);
+    default:              return http.get(`/shows/${id}`);
+  }
+}
+
+export async function getRelatedByType(type, excludeId) {
+  let items = [];
+  switch (type) {
+    case 'news':          items = await http.get('/news') || []; break;
+    case 'sport':         const r = await http.get('/sports'); items = r?.sports || (Array.isArray(r) ? r : []); break;
+    case 'jtandmag':      items = await http.get('/jtandmag') || []; break;
+    case 'divertissement':items = await http.get('/divertissement') || []; break;
+    case 'reportage':     items = await http.get('/reportage') || []; break;
+    case 'archive':       items = await http.get('/archives') || []; break;
+    default:              items = await http.get('/shows') || []; break;
+  }
+  return (Array.isArray(items) ? items : [])
+    .filter(i => String(i.id || i._id) !== String(excludeId))
+    .sort((a, b) => new Date(b.created_at || b.published_at || 0) - new Date(a.created_at || a.published_at || 0))
+    .slice(0, 20);
+}
+
 export async function getLive() {
   return http.get('/livestream/status');
 }
@@ -120,4 +153,57 @@ export async function getMySubscription() {
 
 export async function getFavorites() {
   return http.get('/favorites') || [];
+}
+
+// ===== COMMENTAIRES =====
+export async function getComments(contentType, contentId) {
+  return http.get(`/comments/content/${contentType}/${contentId}?limit=50`).catch(() => []);
+}
+
+export async function addComment(contentType, contentId, text) {
+  return http.post('/comments', { content_type: contentType, content_id: contentId, text });
+}
+
+export async function deleteComment(commentId) {
+  return http.delete(`/comments/${commentId}`);
+}
+
+export async function updateComment(commentId, text) {
+  return http.put(`/comments/${commentId}`, { text });
+}
+
+// ===== LIKES =====
+export async function getLikesCount(contentType, contentId) {
+  try {
+    const res = await http.get(`/likes/content/${contentType}/${contentId}/count`);
+    return (res && typeof res.count === 'number') ? res.count : 0;
+  } catch { return 0; }
+}
+
+export async function toggleLike(contentType, contentId) {
+  return http.post('/likes/toggle', { content_type: contentType, content_id: contentId });
+}
+
+export async function checkLiked(contentType, contentId) {
+  try {
+    const res = await http.get(`/likes/check/${contentType}/${contentId}`);
+    return res?.liked ?? false;
+  } catch { return false; }
+}
+
+// ===== FAVORIS =====
+export async function checkFavorite(contentType, contentId) {
+  try {
+    const favs = await http.get(`/favorites/me?content_type=${contentType}`);
+    if (!Array.isArray(favs)) return false;
+    return favs.some(f => String(f.content_id) === String(contentId));
+  } catch { return false; }
+}
+
+export async function addFavorite(contentType, contentId) {
+  return http.post('/favorites', { content_type: contentType, content_id: contentId });
+}
+
+export async function removeFavorite(contentType, contentId) {
+  return http.delete(`/favorites/content/${contentType}/${contentId}`);
 }

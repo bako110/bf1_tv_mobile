@@ -45,7 +45,7 @@ export async function loadHome() {
     await loadHorizontalSection('flashInfo', newsData.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
       title: item.title || 'Sans titre',
       image: item.image_url || item.image,
-      href: `#/news`,
+      href: `#/news/${item.id || item._id}`,
       time: formatTime(item.created_at || item.published_at),
       badge: { icon: 'bi-lightning-fill', text: item.category || item.edition || 'Actualités' },
     }));
@@ -53,28 +53,28 @@ export async function loadHome() {
     await loadHorizontalSection('jtMag', jtMagData.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
       title: item.title || 'Sans titre',
       image: item.image_url || item.thumbnail || item.image,
-      href: `#/jtandmag`,
+      href: `#/show/jtandmag/${item.id || item._id}`,
       time: formatTime(item.created_at || item.published_at),
     }));
 
     await loadHorizontalSection('divertissements', divertissementData.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
       title: item.title || 'Sans titre',
       image: item.image_url || item.thumbnail || item.image,
-      href: `#/divertissement`,
+      href: `#/show/divertissement/${item.id || item._id}`,
       time: formatTime(item.created_at || item.published_at),
     }));
 
     await loadHorizontalSection('sports', sportsData.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
       title: item.title || 'Sans titre',
       image: item.image_url || item.thumbnail || item.image,
-      href: `#/sports`,
+      href: `#/show/sport/${item.id || item._id}`,
       time: formatTime(item.created_at || item.published_at),
     }));
 
     await loadHorizontalSection('reportages', reportagesData.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
       title: item.title || 'Sans titre',
       image: item.thumbnail || item.image_url,
-      href: `#/reportages`,
+      href: `#/show/reportage/${item.id || item._id}`,
       duration: item.duration_minutes,
       time: formatTime(item.aired_at || item.created_at),
     }));
@@ -82,7 +82,7 @@ export async function loadHome() {
     await loadHorizontalSection('archives', archivesData.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
       title: item.title || 'Sans titre',
       image: item.thumbnail || item.image,
-      href: `#/archive`,
+      href: `#/show/archive/${item.id || item._id}`,
       premium: item.required_subscription_category || item.is_premium,
       duration: item.duration_minutes,
       time: formatTime(item.created_at),

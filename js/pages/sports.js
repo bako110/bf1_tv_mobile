@@ -92,7 +92,7 @@ function buildGridCard(item) {
   const time = formatTime(item.created_at || item.date);
 
   return `
-    <div style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;">
+    <div style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;" onclick="window.location.hash='#/show/sport/${item.id||item._id}'">
       ${img
         ? `<img src="${esc(img)}" alt="" style="width:100%;height:130px;object-fit:cover;display:block;">`
         : placeholder('130px')}
@@ -120,7 +120,7 @@ function buildListCard(item) {
   const time = formatTime(item.created_at || item.date);
 
   return `
-    <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;">
+    <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.location.hash='#/show/sport/${item.id||item._id}'">
       <div style="flex-shrink:0;position:relative;">
         ${img
           ? `<img src="${esc(img)}" alt="" style="width:120px;height:90px;object-fit:cover;">`

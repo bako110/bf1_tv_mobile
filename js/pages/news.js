@@ -121,7 +121,7 @@ function buildListCard(item) {
   const time = formatTime(item.created_at || item.time);
 
   return `
-    <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="">
+    <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.location.hash='#/news/${item.id||item._id}'">
       <div style="flex-shrink:0;">
         ${img
           ? `<img src="${escHtml(img)}" alt="" style="width:120px;height:90px;object-fit:cover;">`
@@ -156,7 +156,7 @@ function buildGridCard(item) {
   const time = formatTime(item.created_at || item.time);
 
   return `
-    <div class="mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;">
+    <div class="mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;" onclick="window.location.hash='#/news/${item.id||item._id}'">
       <div style="position:relative;">
         ${img
           ? `<img src="${escHtml(img)}" alt="" style="width:100%;height:200px;object-fit:cover;display:block;">`
