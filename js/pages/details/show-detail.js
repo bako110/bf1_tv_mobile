@@ -27,6 +27,53 @@ function formatRelative(d) {
   } catch { return 'Récemment'; }
 }
 
+// ─── Video helper (YouTube iframe OR native <video>) ────────────────────────
+
+function extractYoutubeId(url) {
+  if (!url) return null;
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  return m ? m[1] : null;
+}
+
+function buildVideoPlayer(videoUrl, posterImg) {
+  if (!videoUrl) return '';
+  const ytId = extractYoutubeId(videoUrl);
+  const embedSrc = ytId
+    ? `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`
+    : null;
+
+  if (ytId) {
+    return `
+    <div style="position:relative;width:100%;background:#000;">
+      <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
+        <iframe src="${esc(embedSrc)}"
+                style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
+                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>`;
+  }
+
+  // Direct / MP4
+  return `
+    <div style="position:relative;width:100%;background:#000;">
+      <video id="sd-video" controls autoplay muted playsinline preload="auto"
+             style="width:100%;max-height:280px;display:block;object-fit:contain;"
+             ${posterImg ? `poster="${esc(posterImg)}"` : ''}>
+        <source src="${esc(videoUrl)}" type="video/mp4">
+        Votre navigateur ne supporte pas la lecture vidéo.
+      </video>
+      <button onclick="toggleSdFullscreen()"
+              style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);
+                     border:none;border-radius:6px;padding:5px 10px;color:#fff;
+                     cursor:pointer;font-size:17px;">
+        <i class="bi bi-fullscreen"></i>
+      </button>
+    </div>`;
+}
+
 // ─── Config par type ──────────────────────────────────────────────────────────
 
 const TYPE_CONFIG = {
@@ -36,6 +83,7 @@ const TYPE_CONFIG = {
   reportage:     { label: 'Reportage',     icon: 'bi-film',               color: '#F59E0B', apiType: 'reportage' },
   archive:       { label: 'Archive',       icon: 'bi-archive-fill',       color: '#6B7280', apiType: 'archive' },
   show:          { label: 'Émission',      icon: 'bi-tv-fill',            color: '#10B981', apiType: 'show' },
+  movie:         { label: 'Film',          icon: 'bi-film',               color: '#E23E3E', apiType: 'movie' },
 };
 
 // ─── Rendu commentaires ───────────────────────────────────────────────────────
@@ -111,19 +159,7 @@ export async function loadShowDetail(id, type) {
 
     container.innerHTML = `
 
-      ${videoUrl ? `
-      <div style="position:relative;width:100%;background:#000;">
-        <video id="sd-video" controls autoplay muted playsinline preload="auto"
-               style="width:100%;max-height:280px;display:block;object-fit:contain;"
-               ${img ? `poster="${esc(img)}"` : ''}>
-          <source src="${esc(videoUrl)}" type="video/mp4">
-          Votre navigateur ne supporte pas la lecture vidéo.
-        </video>
-        <button onclick="toggleSdFullscreen()"
-                style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);border:none;border-radius:6px;padding:5px 10px;color:#fff;cursor:pointer;font-size:17px;">
-          <i class="bi bi-fullscreen"></i>
-        </button>
-      </div>` : img ? `
+      ${videoUrl ? buildVideoPlayer(videoUrl, img) : img ? `
       <div style="position:relative;width:100%;max-height:260px;overflow:hidden;">
         <img src="${esc(img)}" alt="" style="width:100%;object-fit:cover;display:block;max-height:260px;" onerror="this.style.display='none'">
         <div style="position:absolute;inset:0;background:linear-gradient(transparent 40%,#000 100%);"></div>
@@ -145,7 +181,8 @@ export async function loadShowDetail(id, type) {
           ${duration ? `<span style="font-size:12px;color:#666;"><i class="bi bi-clock me-1"></i>${esc(duration)}</span>` : ''}
         </div>
 
-        <h1 style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;">${esc(title)}</h1>
+        <h1 style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;
+             overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</h1>
 
         ${show.channel ? `<div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-tv" style="color:#555;"></i><span style="font-size:13px;color:#888;">${esc(show.channel)}</span></div>` : ''}
         ${show.category ? `<div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-tag" style="color:#555;"></i><span style="font-size:13px;color:#888;">${esc(show.category)}</span></div>` : ''}
@@ -169,7 +206,15 @@ export async function loadShowDetail(id, type) {
           </button>
         </div>
 
-        ${desc ? `<div style="margin-bottom:24px;"><p style="font-size:15px;color:#d0d0d0;line-height:1.75;white-space:pre-wrap;">${esc(desc)}</p></div>` : ''}
+        ${desc ? `
+        <div style="margin-bottom:24px;">
+          <div id="sd-desc-wrap" onclick="_sdToggleDesc()"
+               style="position:relative;overflow:hidden;max-height:calc(1.75em * 5);cursor:pointer;">
+            <p id="sd-desc-text" style="font-size:15px;color:#d0d0d0;line-height:1.75;white-space:pre-wrap;margin:0;">${esc(desc)}</p>
+            <div id="sd-desc-fade" style="position:absolute;bottom:0;left:0;right:0;height:40px;
+                 background:linear-gradient(transparent,#000);pointer-events:none;"></div>
+          </div>
+        </div>` : ''}
 
         <div style="margin-bottom:28px;">
           <p style="font-size:12px;font-weight:600;color:#555;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px;">Partager</p>
@@ -215,6 +260,32 @@ export async function loadShowDetail(id, type) {
         </div>` : ''}
 
       </div>`;
+
+    // Toggle description
+    window._sdToggleDesc = function() {
+      const wrap = document.getElementById('sd-desc-wrap');
+      const fade = document.getElementById('sd-desc-fade');
+      const btn  = document.getElementById('sd-desc-btn');
+      if (!wrap) return;
+      const open = wrap.style.maxHeight === 'none';
+      wrap.style.maxHeight = open ? 'calc(1.75em * 5)' : 'none';
+      if (fade) fade.style.display = open ? 'block' : 'none';
+      if (btn)  btn.innerHTML = open
+        ? 'Lire la suite <i class="bi bi-chevron-down" style="font-size:11px;"></i>'
+        : 'Réduire <i class="bi bi-chevron-up" style="font-size:11px;"></i>';
+    };
+
+    // Hide 'Lire la suite' if desc is short enough
+    requestAnimationFrame(() => {
+      const wrap = document.getElementById('sd-desc-wrap');
+      const btn  = document.getElementById('sd-desc-btn');
+      if (wrap && btn && wrap.scrollHeight <= wrap.offsetHeight + 4) {
+        wrap.style.maxHeight = 'none';
+        const fade = document.getElementById('sd-desc-fade');
+        if (fade) fade.style.display = 'none';
+        btn.style.display = 'none';
+      }
+    });
 
     // Toggle favori
     let currentlyFavorited = userFavorited;

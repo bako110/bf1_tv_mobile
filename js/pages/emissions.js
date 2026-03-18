@@ -15,8 +15,9 @@ function buildCategoryCard(cat) {
   const isNew = cat.is_new;
 
   return `
-    <div class="col-6 mb-3">
-      <div class="position-relative rounded overflow-hidden" style="background:#111;aspect-ratio:3/4;cursor:pointer;">
+    <div class="col-6">
+      <div class="position-relative rounded overflow-hidden" style="background:#111;aspect-ratio:3/4;cursor:pointer;"
+           onclick="window.location.hash='#/emission-category/${encodeURIComponent(name)}'">
         <img
           src="${image}"
           alt="${name}"
@@ -69,7 +70,7 @@ export async function loadEmissions() {
       return;
     }
 
-    container.innerHTML = `<div class="row g-0 px-2 py-2">${categories.map(buildCategoryCard).join('')}</div>`;
+    container.innerHTML = `<div class="row g-3 px-3 py-3">${categories.map(buildCategoryCard).join('')}</div>`;
 
   } catch (err) {
     console.error('Erreur loadEmissions:', err);

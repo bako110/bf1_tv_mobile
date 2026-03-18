@@ -114,8 +114,58 @@ export async function getShowById(id, type) {
     case 'divertissement':return http.get(`/divertissement/${id}`);
     case 'reportage':     return http.get(`/reportage/${id}`);
     case 'archive':       return http.get(`/archives/${id}`);
+    case 'movie':         return http.get(`/movies/${id}`);
     default:              return http.get(`/shows/${id}`);
   }
+}
+
+export async function getMovieById(id) {
+  return http.get(`/movies/${id}`);
+}
+
+export async function getSeriesById(id) {
+  return http.get(`/series/${id}`);
+}
+
+export async function getSeriesSeasons(seriesId) {
+  const r = await http.get(`/series/${seriesId}/seasons`).catch(() => null);
+  return r?.seasons || (Array.isArray(r) ? r : []);
+}
+
+export async function getSeriesEpisodes(seriesId) {
+  const r = await http.get(`/series/${seriesId}/episodes`).catch(() => null);
+  return r?.episodes || (Array.isArray(r) ? r : []);
+}
+
+export async function getSeasonEpisodes(seasonId) {
+  return http.get(`/seasons/${seasonId}/episodes`).catch(() => []);
+}
+
+export async function getShowsByCategory(category) {
+  const name = (category || '').toLowerCase();
+  let items, contentType;
+  if (name.includes('sport')) {
+    const r = await http.get('/sports').catch(() => ({}));
+    items = r?.sports || (Array.isArray(r) ? r : []);
+    contentType = 'sport';
+  } else if (name.includes('jt') || name.includes('mag')) {
+    items = await http.get('/jtandmag').catch(() => []);
+    contentType = 'jtandmag';
+  } else if (name.includes('divertissement')) {
+    items = await http.get('/divertissement').catch(() => []);
+    contentType = 'divertissement';
+  } else if (name.includes('reportage')) {
+    items = await http.get('/reportage').catch(() => []);
+    contentType = 'reportage';
+  } else {
+    items = [];
+    contentType = 'show';
+  }
+  return (Array.isArray(items) ? items : []).map(item => ({
+    ...item,
+    id: item._id || item.id,
+    _contentType: contentType
+  }));
 }
 
 export async function getRelatedByType(type, excludeId) {
@@ -127,6 +177,7 @@ export async function getRelatedByType(type, excludeId) {
     case 'divertissement':items = await http.get('/divertissement') || []; break;
     case 'reportage':     items = await http.get('/reportage') || []; break;
     case 'archive':       items = await http.get('/archives') || []; break;
+    case 'movie':         const mv = await http.get('/movies'); items = Array.isArray(mv) ? mv : (mv?.items || mv?.movies || []); break;
     default:              items = await http.get('/shows') || []; break;
   }
   return (Array.isArray(items) ? items : [])

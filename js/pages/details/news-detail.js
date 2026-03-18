@@ -117,7 +117,8 @@ export async function loadNewsDetail(id) {
           ${news.created_at ? `<span style="font-size:12px;color:#666;">${formatDate(news.created_at)}</span>` : ''}
         </div>
 
-        <h1 style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;">${esc(title)}</h1>
+        <h1 style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;
+             overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</h1>
 
         ${news.author ? `
         <div class="d-flex align-items-center gap-2 mb-3">
@@ -144,7 +145,15 @@ export async function loadNewsDetail(id) {
           </button>
         </div>
 
-        ${desc ? `<div style="margin-bottom:24px;"><p style="font-size:15px;color:#d0d0d0;line-height:1.75;white-space:pre-wrap;">${esc(desc)}</p></div>` : ''}
+        ${desc ? `
+        <div style="margin-bottom:24px;">
+          <div id="nd-desc-wrap" onclick="_ndToggleDesc()"
+               style="position:relative;overflow:hidden;max-height:calc(1.75em * 5);cursor:pointer;">
+            <p id="nd-desc-text" style="font-size:15px;color:#d0d0d0;line-height:1.75;white-space:pre-wrap;margin:0;">${esc(desc)}</p>
+            <div id="nd-desc-fade" style="position:absolute;bottom:0;left:0;right:0;height:40px;
+                 background:linear-gradient(transparent,#000);pointer-events:none;"></div>
+          </div>
+        </div>` : ''}
         ${news.edition ? `<div class="d-flex align-items-center gap-2 mb-4"><i class="bi bi-newspaper" style="color:#555;"></i><span style="font-size:13px;color:#888;">Édition : ${esc(news.edition)}</span></div>` : ''}
 
         <div style="margin-bottom:28px;">
@@ -187,6 +196,32 @@ export async function loadNewsDetail(id) {
         </div>` : ''}
 
       </div>`;
+
+    // Toggle description
+    window._ndToggleDesc = function() {
+      const wrap = document.getElementById('nd-desc-wrap');
+      const fade = document.getElementById('nd-desc-fade');
+      const btn  = document.getElementById('nd-desc-btn');
+      if (!wrap) return;
+      const open = wrap.style.maxHeight === 'none';
+      wrap.style.maxHeight = open ? 'calc(1.75em * 5)' : 'none';
+      if (fade) fade.style.display = open ? 'block' : 'none';
+      if (btn)  btn.innerHTML = open
+        ? 'Lire la suite <i class="bi bi-chevron-down" style="font-size:11px;"></i>'
+        : 'Réduire <i class="bi bi-chevron-up" style="font-size:11px;"></i>';
+    };
+
+    // Hide 'Lire la suite' if desc is short enough
+    requestAnimationFrame(() => {
+      const wrap = document.getElementById('nd-desc-wrap');
+      const btn  = document.getElementById('nd-desc-btn');
+      if (wrap && btn && wrap.scrollHeight <= wrap.offsetHeight + 4) {
+        wrap.style.maxHeight = 'none';
+        const fade = document.getElementById('nd-desc-fade');
+        if (fade) fade.style.display = 'none';
+        btn.style.display = 'none';
+      }
+    });
 
     // Toggle favori
     let currentlyFavorited = userFavorited;

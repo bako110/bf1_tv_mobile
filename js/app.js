@@ -26,6 +26,8 @@ const routes = {
   '#/support': 'pages/support.html',
   '#/ugc': 'pages/ugc.html',
   '#/about': 'pages/about.html',
+  '#/movies': 'pages/movies.html',
+  '#/series': 'pages/series.html',
 };
 
 const PROTECTED_ROUTES = [
@@ -51,6 +53,15 @@ async function renderRoute(route) {
       const parts = route.slice(7).split('/');
       pagePath = 'pages/details/show-detail.html';
       detailParams = { type: parts[0], id: decodeURIComponent(parts.slice(1).join('/')) };
+    } else if (route.startsWith('#/movie/')) {
+      pagePath = 'pages/details/show-detail.html';
+      detailParams = { type: 'movie', id: decodeURIComponent(route.slice(8)) };
+    } else if (route.startsWith('#/series-detail/')) {
+      pagePath = 'pages/details/series-detail.html';
+      detailParams = { type: 'series', id: decodeURIComponent(route.slice(16)) };
+    } else if (route.startsWith('#/emission-category/')) {
+      pagePath = 'pages/emission-category.html';
+      detailParams = { type: 'emission-category', name: decodeURIComponent(route.slice(20)) };
     } else {
       renderNotFound();
       return;
@@ -119,9 +130,13 @@ async function loadPageScript(route, detailParams = null) {
     '#/programs':       () => import('./pages/programs.js').then(m => m.loadPrograms()),
     '#/login':          () => import('./pages/login.js').then(m => m.loadLogin()),
     '#/register':       () => import('./pages/register.js').then(m => m.loadRegister()),
+    '#/movies':         () => import('./pages/movies.js').then(m => m.loadMovies()),
+    '#/series':         () => import('./pages/series.js').then(m => m.loadSeries()),
     '#/favorites':      () => import('./pages/favorites.js').then(m => m.loadFavorites()),
     '#/search':         () => import('./pages/search.js').then(m => m.loadSearch()),
     '#/notifications':  () => import('./pages/notifications.js').then(m => m.loadNotifications()),
+    '#/support':        () => import('./pages/support.js').then(m => m.loadSupport()),
+    '#/about':          () => import('./pages/about.js').then(m => m.loadAbout()),
   };
 
   try {
@@ -135,6 +150,15 @@ async function loadPageScript(route, detailParams = null) {
       } else if (route.startsWith('#/show/')) {
         const { loadShowDetail } = await import('./pages/details/show-detail.js');
         await loadShowDetail(detailParams.id, detailParams.type);
+      } else if (route.startsWith('#/movie/')) {
+        const { loadShowDetail } = await import('./pages/details/show-detail.js');
+        await loadShowDetail(detailParams.id, 'movie');
+      } else if (route.startsWith('#/series-detail/')) {
+        const { loadSeriesDetail } = await import('./pages/details/series-detail.js');
+        await loadSeriesDetail(detailParams.id);
+      } else if (route.startsWith('#/emission-category/')) {
+        const { loadEmissionCategory } = await import('./pages/emission-category.js');
+        await loadEmissionCategory(detailParams.name);
       }
     }
   } catch (error) {
