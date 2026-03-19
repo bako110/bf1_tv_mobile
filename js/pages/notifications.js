@@ -152,20 +152,131 @@ export async function loadNotifications() {
 
   const token = localStorage.getItem('bf1_token');
   if (!token) {
+    const _NOTIF_KEY = 'bf1_notif_accepted';
+    const accepted = localStorage.getItem(_NOTIF_KEY) === '1';
+
     container.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
-                  min-height:calc(100vh - 130px);padding:0 24px;text-align:center;">
-        <i class="bi bi-bell" style="font-size:56px;color:#E23E3E;margin-bottom:20px;"></i>
-        <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;">Notifications</h2>
-        <p style="color:#888;font-size:14px;margin-bottom:24px;max-width:280px;">
-          Connectez-vous pour recevoir vos notifications BF1
-        </p>
-        <button onclick="window.location.hash='#/login'"
-                style="background:#E23E3E;border:none;border-radius:10px;padding:14px 40px;
-                       color:#fff;font-size:15px;font-weight:600;cursor:pointer;">
-          Se connecter
-        </button>
+      <style>
+        @keyframes _nsBell {
+          0%,100% { transform:rotate(0deg); }
+          15%      { transform:rotate(14deg); }
+          30%      { transform:rotate(-12deg); }
+          45%      { transform:rotate(8deg); }
+          60%      { transform:rotate(-6deg); }
+          75%      { transform:rotate(3deg); }
+        }
+        #_ns-bell { animation: _nsBell 2.8s ease-in-out infinite; display:inline-block; }
+      </style>
+
+      <!-- Header -->
+      <div style="padding:16px 16px 0;display:flex;align-items:center;gap:10px;">
+        <i class="bi bi-bell-fill" style="font-size:22px;color:#E23E3E;"></i>
+        <h2 style="font-size:20px;font-weight:700;margin:0;">Notifications</h2>
+      </div>
+
+      <!-- Carte principale -->
+      <div style="margin:24px 16px;background:#0f0f0f;border-radius:16px;
+                  border:1px solid #1e1e1e;overflow:hidden;">
+
+        <!-- Illustration -->
+        <div style="background:linear-gradient(135deg,#1a0000,#0f0f0f);padding:32px 24px 24px;
+                    text-align:center;border-bottom:1px solid #1a1a1a;">
+          <span id="_ns-bell"><i class="bi bi-bell-fill" style="font-size:52px;color:#E23E3E;"></i></span>
+          <h3 style="font-size:17px;font-weight:700;margin:16px 0 6px;">
+            Restez informé en temps réel
+          </h3>
+          <p style="color:#666;font-size:13px;margin:0;line-height:1.5;">
+            Recevez les dernières actualités,<br>
+            breaking news et alertes BF1 TV.
+          </p>
+        </div>
+
+        <!-- Ce que vous recevrez -->
+        <div style="padding:20px 20px 16px;">
+          <p style="font-size:11px;font-weight:700;color:#444;letter-spacing:.7px;
+                    text-transform:uppercase;margin:0 0 12px;">Ce que vous recevrez</p>
+          ${[
+            ['bi-newspaper',    '#E23E3E', 'Actualités & Breaking news'],
+            ['bi-broadcast',    '#E23E3E', 'Alertes émissions en direct'],
+            ['bi-star-fill',    '#E23E3E', 'Nouveaux contenus exclusifs'],
+            ['bi-chat-dots-fill','#E23E3E','Réponses à vos commentaires'],
+          ].map(([ic, col, txt]) => `
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+              <div style="width:34px;height:34px;border-radius:8px;flex-shrink:0;
+                          background:rgba(226,62,62,.1);
+                          display:flex;align-items:center;justify-content:center;">
+                <i class="bi ${ic}" style="color:${col};font-size:15px;"></i>
+              </div>
+              <span style="font-size:14px;color:#ccc;">${txt}</span>
+            </div>`).join('')}
+        </div>
+
+        <!-- Conditions -->
+        <div style="margin:0 20px 20px;background:#161616;border-radius:10px;
+                    padding:12px 14px;border:1px solid #222;">
+          <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+            <input type="checkbox" id="_notif-accept-cb"
+                   ${accepted ? 'checked' : ''}
+                   style="margin-top:3px;width:18px;height:18px;accent-color:#E23E3E;
+                          flex-shrink:0;cursor:pointer;">
+            <span style="font-size:12px;color:#777;line-height:1.6;">
+              J'accepte de recevoir des notifications de <strong style="color:#aaa;">BF1 TV</strong>
+              et je comprends que je peux les désactiver à tout moment depuis les
+              paramètres de l'application.
+            </span>
+          </label>
+        </div>
+
+        <!-- Bouton -->
+        <div style="padding:0 20px 24px;">
+          <button id="_notif-connect-btn"
+                  onclick="window._notifConnect()"
+                  style="width:100%;background:${accepted ? '#E23E3E' : '#1a1a1a'};
+                         border:none;border-radius:12px;padding:15px;
+                         color:${accepted ? '#fff' : '#555'};
+                         font-size:15px;font-weight:700;cursor:pointer;
+                         transition:background .2s,color .2s;
+                         display:flex;align-items:center;justify-content:center;gap:8px;">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Se connecter pour activer
+          </button>
+          <p style="text-align:center;margin:12px 0 0;font-size:12px;color:#383838;">
+            Pas encore de compte ?
+            <a href="#/register"
+               style="color:#E23E3E;text-decoration:none;font-weight:600;">
+              S'inscrire gratuitement
+            </a>
+          </p>
+        </div>
       </div>`;
+
+    // Activer/désactiver le bouton selon la case
+    const cb  = document.getElementById('_notif-accept-cb');
+    const btn = document.getElementById('_notif-connect-btn');
+    cb?.addEventListener('change', () => {
+      const ok = cb.checked;
+      localStorage.setItem(_NOTIF_KEY, ok ? '1' : '0');
+      if (btn) {
+        btn.style.background = ok ? '#E23E3E' : '#1a1a1a';
+        btn.style.color      = ok ? '#fff'    : '#555';
+      }
+    });
+
+    // Rediriger vers login si accepté
+    window._notifConnect = function() {
+      const cb2 = document.getElementById('_notif-accept-cb');
+      if (!cb2?.checked) {
+        // Faire vibrer la case
+        if (cb2) {
+          cb2.style.outline = '2px solid #E23E3E';
+          setTimeout(() => { cb2.style.outline = ''; }, 1200);
+        }
+        return;
+      }
+      localStorage.setItem(_NOTIF_KEY, '1');
+      window.location.hash = '#/login';
+    };
+
     return;
   }
 
@@ -211,7 +322,7 @@ export async function loadNotifications() {
       </div>
 
       <!-- Liste -->
-      <div id="notif-list" style="padding-bottom:90px;"></div>`;
+      <div id="notif-list" style="padding-bottom:16px;"></div>`;
 
     renderList(_notifications);
 

@@ -5,12 +5,119 @@ function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function _fmtTime(s) {
+  const m = Math.floor(s / 60);
+  return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+}
+
+function _setupYTGlobals() {
+  if (window.__ytSetup) return;
+  window.__ytSetup  = true;
+  window._ytPlayers = window._ytPlayers || {};
+  window._ytTimers  = window._ytTimers  || {};
+  window._ytQueue   = window._ytQueue   || [];
+  window._ytPending = window._ytPending || {};
+
+  const _orig = window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady = function() {
+    if (_orig) _orig();
+    window._ytReady = true;
+    (window._ytQueue || []).forEach(fn => fn());
+    window._ytQueue = [];
+  };
+  if (window.YT && window.YT.Player) window._ytReady = true;
+
+  window._ytLoad = function() {
+    if (document.getElementById('yt-iframe-api')) return;
+    const s = document.createElement('script');
+    s.id = 'yt-iframe-api';
+    s.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(s);
+  };
+
+  window._ytToggle = function(pid) {
+    const p = window._ytPlayers[pid];
+    if (!p || typeof p.getPlayerState !== 'function') {
+      window._ytPending[pid] = true; return;
+    }
+    p.getPlayerState() === 1 ? p.pauseVideo() : p.playVideo();
+  };
+
+  window._ytSeek = function(e, pid) {
+    const p = window._ytPlayers[pid];
+    if (!p || typeof p.getDuration !== 'function') return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    p.seekTo(((e.clientX - rect.left) / rect.width) * p.getDuration(), true);
+  };
+
+  window._ytFullscreen = function(pid) {
+    const p = window._ytPlayers[pid];
+    if (!p) return;
+    const el = p.getIframe();
+    (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || (()=>{})).call(el);
+  };
+
+  window._ytStartTimer = function(pid) {
+    clearInterval(window._ytTimers[pid]);
+    window._ytTimers[pid] = setInterval(() => {
+      const p = window._ytPlayers[pid];
+      if (!p || typeof p.getCurrentTime !== 'function') { clearInterval(window._ytTimers[pid]); return; }
+      try {
+        const cur = p.getCurrentTime(), dur = p.getDuration();
+        if (dur > 0) {
+          const prog   = document.getElementById(pid + '-prog');
+          const timeEl = document.getElementById(pid + '-time');
+          if (prog)   prog.style.width   = (cur / dur * 100) + '%';
+          if (timeEl) timeEl.textContent = _fmtTime(cur) + ' / ' + _fmtTime(dur);
+        }
+      } catch(err) {}
+    }, 500);
+  };
+}
+
 function extractYoutubeId(url) {
   if (!url) return null;
-  const m = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
   return m ? m[1] : null;
+}
+
+function _createYTPlayer(pid, ytId, posterId) {
+  _setupYTGlobals();
+  window._ytLoad();
+  const init = () => {
+    const el = document.getElementById(pid);
+    if (!el) return;
+    window._ytPlayers[pid] = new YT.Player(pid, {
+      videoId: ytId,
+      playerVars: {
+        autoplay: 0, controls: 0, modestbranding: 1, rel: 0,
+        showinfo: 0, iv_load_policy: 3, playsinline: 1, hl: 'fr',
+      },
+      events: {
+        onReady: () => {
+          if (window._ytPending && window._ytPending[pid]) {
+            window._ytPlayers[pid].playVideo();
+            delete window._ytPending[pid];
+            const post = document.getElementById(posterId);
+            if (post) post.style.display = 'none';
+          }
+        },
+        onStateChange: (e) => {
+          const playing = e.data === 1;
+          const btn = document.getElementById(pid + '-playbtn');
+          if (btn) btn.innerHTML = playing
+            ? '<i class="bi bi-pause-fill" style="font-size:18px;"></i>'
+            : '<i class="bi bi-play-fill"  style="font-size:18px;"></i>';
+          const post = document.getElementById(posterId);
+          if (post && playing) post.style.display = 'none';
+          if (playing) window._ytStartTimer(pid);
+          else clearInterval(window._ytTimers[pid]);
+        },
+      },
+    });
+  };
+  if (window._ytReady) setTimeout(init, 80);
+  else { window._ytQueue = window._ytQueue || []; window._ytQueue.push(() => setTimeout(init, 80)); }
 }
 
 function buildEpVideoPlayer(videoUrl, posterImg) {
@@ -23,13 +130,52 @@ function buildEpVideoPlayer(videoUrl, posterImg) {
 
   const ytId = extractYoutubeId(videoUrl);
   if (ytId) {
-    const src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    const pid      = 'epyt' + Date.now().toString(36);
+    const posterId = pid + '-post';
+    _createYTPlayer(pid, ytId, posterId);
+    const pStyle = posterImg
+      ? `background:url('${esc(posterImg)}') center/cover no-repeat;`
+      : 'background:#111;';
     return `
-      <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;background:#000;">
-        <iframe src="${esc(src)}"
-                style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
-                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                allowfullscreen loading="lazy"></iframe>
+      <div style="background:#000;">
+        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
+          <div id="${pid}" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+          <div id="${posterId}"
+               onclick="window._ytToggle('${pid}');this.style.display='none';"
+               style="position:absolute;inset:0;cursor:pointer;z-index:5;${pStyle}">
+            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);
+                        display:flex;align-items:center;justify-content:center;">
+              <div style="width:56px;height:56px;background:rgba(226,62,62,.92);border-radius:50%;
+                          display:flex;align-items:center;justify-content:center;
+                          box-shadow:0 4px 20px rgba(226,62,62,.45);">
+                <i class="bi bi-play-fill" style="color:#fff;font-size:22px;margin-left:2px;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#0d0d0d;padding:8px 14px;display:flex;align-items:center;
+                    gap:10px;border-top:1px solid #1a1a1a;">
+          <button id="${pid}-playbtn" onclick="window._ytToggle('${pid}')"
+                  style="background:none;border:none;color:#fff;cursor:pointer;
+                         padding:0;flex-shrink:0;line-height:1;">
+            <i class="bi bi-play-fill" style="font-size:18px;"></i>
+          </button>
+          <div style="flex:1;height:4px;background:#2a2a2a;border-radius:2px;
+                      cursor:pointer;position:relative;"
+               onclick="window._ytSeek(event,'${pid}')">
+            <div id="${pid}-prog"
+                 style="height:100%;background:#E23E3E;border-radius:2px;
+                        width:0%;pointer-events:none;transition:width .4s linear;"></div>
+          </div>
+          <span id="${pid}-time"
+                style="font-size:11px;color:#888;white-space:nowrap;
+                       min-width:78px;text-align:right;">0:00 / 0:00</span>
+          <button onclick="window._ytFullscreen('${pid}')"
+                  style="background:none;border:none;color:#888;cursor:pointer;
+                         padding:0;flex-shrink:0;line-height:1;">
+            <i class="bi bi-fullscreen" style="font-size:16px;"></i>
+          </button>
+        </div>
       </div>`;
   }
 
@@ -77,6 +223,15 @@ function closeEpPlayer() {
   if (!overlay || !sheet) return;
   sheet.style.transform = 'translateY(100%)';
   setTimeout(() => {
+    // Stop YT player and timer before clearing DOM
+    if (window._ytPlayers) {
+      Object.keys(window._ytPlayers).filter(k => k.startsWith('epyt')).forEach(pid => {
+        try { window._ytPlayers[pid].stopVideo(); } catch(e) {}
+        clearInterval((window._ytTimers || {})[pid]);
+        delete window._ytTimers[pid];
+        delete window._ytPlayers[pid];
+      });
+    }
     overlay.style.display = 'none';
     if (videoWrap) videoWrap.innerHTML = '';
   }, 300);
@@ -86,7 +241,7 @@ function closeEpPlayer() {
 
 function renderSeries(container, serie, seasons, episodes) {
   const headerEl = document.getElementById('sd2-header-title');
-  if (headerEl) headerEl.textContent = serie.title || 'Série';
+  if (headerEl) headerEl.textContent = 'Série'; // titre déjà dans le contenu
 
   const img    = serie.image_url || serie.banner_url || '';
   const title  = serie.title || 'Sans titre';

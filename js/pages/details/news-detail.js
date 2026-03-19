@@ -90,7 +90,7 @@ export async function loadNewsDetail(id) {
       ]);
     }
 
-    if (headerTitle) headerTitle.textContent = news.title || 'Flash Info';
+    // titre déjà affiché dans le contenu — header garde juste le label fixe
 
     const img   = news.image_url || news.image || '';
     const cat   = news.category || news.edition || '';
@@ -226,7 +226,10 @@ export async function loadNewsDetail(id) {
     // Toggle favori
     let currentlyFavorited = userFavorited;
     window.toggleNdFavorite = async function() {
-      if (!localStorage.getItem('bf1_token')) { window.location.hash = '#/login'; return; }
+      if (!localStorage.getItem('bf1_token')) {
+        window._showLoginModal?.('Connectez-vous pour sauvegarder cet article dans vos favoris');
+        return;
+      }
       const btn = document.getElementById('nd-fav-btn');
       if (!btn) return;
       btn.disabled = true;
@@ -250,7 +253,10 @@ export async function loadNewsDetail(id) {
     let currentlyLiked = userLiked;
     let currentLikesCount = likesCount;
     window.toggleNdLike = async function() {
-      if (!localStorage.getItem('bf1_token')) { window.location.hash = '#/login'; return; }
+      if (!localStorage.getItem('bf1_token')) {
+        window._showLoginModal?.('Connectez-vous pour liker cet article');
+        return;
+      }
       const btn = document.getElementById('nd-like-btn');
       const countEl = document.getElementById('nd-like-count');
       if (!btn) return;
@@ -328,7 +334,7 @@ export async function loadNewsDetail(id) {
             </button>
           </div>` : `
           <div style="padding:14px 16px;border-top:1px solid #1a0000;text-align:center;">
-            <button onclick="closeNdComments();window.location.hash='#/login';" style="background:#E23E3E;border:none;border-radius:8px;padding:9px 24px;color:#fff;cursor:pointer;font-size:14px;font-weight:600;">Se connecter pour commenter</button>
+            <button onclick="closeNdComments();setTimeout(()=>window._showLoginModal?.('Connectez-vous pour laisser un commentaire'),350);" style="background:#E23E3E;border:none;border-radius:8px;padding:9px 24px;color:#fff;cursor:pointer;font-size:14px;font-weight:600;">Se connecter pour commenter</button>
           </div>`}
         </div>`;
       document.body.appendChild(modal);
@@ -359,7 +365,11 @@ export async function loadNewsDetail(id) {
     window.submitNdCmComment = async function() {
       const inp = document.getElementById('nd-cm-input');
       if (!inp || !inp.value.trim()) return;
-      if (!localStorage.getItem('bf1_token')) { closeNdComments(); window.location.hash = '#/login'; return; }
+      if (!localStorage.getItem('bf1_token')) {
+        closeNdComments();
+        window._showLoginModal?.('Connectez-vous pour laisser un commentaire');
+        return;
+      }
       const text = inp.value.trim();
       inp.disabled = true;
       try {

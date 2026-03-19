@@ -198,6 +198,15 @@ export async function getCurrentUser() {
   return http.get('/users/me');
 }
 
+// ===== ABONNEMENTS & PLANS =====
+export async function getSubscriptionPlans() {
+  return http.get('/subscription-plans?active_only=true').catch(() => []);
+}
+
+export async function createSubscription(payload) {
+  return http.post('/subscriptions', payload);
+}
+
 export async function getMySubscription() {
   return http.get('/subscriptions/me');
 }
@@ -229,6 +238,13 @@ export async function updateComment(commentId, text) {
 }
 
 // ===== LIKES =====
+export async function getMyLikes(contentType) {
+  try {
+    const res = await http.get(`/likes/my-likes?content_type=${encodeURIComponent(contentType)}`);
+    return Array.isArray(res) ? res : (res?.items || []);
+  } catch { return []; }
+}
+
 export async function getLikesCount(contentType, contentId) {
   try {
     const res = await http.get(`/likes/content/${contentType}/${contentId}/count`);
@@ -288,4 +304,22 @@ export async function deleteNotification(notifId) {
 
 export async function deleteAllNotifications() {
   return http.delete('/notifications/delete-all');
+}
+
+// ===== PARAMÈTRES UTILISATEUR =====
+export async function getUserSettings() {
+  return http.get('/settings/my-settings');
+}
+
+export async function updateUserSettings(patch) {
+  return http.put('/settings/my-settings', patch);
+}
+
+export async function resetUserSettings() {
+  return http.post('/settings/my-settings/reset', {});
+}
+
+// ===== CONTACT =====
+export async function sendContactMessage({ name, email, subject, message }) {
+  return http.post('/contact', { name, email, subject, message });
 }

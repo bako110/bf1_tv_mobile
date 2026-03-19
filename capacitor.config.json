@@ -1,0 +1,30 @@
+{
+  "appId": "tv.bf1.app",
+  "appName": "BF1 TV",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "bf1.fly.dev",
+      "*.youtube.com",
+      "*.ytimg.com",
+      "*.googleapis.com"
+    ]
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#000000",
+      "overlaysWebView": false
+    }
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scrollEnabled": true
+  }
+}

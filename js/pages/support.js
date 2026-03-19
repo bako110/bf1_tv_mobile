@@ -1,4 +1,4 @@
-import { isAuthenticated, getUser } from '../services/api.js';
+import { isAuthenticated, getUser, sendContactMessage } from '../services/api.js';
 import { createSnakeLoader } from '../utils/snakeLoader.js';
 
 // ─── FAQ data ──────────────────────────────────────────────────────────────
@@ -153,13 +153,14 @@ function renderSupport(container) {
     icon.className = open ? 'bi bi-chevron-down' : 'bi bi-chevron-up';
   };
 
-  // ── Form submit (mailto fallback) ──────────────────────────────────────
-  window._bf1SupSubmit = () => {
+  // ── Form submit → API réelle ────────────────────────────────────────────
+  window._bf1SupSubmit = async () => {
     const name    = document.getElementById('sup-name')?.value.trim();
     const email   = document.getElementById('sup-email')?.value.trim();
     const subject = document.getElementById('sup-subject')?.value;
     const message = document.getElementById('sup-message')?.value.trim();
     const fb      = document.getElementById('sup-feedback');
+    const btn     = document.querySelector('[onclick="_bf1SupSubmit()"]');
 
     if (!name || !email || !subject || !message) {
       fb.style.display = 'block';
@@ -167,15 +168,31 @@ function renderSupport(container) {
       fb.textContent = 'Veuillez remplir tous les champs.';
       return;
     }
+    if (message.length < 10) {
+      fb.style.display = 'block';
+      fb.style.color = '#E23E3E';
+      fb.textContent = 'Le message doit contenir au moins 10 caractères.';
+      return;
+    }
 
-    const body = `Nom: ${name}\nEmail: ${email}\nSujet: ${subject}\n\n${message}`;
-    const mailto = `mailto:support@bf1tv.bf?subject=${encodeURIComponent(`[BF1 App] ${subject}`)}&body=${encodeURIComponent(body)}`;
-    window.open(mailto, '_blank');
+    // Désactiver le bouton pendant l'envoi
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Envoi en cours…'; }
+    fb.style.display = 'none';
 
-    fb.style.display = 'block';
-    fb.style.color = '#4CAF50';
-    fb.textContent = 'Votre client email va s\'ouvrir. Merci de nous contacter !';
-    document.getElementById('sup-message').value = '';
+    try {
+      await sendContactMessage({ name, email, subject, message });
+      fb.style.display = 'block';
+      fb.style.color = '#4CAF50';
+      fb.innerHTML = '<i class="bi bi-check-circle me-1"></i>Message envoyé avec succès ! Nous vous répondrons rapidement.';
+      document.getElementById('sup-message').value = '';
+      document.getElementById('sup-subject').value = '';
+    } catch (err) {
+      fb.style.display = 'block';
+      fb.style.color = '#E23E3E';
+      fb.textContent = 'Erreur lors de l\'envoi. Réessayez ou contactez-nous par email.';
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Envoyer'; }
+    }
   };
 }
 

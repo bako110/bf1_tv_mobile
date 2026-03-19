@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>BF1-TV</title>
   <link href="./assets/vendor/bootstrap.min.css" rel="stylesheet">
   <link href="./assets/vendor/bootstrap-icons.min.css" rel="stylesheet">
@@ -15,6 +15,60 @@
       --text-secondary: #A0A0A0;
     }
 
+    /* ===== SKELETON SHIMMER ===== */
+    @keyframes bf1Shimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%);  }
+    }
+    .bf1-sk-wrap { position: relative !important; }
+    .bf1-sk-overlay {
+      position: absolute;
+      inset: 0;
+      background: #141414;
+      pointer-events: none;
+      z-index: 2;
+      overflow: hidden;
+      transition: opacity 0.4s ease;
+      border-radius: inherit;
+    }
+    .bf1-sk-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        105deg,
+        transparent 30%,
+        rgba(255,255,255,0.07) 50%,
+        transparent 70%
+      );
+      background-size: 200% 100%;
+      animation: bf1Shimmer 1.5s ease-in-out infinite;
+    }
+
+    /* Spinner vidéo / live */
+    @keyframes bf1Spin {
+      to { transform: rotate(360deg); }
+    }
+    .bf1-vid-spin {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.55);
+      pointer-events: none;
+      z-index: 5;
+      transition: opacity 0.35s ease;
+    }
+    .bf1-vid-spin-inner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(226,62,62,0.25);
+      border-top-color: #E23E3E;
+      border-radius: 50%;
+      animation: bf1Spin 0.8s linear infinite;
+    }
+
     * { box-sizing: border-box; }
 
     body {
@@ -25,7 +79,8 @@
     }
 
     #app-content {
-      padding-bottom: 68px; /* hauteur tab bar */
+      padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+      padding-top: 0;
     }
 
     /* ===== TOP HEADER ===== */
@@ -35,11 +90,15 @@
       z-index: 1030;
       background-color: #000000;
       border-bottom: 1px solid #E23E3E;
-      height: 56px;
+      /* Hauteur = 56px contenu + barre de statut */
+      padding-top: max(env(safe-area-inset-top, 0px), 0px);
+      min-height: calc(56px + env(safe-area-inset-top, 0px));
       display: flex;
-      align-items: center;
+      align-items: flex-end; /* aligne les icônes en bas du header élargi */
       justify-content: space-between;
-      padding: 0 16px;
+      padding-left: 16px;
+      padding-right: 16px;
+      padding-bottom: 10px;
     }
 
     .app-header .brand {
@@ -161,12 +220,14 @@
       z-index: 1040;
       background-color: #000000;
       border-top: 1.5px solid #E23E3E;
-      height: 60px;
+      /* Hauteur = 60px + barre de navigation système */
+      min-height: calc(60px + env(safe-area-inset-bottom, 0px));
       display: flex;
       align-items: flex-start;
       padding-top: 6px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
       box-shadow: 0 -4px 15px rgba(226, 62, 62, 0.2);
-      overflow: visible; /* permet au FAB de dépasser vers le haut */
+      overflow: visible;
     }
 
     .bottom-nav .tabs {
@@ -412,6 +473,13 @@
   <!-- Page Loader -->
   <div id="page-loader" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center d-none"></div>
 
+  <!-- Capacitor runtime (injecté automatiquement sur Android/iOS, ignoré sur web) -->
+  <script>
+    if (window.Capacitor === undefined) {
+      // On web : stub vide pour éviter les erreurs
+      window.Capacitor = { isNativePlatform: () => false, getPlatform: () => 'web' };
+    }
+  </script>
   <script src="./assets/vendor/bootstrap.bundle.min.js"></script>
   <script>
     // Fonctions d'ouverture/fermeture du drawer

@@ -162,7 +162,7 @@ export async function loadFavorites() {
         <p style="color:#888;font-size:14px;margin-bottom:24px;max-width:280px;">
           Connectez-vous pour retrouver tous les contenus que vous avez sauvegardés
         </p>
-        <button onclick="window.location.hash='#/login'"
+        <button onclick="window._showLoginModal?.('Connectez-vous pour retrouver tous les contenus que vous avez sauvegardés')"
                 style="background:#E23E3E;border:none;border-radius:10px;padding:14px 40px;
                        color:#fff;font-size:15px;font-weight:600;cursor:pointer;">
           Se connecter

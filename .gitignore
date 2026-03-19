@@ -1,0 +1,29 @@
+# Dépendances Node
+node_modules/
+
+# Dossier de build Capacitor (regénéré par npm run build)
+www/
+
+# Plateformes Capacitor (générées par cap add android / cap add ios)
+# Décommentez si vous ne voulez pas versionner les plateformes natives
+# android/
+# ios/
+
+# Gradle / Android Studio
+.gradle/
+local.properties
+*.jks
+*.keystore
+*.release.keystore
+bf1-release.keystore
+
+# iOS / Xcode
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+Pods/
+DerivedData/
+
+# Divers
+.DS_Store
+Thumbs.db
+*.log
