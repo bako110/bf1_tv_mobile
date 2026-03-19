@@ -299,7 +299,7 @@ function renderSeries(container, serie, seasons, episodes) {
     <div class="px-3 pt-3">
 
       <!-- Title + meta -->
-      <h1 style="font-size:22px;font-weight:700;color:#fff;margin-bottom:8px;
+      <h1 id="sd2-title-h1" style="font-size:22px;font-weight:700;color:#fff;margin-bottom:8px;
            overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</h1>
 
       <div class="d-flex flex-wrap align-items-center gap-2 mb-3">

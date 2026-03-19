@@ -317,7 +317,7 @@ export async function loadShowDetail(id, type) {
           ${duration ? `<span style="font-size:12px;color:#666;"><i class="bi bi-clock me-1"></i>${esc(duration)}</span>` : ''}
         </div>
 
-        <h1 style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;
+        <h1 id="sd-title-h1" style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;
              overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</h1>
 
         ${show.channel ? `<div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-tv" style="color:#555;"></i><span style="font-size:13px;color:#888;">${esc(show.channel)}</span></div>` : ''}

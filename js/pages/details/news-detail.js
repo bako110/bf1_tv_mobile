@@ -117,7 +117,7 @@ export async function loadNewsDetail(id) {
           ${news.created_at ? `<span style="font-size:12px;color:#666;">${formatDate(news.created_at)}</span>` : ''}
         </div>
 
-        <h1 style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;
+        <h1 id="nd-title-h1" style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;
              overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</h1>
 
         ${news.author ? `

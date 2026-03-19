@@ -1,10 +1,16 @@
 /**
  * prepare-www.js
- * Copie les fichiers web dans le dossier www/ pour Capacitor
+ * Copie les fichiers web dans www/, synchronise avec Android, et build l'APK release.
+ * Usage :
+ *   node scripts/prepare-www.js          → copie www/ seulement
+ *   node scripts/prepare-www.js --apk    → copie + cap sync + assembleRelease
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs    = require('fs');
+const path  = require('path');
+const { execSync } = require('child_process');
+
+const BUILD_APK = process.argv.includes('--apk');
 
 const ROOT = path.resolve(__dirname, '..');
 const WWW  = path.join(ROOT, 'www');
@@ -61,4 +67,36 @@ for (const { src, dest } of COPY_LIST) {
   ok++;
 }
 
-console.log(`\n✨ ${ok} élément(s) copié(s) dans www/  — prêt pour cap sync\n`);
+console.log(`\n✨ ${ok} élément(s) copié(s) dans www/\n`);
+
+if (!BUILD_APK) {
+  console.log('💡 Lancez  node scripts/prepare-www.js --apk  pour builder l\'APK release.\n');
+  process.exit(0);
+}
+
+// ─── Cap sync ────────────────────────────────────────────────────────────────
+function run(cmd, label) {
+  console.log(`\n⏳ ${label}…`);
+  try {
+    execSync(cmd, { cwd: ROOT, stdio: 'inherit' });
+    console.log(`✅ ${label} terminé\n`);
+  } catch (e) {
+    console.error(`❌ Échec : ${label}`);
+    process.exit(1);
+  }
+}
+
+run('npx cap sync android', 'cap sync android');
+
+// ─── Gradle assembleRelease ───────────────────────────────────────────────────
+const gradlew = path.join(ROOT, 'android', process.platform === 'win32' ? 'gradlew.bat' : 'gradlew');
+run(`"${gradlew}" assembleRelease`, 'Gradle assembleRelease');
+
+// ─── Résultat ─────────────────────────────────────────────────────────────────
+const APK = path.join(ROOT, 'android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk');
+if (fs.existsSync(APK)) {
+  const size = (fs.statSync(APK).size / 1024 / 1024).toFixed(1);
+  console.log(`🎉 APK release prêt : ${APK}  (${size} MB)\n`);
+} else {
+  console.warn('⚠️  APK introuvable à l\'emplacement attendu.\n');
+}
