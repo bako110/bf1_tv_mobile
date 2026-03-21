@@ -42,9 +42,9 @@ function renderList(container) {
     return;
   }
   if (currentMode === 'grid') {
-    container.innerHTML = `<div class="px-3 pt-2 pb-5">${allVideos.map(buildGridCard).join('')}</div>`;
+    container.innerHTML = `<div class="px-3 pt-2 pb-3">${allVideos.map(buildGridCard).join('')}</div>`;
   } else {
-    container.innerHTML = `<div class="px-3 pt-2 pb-5">${allVideos.map(buildListCard).join('')}</div>`;
+    container.innerHTML = `<div class="px-3 pt-2 pb-3">${allVideos.map(buildListCard).join('')}</div>`;
   }
 }
 

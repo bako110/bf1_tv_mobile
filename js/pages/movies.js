@@ -91,7 +91,7 @@ export async function loadMovies() {
     }
 
     container.innerHTML = `
-      <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:70px;">
         ${movies.map(buildCard).join('')}
       </div>`;
 

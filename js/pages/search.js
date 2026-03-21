@@ -177,7 +177,7 @@ export async function loadSearch() {
     </div>
 
     <!-- Zone résultats -->
-    <div id="srch-results" style="padding-bottom:90px;"></div>`;
+    <div id="srch-results" style="padding-bottom:70px;"></div>`;
 
   // Écoute saisie
   const input = document.getElementById('srch-input');

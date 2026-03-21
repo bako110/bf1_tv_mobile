@@ -78,9 +78,9 @@ function renderList(container) {
   }
 
   if (currentMode === 'grid') {
-    container.innerHTML = `<div class="px-3 pt-2 pb-5" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${filtered.map(buildGridCard).join('')}</div>`;
+    container.innerHTML = `<div class="px-3 pt-2 pb-3" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${filtered.map(buildGridCard).join('')}</div>`;
   } else {
-    container.innerHTML = `<div class="px-3 pt-2 pb-5">${filtered.map(buildListCard).join('')}</div>`;
+    container.innerHTML = `<div class="px-3 pt-2 pb-3">${filtered.map(buildListCard).join('')}</div>`;
   }
 }
 

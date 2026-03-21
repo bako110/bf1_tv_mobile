@@ -211,7 +211,7 @@ export async function loadFavorites() {
                                     scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>
 
       <!-- Grille -->
-      <div id="fav-grid" style="padding:0 16px 90px;"></div>`;
+      <div id="fav-grid" style="padding:0 16px 70px;"></div>`;
 
     renderFilters(_allFavorites);
     renderGrid(_allFavorites);

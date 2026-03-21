@@ -101,6 +101,25 @@ export async function getPrograms() {
   return http.get('/programs') || [];
 }
 
+// Récupérer la grille des programmes de la semaine (groupés par jour)
+export async function getProgramWeek(weeksAhead = 0, type = null) {
+  const params = new URLSearchParams();
+  params.append('weeks_ahead', weeksAhead);
+  if (type) params.append('type', type);
+  
+  return http.get(`/programs/grid/weekly?${params.toString()}`).catch(() => ({ days: [] }));
+}
+
+// Récupérer la grille des programmes par plage de dates
+export async function getProgramGrid(startDate = null, endDate = null, type = null) {
+  const params = new URLSearchParams();
+  if (startDate) params.append('start_date', startDate);
+  if (endDate) params.append('end_date', endDate);
+  if (type) params.append('type', type);
+  
+  return http.get(`/programs/grid/daily?${params.toString()}`).catch(() => ({ days: [] }));
+}
+
 export async function getSports() {
   // L'API retourne { sports: [...], total, page, ... }
   const res = await http.get('/sports');
