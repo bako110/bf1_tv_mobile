@@ -58,9 +58,9 @@ export async function loadPrograms() {
 
   try {
     // Charger les programmes (peut être des shows ou programs)
-    const programs = await api.getPrograms() || [];
+    const programsRaw = await api.getPrograms() || [];
 
-    if (!programs || programs.length === 0) {
+    if (!programsRaw || programsRaw.length === 0) {
       container.innerHTML = `
         <div class="text-center py-5">
           <i class="bi bi-calendar-event" style="font-size:3rem;color:#444;"></i>
@@ -69,10 +69,14 @@ export async function loadPrograms() {
       return;
     }
 
-    // Grouper par date si possible
-    const sortedPrograms = programs.slice(0, 20); // Limiter à 20
+    // Trier par date (plus récent en premier) 📅
+    const programs = [...programsRaw].sort((a, b) => {
+      const dateA = new Date(a.created_at || a.date || a.start_time || 0);
+      const dateB = new Date(b.created_at || b.date || b.start_time || 0);
+      return dateB - dateA;
+    }).slice(0, 20); // Limiter à 20
 
-    container.innerHTML = `<div class="row g-0 px-2 py-2">${sortedPrograms.map(buildProgramCard).join('')}</div>`;
+    container.innerHTML = `<div class="row g-0 px-2 py-2">${programs.map(buildProgramCard).join('')}</div>`;
 
   } catch (err) {
     console.error('Erreur loadPrograms:', err);

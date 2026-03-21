@@ -14,17 +14,19 @@ async function request(path, options = {}) {
     headers,
   });
 
-  if (response.status === 401 || response.status === 403) {
-    token = null;
-    localStorage.removeItem('bf1_token');
-    localStorage.removeItem('bf1_user');
-  }
-
   const isJson = response.headers.get('content-type')?.includes('application/json');
   const data = isJson ? await response.json() : await response.text();
 
   if (!response.ok) {
-    throw new Error(data?.detail || data?.message || 'Erreur API');
+    // Only clear token on 401 (truly unauthorized/expired), NOT on 403 (forbidden/insufficient rights)
+    if (response.status === 401) {
+      token = null;
+      localStorage.removeItem('bf1_token');
+      localStorage.removeItem('bf1_user');
+    }
+    const err = new Error(data?.detail || data?.message || 'Erreur API');
+    err.status = response.status;
+    throw err;
   }
 
   return data;

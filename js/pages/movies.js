@@ -72,7 +72,14 @@ export async function loadMovies() {
 
   try {
     const raw = await api.getMovies().catch(() => []);
-    const movies = Array.isArray(raw) ? raw : (raw?.items || raw?.movies || []);
+    const moviesRaw = Array.isArray(raw) ? raw : (raw?.items || raw?.movies || []);
+    
+    // Trier par date (plus récent en premier) 📅
+    const movies = [...moviesRaw].sort((a, b) => {
+      const dateA = new Date(a.created_at || a.release_date || 0);
+      const dateB = new Date(b.created_at || b.release_date || 0);
+      return dateB - dateA;
+    });
 
     if (!movies.length) {
       container.innerHTML = `

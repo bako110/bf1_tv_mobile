@@ -59,12 +59,14 @@ function renderResults(items) {
         </div>
         ${list.map(item => {
           const href = cfg.route(item);
+          // Support des champs image alternatifs pour chaque type de contenu
+          const imgUrl = item.image_url || item.thumbnail || item.image || '';
           return `
           <div onclick="window.location.hash='${esc(href)}'"
                style="display:flex;gap:12px;padding:10px 16px;cursor:pointer;transition:background .15s;"
                onmouseover="this.style.background='#111'" onmouseout="this.style.background='transparent'">
             <div style="flex-shrink:0;width:72px;height:52px;border-radius:8px;overflow:hidden;background:#1a1a1a;display:flex;align-items:center;justify-content:center;">
-              ${item.image_url ? `<img src="${esc(item.image_url)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : `<i class="bi ${cfg.icon}" style="color:#333;font-size:20px;"></i>`}
+              ${imgUrl ? `<img src="${esc(imgUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : `<i class="bi ${cfg.icon}" style="color:#333;font-size:20px;"></i>`}
             </div>
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;">
               <p style="margin:0;font-size:14px;font-weight:600;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35;">${esc(item.title)}</p>

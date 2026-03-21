@@ -497,7 +497,16 @@ export async function loadReels() {
   container.appendChild(loaderWrap);
 
   try {
-    const reels = await api.getReels();
+    const reelsRaw = await api.getReels();
+    
+    // Trier par date (plus récent en premier) 📅
+    const reels = reelsRaw && reelsRaw.length > 0
+      ? [...reelsRaw].sort((a, b) => {
+          const dateA = new Date(a.created_at || a.published_at || 0);
+          const dateB = new Date(b.created_at || b.published_at || 0);
+          return dateB - dateA;
+        })
+      : [];
 
     if (!reels || reels.length === 0) {
       container.innerHTML = `

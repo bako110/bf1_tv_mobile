@@ -89,10 +89,17 @@ function renderGrid(favs) {
   if (!grid) return;
 
   const filtered = _activeFilter === 'all' ? favs : favs.filter(f => f.content_type === _activeFilter);
+  
+  // Trier par date (plus récent en premier) 📅
+  const sorted = [...filtered].sort((a, b) => {
+    const dateA = new Date(a.added_at || a.created_at || a.date || 0);
+    const dateB = new Date(b.added_at || b.created_at || b.date || 0);
+    return dateB - dateA;
+  });
 
-  if (count) count.textContent = `${filtered.length} favori${filtered.length !== 1 ? 's' : ''}`;
+  if (count) count.textContent = `${sorted.length} favori${sorted.length !== 1 ? 's' : ''}`;
 
-  if (!filtered.length) {
+  if (!sorted.length) {
     grid.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:60px 20px;">
         <i class="bi bi-bookmark" style="font-size:52px;color:#333;display:block;margin-bottom:16px;"></i>
@@ -102,7 +109,7 @@ function renderGrid(favs) {
     return;
   }
 
-  grid.innerHTML = filtered.map(renderCard).join('');
+  grid.innerHTML = sorted.map(renderCard).join('');
 }
 
 // ─── Rendu onglets filtres ─────────────────────────────────────────────────────

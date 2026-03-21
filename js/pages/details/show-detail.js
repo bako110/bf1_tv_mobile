@@ -262,17 +262,71 @@ export async function loadShowDetail(id, type) {
   const CONTENT_TYPE = cfg.apiType;
 
   try {
-    const [show, related, comments, likesCount] = await Promise.all([
-      api.getShowById(id, type).catch(() => null),
+    // Capture show separately so we can inspect error status (401/403 = access denied)
+    let show = null;
+    let showError = null;
+    try {
+      show = await api.getShowById(id, type);
+    } catch (err) {
+      showError = err;
+    }
+
+    if (!show) {
+      const status = showError?.status;
+      if (status === 401) {
+        // Not logged in
+        container.innerHTML = `
+          <div class="d-flex flex-column align-items-center justify-content-center py-5 px-4 text-center">
+            <div style="width:72px;height:72px;background:rgba(226,62,62,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+              <i class="bi bi-lock-fill" style="font-size:32px;color:#E23E3E;"></i>
+            </div>
+            <h3 style="color:#fff;font-size:18px;font-weight:700;margin:0 0 8px;">Connexion requise</h3>
+            <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0 0 20px;">
+              Cette archive est reservee aux abonnes.<br>Connectez-vous pour acceder a notre contenu premium.
+            </p>
+            <div class="d-flex gap-3">
+              <button onclick="history.back()" style="background:#1a1a1a;color:#aaa;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-size:14px;">Retour</button>
+              <button onclick="window.location.hash='#/login'" style="background:#E23E3E;color:#fff;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-size:14px;font-weight:700;">Se connecter</button>
+            </div>
+          </div>`;
+        return;
+      }
+      if (status === 403) {
+        // Logged in but insufficient subscription
+        const isLoggedIn = (() => { try { return Boolean(localStorage.getItem('bf1_token')); } catch { return false; } })();
+        const userCat    = (() => { try { return JSON.parse(localStorage.getItem('bf1_user') || 'null')?.subscription_category; } catch { return null; } })();
+        const BADGES = { basic: { label: 'Basic', color: '#3B82F6' }, standard: { label: 'Standard', color: '#9C27B0' }, premium: { label: 'Premium', color: '#FF6F00' } };
+        const userBadge = userCat ? BADGES[userCat] : null;
+        container.innerHTML = `
+          <div class="d-flex flex-column align-items-center justify-content-center py-5 px-4 text-center">
+            <div style="width:72px;height:72px;background:rgba(255,111,0,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+              <i class="bi bi-star-fill" style="font-size:32px;color:#FF6F00;"></i>
+            </div>
+            <h3 style="color:#fff;font-size:18px;font-weight:700;margin:0 0 8px;">Abonnement insuffisant</h3>
+            <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0 0 4px;">
+              ${userBadge
+                ? `Votre abonnement actuel : <strong style="color:#fff;">${userBadge.label}</strong>`
+                : "Vous n'avez pas encore d'abonnement."}
+            </p>
+            <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0 0 20px;">Ameliorez votre abonnement pour acceder a cette archive.</p>
+            <div class="d-flex gap-3">
+              <button onclick="history.back()" style="background:#1a1a1a;color:#aaa;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-size:14px;">Retour</button>
+              <button onclick="window._archiveBannerUpgrade ? window._archiveBannerUpgrade('premium') : (window.location.hash='#/premium')"
+                      style="background:#FF6F00;color:#fff;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-size:14px;font-weight:700;">Voir les offres</button>
+            </div>
+          </div>`;
+        return;
+      }
+      // Generic not found
+      container.innerHTML = `<div class="d-flex flex-column align-items-center justify-content-center py-5"><i class="bi bi-exclamation-circle text-danger" style="font-size:3rem;"></i><p class="mt-3 text-secondary">Contenu introuvable</p><button onclick="history.back()" style="background:#E23E3E;color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;margin-top:8px;">Retour</button></div>`;
+      return;
+    }
+
+    const [related, comments, likesCount] = await Promise.all([
       api.getRelatedByType(type, id).catch(() => []),
       api.getComments(CONTENT_TYPE, id).catch(() => []),
       api.getLikesCount(CONTENT_TYPE, id).catch(() => 0),
     ]);
-
-    if (!show) {
-      container.innerHTML = `<div class="d-flex flex-column align-items-center justify-content-center py-5"><i class="bi bi-exclamation-circle text-danger" style="font-size:3rem;"></i><p class="mt-3 text-secondary">Contenu introuvable</p><button onclick="history.back()" style="background:#E23E3E;color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;margin-top:8px;">Retour</button></div>`;
-      return;
-    }
 
     let userLiked = false;
     let userFavorited = false;

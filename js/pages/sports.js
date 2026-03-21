@@ -98,9 +98,6 @@ function buildGridCard(item) {
         : placeholder('130px')}
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.9) 100%);"></div>
       <div style="position:absolute;top:8px;left:8px;">
-        <span style="display:inline-flex;align-items:center;gap:3px;background:#E23E3E;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">
-          <i class="bi bi-basketball-fill" style="font-size:9px;"></i>${esc(type.toUpperCase())}
-        </span>
       </div>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
         <p class="mb-1 fw-semibold" style="font-size:12px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
@@ -114,8 +111,8 @@ function buildGridCard(item) {
 
 function buildListCard(item) {
   const img = item.image || item.image_url || '';
-  const title = item.title || 'Sans titre';
-  const type = item.sport_type || 'Sport';
+  const title = item.title ;
+  const type = item.sport_type ;
   const views = formatViews(item.views || item.view_count || item.views_count || 0);
   const time = formatTime(item.created_at || item.date);
 
@@ -125,7 +122,6 @@ function buildListCard(item) {
         ${img
           ? `<img src="${esc(img)}" alt="" style="width:120px;height:90px;object-fit:cover;">`
           : placeholder('90px', '120px')}
-        <span style="position:absolute;top:6px;left:6px;background:#E23E3E;color:#fff;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">${esc(type.toUpperCase())}</span>
       </div>
       <div class="d-flex flex-column justify-content-between p-2" style="flex:1;overflow:hidden;">
         <p class="mb-1 fw-semibold" style="font-size:13px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${esc(title)}</p>

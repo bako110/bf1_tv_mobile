@@ -63,11 +63,11 @@ function buildGridCard(item) {
           : placeholder('200px')}
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,transparent 30%,transparent 60%,rgba(0,0,0,0.85) 100%);"></div>
         <!-- durée badge top-right -->
-        <div style="position:absolute;top:10px;right:10px;">
+        <!-- <div style="position:absolute;top:10px;right:10px;">
           <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,0.75);color:#fff;border-radius:4px;padding:3px 7px;font-size:11px;">
             <i class="bi bi-clock" style="font-size:10px;"></i>${esc(dur)}
           </span>
-        </div>
+        </div> -->
         <!-- info bas -->
         <div style="position:absolute;bottom:0;left:0;right:0;padding:12px;">
           <p class="mb-1 fw-semibold" style="font-size:14px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>

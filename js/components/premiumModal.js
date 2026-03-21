@@ -502,12 +502,12 @@ function _renderStep4(planName) {
       <p style="color:#555;font-size:14px;line-height:1.6;margin:0 0 28px;">
         Votre accès premium est maintenant actif.<br>Profitez de tous les contenus exclusifs BF1.
       </p>
-      <button onclick="window._closePremiumModal()"
+      <button onclick="window._closePremiumModal(); window._reloadProfile?.(); window.location.hash='#/profile';"
               style="background:#22C55E;border:none;border-radius:12px;padding:14px 40px;
                      color:#000;font-size:15px;font-weight:700;cursor:pointer;
                      display:inline-flex;align-items:center;gap:8px;"
               class="_pm-ripple">
-        <i class="bi bi-play-fill"></i> Commencer à regarder
+        <i class="bi bi-check-circle-fill"></i> Voir mon profil
       </button>
     </div>`;
 }
@@ -579,6 +579,10 @@ window._pmSubmit = async () => {
       payment_details: { method: m, ..._state.paymentData },
     });
 
+    // Rafraîchir l'utilisateur depuis le serveur pour mettre à jour is_premium et subscription_category
+    const { refreshUser } = await import('../services/api.js');
+    await refreshUser();
+    
     _renderStep4(p.name || p.code);
     if (_state.onSuccess) _state.onSuccess(p);
 

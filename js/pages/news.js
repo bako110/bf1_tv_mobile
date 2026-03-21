@@ -95,7 +95,14 @@ function renderNewsList(container) {
     ? allNews
     : allNews.filter(n => (n.category || n.edition) === currentCategory);
 
-  if (filtered.length === 0) {
+  // Trier par date (plus récent en premier) 📅
+  const sorted = [...filtered].sort((a, b) => {
+    const dateA = new Date(a.created_at || a.published_at || 0);
+    const dateB = new Date(b.created_at || b.published_at || 0);
+    return dateB - dateA;
+  });
+
+  if (sorted.length === 0) {
     container.innerHTML = `
       <div class="text-center py-5 text-muted">
         <i class="bi bi-newspaper" style="font-size:3.5rem;color:#444;"></i>
@@ -106,9 +113,9 @@ function renderNewsList(container) {
   }
 
   if (currentMode === 'grid') {
-    container.innerHTML = `<div class="px-3 pt-2 pb-5">${filtered.map(buildGridCard).join('')}</div>`;
+    container.innerHTML = `<div class="px-3 pt-2 pb-5">${sorted.map(buildGridCard).join('')}</div>`;
   } else {
-    container.innerHTML = `<div class="px-3 pt-2 pb-5">${filtered.map(buildListCard).join('')}</div>`;
+    container.innerHTML = `<div class="px-3 pt-2 pb-5">${sorted.map(buildListCard).join('')}</div>`;
   }
 }
 

@@ -67,7 +67,14 @@ export async function loadSeries() {
 
   try {
     const raw = await api.getSeries().catch(() => []);
-    const series = Array.isArray(raw) ? raw : (raw?.series || raw?.items || []);
+    const seriesRaw = Array.isArray(raw) ? raw : (raw?.series || raw?.items || []);
+    
+    // Trier par date (plus récent en premier) 📅
+    const series = [...seriesRaw].sort((a, b) => {
+      const dateA = new Date(a.created_at || a.release_date || 0);
+      const dateB = new Date(b.created_at || b.release_date || 0);
+      return dateB - dateA;
+    });
 
     if (!series.length) {
       container.innerHTML = `

@@ -218,3 +218,9 @@ export async function loadProfile() {
     container.innerHTML = `<div class="alert alert-danger m-3">Erreur: ${err.message}</div>`;
   }
 }
+
+// Fonction globale pour recharger le profil (appelée après un abonnement réussi)
+window._reloadProfile = async function() {
+  console.log('🔄 Rechargement du profil après abonnement...');
+  await loadProfile();
+};

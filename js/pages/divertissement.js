@@ -60,9 +60,6 @@ function buildGridCard(item) {
           : placeholder('140px')}
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(0,0,0,0.9) 100%);"></div>
         <div style="position:absolute;top:8px;left:8px;">
-          <span style="background:rgba(226,62,62,0.85);color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;">
-            <i class="bi bi-mic-fill" style="font-size:9px;"></i> Divertissement
-          </span>
         </div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
           <p class="mb-1 fw-semibold" style="font-size:12px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>

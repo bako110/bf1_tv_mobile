@@ -63,7 +63,6 @@ function buildGridCard(item) {
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(0,0,0,0.9) 100%);"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
           <p class="mb-1 fw-semibold" style="font-size:12px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-          ${desc ? `<p class="mb-1" style="font-size:11px;color:#B0B0B0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(desc)}</p>` : ''}
           <div class="d-flex align-items-center gap-1" style="font-size:10px;color:#888;">
             <i class="bi bi-eye"></i><span>${views}</span>
             ${host ? `<span>•</span><i class="bi bi-person"></i><span>${esc(host)}</span>` : ''}
@@ -76,7 +75,6 @@ function buildGridCard(item) {
 function buildListCard(item) {
   const img = item.image_url || item.image || '';
   const title = item.title || 'Sans titre';
-  const desc = item.description || '';
   const views = formatViews(item.views || item.view_count || item.views_count || 0);
   const host = item.host || '';
   const time = formatTime(item.created_at || item.published_at);
@@ -91,7 +89,7 @@ function buildListCard(item) {
       <div class="d-flex flex-column justify-content-between p-2" style="flex:1;overflow:hidden;">
         <div>
           <p class="mb-1 fw-semibold" style="font-size:13px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-          ${desc ? `<p class="mb-0" style="font-size:12px;color:#B0B0B0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(desc)}</p>` : ''}
+          
         </div>
         <div class="d-flex align-items-center gap-1 mt-1" style="font-size:11px;color:#888;">
           <i class="bi bi-eye"></i><span>${views}</span>

@@ -46,6 +46,29 @@ export function getUser() {
   }
 }
 
+// Mettre à jour le cache utilisateur après un changement (ex: nouveau subscription_category)
+export function setUser(userData) {
+  try {
+    localStorage.setItem('bf1_user', JSON.stringify(userData));
+  } catch (err) {
+    console.warn('⚠️ Impossible de mettre à jour l\'utilisateur en cache:', err.message);
+  }
+}
+
+// Rafraîchir les données utilisateur depuis le serveur (appel après abonnement)
+export async function refreshUser() {
+  try {
+    const userData = await http.get('/users/me');
+    if (userData) {
+      setUser(userData);
+      return userData;
+    }
+  } catch (err) {
+    console.warn('⚠️ Impossible de rafraîchir l\'utilisateur:', err.message);
+  }
+  return getUser();
+}
+
 export function isAuthenticated() {
   return Boolean(http.getToken());
 }
@@ -96,6 +119,10 @@ export async function getReportages() {
 export async function getArchive() {
   // Route pluriel: /archives
   return http.get('/archives') || [];
+}
+
+export async function checkArchiveAccess(id) {
+  return http.get(`/archives/${id}/check-access`);
 }
 
 export async function getJTandMag() {
