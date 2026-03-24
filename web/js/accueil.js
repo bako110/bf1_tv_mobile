@@ -463,6 +463,8 @@ async function init() {
   console.log(`✅ Page accueil initialisée - Affichage des ${ITEMS_PER_PAGE} derniers contenus`);
 }
 
+
+
 // Rendre la fonction toggleTheme accessible globalement
 window.toggleTheme = toggleTheme;
 
