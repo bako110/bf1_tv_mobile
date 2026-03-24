@@ -21,9 +21,9 @@ const server = http.createServer((req, res) => {
   const cleanUrl = req.url.split('?')[0];
   let filePath;
   
-  // Route racine -> index.js de détection
+  // Route racine -> index.html de détection
   if (cleanUrl === '/') {
-    filePath = path.join(__dirname, 'index.js');
+    filePath = path.join(__dirname, 'index.html');
   }
   // Fichiers partagés (shared/)
   else if (cleanUrl.startsWith('/shared/')) {

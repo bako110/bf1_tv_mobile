@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BF1 TV</title>
+</head>
+<body>
+  <script>
+    // Fonction pour détecter si on est dans Capacitor (app mobile)
+    function isCapacitor() {
+      return window.Capacitor !== undefined;
+    }
+
+    // Fonction pour détecter si on est sur un appareil mobile (navigateur)
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    // Fonction de redirection
+    function redirect() {
+      if (isCapacitor()) {
+        window.location.href = '/mobile/index.html';
+      } else if (isMobileDevice()) {
+        window.location.href = '/mobile/index.html';
+      } else {
+        window.location.href = '/web/index.html';
+      }
+    }
+
+    // Exécution immédiate
+    if (window.Capacitor) {
+      redirect();
+    } else {
+      setTimeout(redirect, 50);
+    }
+  </script>
+</body>
+</html>
