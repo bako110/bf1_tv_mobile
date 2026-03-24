@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="../styles/direct.css"/>
   <link rel="stylesheet" href="../styles/pages.css"/>
   <link rel="stylesheet" href="../styles/responsive.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
 
@@ -102,25 +103,23 @@
       </div>
 
       <div class="mt-4">
-        <h3 class="section-title mb-3"><i class="bi bi-clock-history"></i>À venir</h3>
+        <div class="schedule-header">
+          <h3 class="section-title mb-0"><i class="bi bi-clock-history"></i>À venir</h3>
+          <div class="schedule-actions">
+            <button class="btn-icon" id="seeAllPrograms">
+              <i class="bi bi-arrow-right-circle"></i>Voir tous les programmes
+            </button>
+            <button class="btn-icon" id="seeLessPrograms" style="display: none;">
+              <i class="bi bi-arrow-left-circle"></i>Voir moins
+            </button>
+          </div>
+        </div>
         <div class="schedule-grid">
-          <div class="schedule-card">
-            <div class="schedule-time"><i class="bi bi-clock"></i>21:00 - 22:00</div>
-            <div class="schedule-title">Débat politique</div>
-            <div class="schedule-channel"><i class="bi bi-mic-fill"></i>BF1 Info</div>
-            <button class="btn-outline mt-2 w-100 justify-content-center" style="font-size:0.8rem;padding:7px"><i class="bi bi-bell"></i>Rappel</button>
-          </div>
-          <div class="schedule-card">
-            <div class="schedule-time"><i class="bi bi-clock"></i>22:00 - 23:00</div>
-            <div class="schedule-title">CAN 2024 — Analyse</div>
-            <div class="schedule-channel"><i class="bi bi-trophy-fill"></i>BF1 Sport</div>
-            <button class="btn-outline mt-2 w-100 justify-content-center" style="font-size:0.8rem;padding:7px"><i class="bi bi-bell"></i>Rappel</button>
-          </div>
-          <div class="schedule-card">
-            <div class="schedule-time"><i class="bi bi-clock"></i>23:00 - 00:00</div>
-            <div class="schedule-title">Concert live</div>
-            <div class="schedule-channel"><i class="bi bi-music-note-fill"></i>BF1 Musique</div>
-            <button class="btn-outline mt-2 w-100 justify-content-center" style="font-size:0.8rem;padding:7px"><i class="bi bi-bell"></i>Rappel</button>
+          <div class="text-center py-5">
+            <div class="spinner-border text-danger" role="status">
+              <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p class="mt-3">Chargement des programmes...</p>
           </div>
         </div>
       </div>
@@ -171,30 +170,6 @@
           <button class="chat-send-btn"><i class="bi bi-send-fill"></i></button>
         </div>
       </div>
-
-      <div class="others-directs mt-4">
-        <div class="others-directs-title"><i class="bi bi-broadcast"></i>Autres directs</div>
-        <div class="direct-item active">
-          <div class="direct-item-thumb"><div style="width:100%;height:100%;background:#1a0508;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:1.2rem"><i class="bi bi-camera-video-fill"></i></div></div>
-          <div><div class="direct-item-name">Journal de 20h</div><div class="direct-item-channel">BF1 National</div></div>
-          <div class="direct-item-viewers">12.3k</div>
-        </div>
-        <div class="direct-item">
-          <div class="direct-item-thumb"><img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=120&q=60" alt=""/></div>
-          <div><div class="direct-item-name">CAN 2024 — Match</div><div class="direct-item-channel">BF1 Sport</div></div>
-          <div class="direct-item-viewers">45.2k</div>
-        </div>
-        <div class="direct-item">
-          <div class="direct-item-thumb"><img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=120&q=60" alt=""/></div>
-          <div><div class="direct-item-name">Festival culturel</div><div class="direct-item-channel">BF1 Culture</div></div>
-          <div class="direct-item-viewers">5.2k</div>
-        </div>
-        <div class="direct-item">
-          <div class="direct-item-thumb"><img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=120&q=60" alt=""/></div>
-          <div><div class="direct-item-name">Top 50 en direct</div><div class="direct-item-channel">BF1 Musique</div></div>
-          <div class="direct-item-viewers">3.1k</div>
-        </div>
-      </div>
     </div>
   </div>
 </main>
@@ -241,5 +216,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../app.js"></script>
+<script type="module" src="../js/direct.js"></script>
 </body>
 </html>

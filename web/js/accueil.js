@@ -1,3 +1,4 @@
+// js/accueil.js
 import * as api from '../../shared/services/api.js';
 
 // État actuel
@@ -35,6 +36,54 @@ const categoryNames = {
   'archive': 'Archive',
   'jtandmag': 'Journal et Magazine'
 };
+
+// ===== FONCTIONS DE THÈME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const currentTheme = html.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  
+  html.setAttribute('data-theme', newTheme);
+  
+  // Sauvegarder la préférence dans localStorage
+  try {
+    localStorage.setItem('bf1_theme', newTheme);
+  } catch (err) {
+    console.warn('Impossible de sauvegarder le thème:', err);
+  }
+  
+  // Changer l'icône du bouton
+  const themeBtn = document.querySelector('.theme-toggle i');
+  if (themeBtn) {
+    if (newTheme === 'dark') {
+      themeBtn.className = 'bi bi-sun-fill';
+    } else {
+      themeBtn.className = 'bi bi-moon-fill';
+    }
+  }
+}
+
+function loadSavedTheme() {
+  try {
+    const savedTheme = localStorage.getItem('bf1_theme');
+    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      // Mettre à jour l'icône du bouton
+      const themeBtn = document.querySelector('.theme-toggle i');
+      if (themeBtn) {
+        if (savedTheme === 'dark') {
+          themeBtn.className = 'bi bi-sun-fill';
+        } else {
+          themeBtn.className = 'bi bi-moon-fill';
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Impossible de charger le thème:', err);
+  }
+}
+// ===== FIN FONCTIONS DE THÈME =====
 
 // Fonction pour obtenir l'URL complète de l'image
 function getImageUrl(imagePath) {
@@ -386,6 +435,9 @@ function escapeHtml(str) {
 async function init() {
   console.log('🚀 Initialisation de la page accueil...');
   
+  // Charger le thème sauvegardé
+  loadSavedTheme();
+  
   await loadAllData();
   
   // Ajouter les événements aux filtres
@@ -410,5 +462,8 @@ async function init() {
   
   console.log(`✅ Page accueil initialisée - Affichage des ${ITEMS_PER_PAGE} derniers contenus`);
 }
+
+// Rendre la fonction toggleTheme accessible globalement
+window.toggleTheme = toggleTheme;
 
 document.addEventListener('DOMContentLoaded', init);

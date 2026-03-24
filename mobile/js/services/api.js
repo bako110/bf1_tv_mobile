@@ -1,3 +1,4 @@
+// shared/services/api.js
 import { http } from './http.js';
 
 export async function login(identifier, password) {
@@ -46,7 +47,6 @@ export function getUser() {
   }
 }
 
-// Mettre à jour le cache utilisateur après un changement (ex: nouveau subscription_category)
 export function setUser(userData) {
   try {
     localStorage.setItem('bf1_user', JSON.stringify(userData));
@@ -55,7 +55,6 @@ export function setUser(userData) {
   }
 }
 
-// Rafraîchir les données utilisateur depuis le serveur (appel après abonnement)
 export async function refreshUser() {
   try {
     const userData = await http.get('/users/me');
@@ -73,7 +72,7 @@ export function isAuthenticated() {
   return Boolean(http.getToken());
 }
 
-// SERVICES DE CONTENU
+// ===== SERVICES DE CONTENU =====
 export async function getNews() {
   return http.get('/news') || [];
 }
@@ -101,27 +100,22 @@ export async function getPrograms() {
   return http.get('/programs') || [];
 }
 
-// Récupérer la grille des programmes de la semaine (groupés par jour)
 export async function getProgramWeek(weeksAhead = 0, type = null) {
   const params = new URLSearchParams();
   params.append('weeks_ahead', weeksAhead);
   if (type) params.append('type', type);
-  
   return http.get(`/programs/grid/weekly?${params.toString()}`).catch(() => ({ days: [] }));
 }
 
-// Récupérer la grille des programmes par plage de dates
 export async function getProgramGrid(startDate = null, endDate = null, type = null) {
   const params = new URLSearchParams();
   if (startDate) params.append('start_date', startDate);
   if (endDate) params.append('end_date', endDate);
   if (type) params.append('type', type);
-  
   return http.get(`/programs/grid/daily?${params.toString()}`).catch(() => ({ days: [] }));
 }
 
 export async function getSports() {
-  // L'API retourne { sports: [...], total, page, ... }
   const res = await http.get('/sports');
   return (res && res.sports) ? res.sports : (Array.isArray(res) ? res : []);
 }
@@ -131,12 +125,10 @@ export async function getDivertissement() {
 }
 
 export async function getReportages() {
-  // Route singulier: /reportage
   return http.get('/reportage') || [];
 }
 
 export async function getArchive() {
-  // Route pluriel: /archives
   return http.get('/archives') || [];
 }
 
@@ -368,4 +360,29 @@ export async function resetUserSettings() {
 // ===== CONTACT =====
 export async function sendContactMessage({ name, email, subject, message }) {
   return http.post('/contact', { name, email, subject, message });
+}
+
+// ===== PROGRAM REMINDERS =====
+export async function createReminder(programId, data) {
+  return http.post(`/programs/${programId}/reminders`, data);
+}
+
+export async function getMyReminders(status = null, upcomingOnly = false) {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  if (upcomingOnly) params.append('upcoming_only', 'true');
+  const url = `/programs/reminders/my${params.toString() ? `?${params.toString()}` : ''}`;
+  return http.get(url).catch(() => []);
+}
+
+export async function cancelReminder(reminderId) {
+  return http.post(`/programs/reminders/${reminderId}/cancel`);
+}
+
+export async function deleteReminder(reminderId) {
+  return http.delete(`/programs/reminders/${reminderId}`);
+}
+
+export async function updateReminder(reminderId, data) {
+  return http.patch(`/programs/reminders/${reminderId}`, data);
 }
