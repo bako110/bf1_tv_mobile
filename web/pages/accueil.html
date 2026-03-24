@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Accueil — BF1 TV</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../styles/variables.css"/>
+  <link rel="stylesheet" href="../styles/base.css"/>
+  <link rel="stylesheet" href="../styles/navbar.css"/>
+  <link rel="stylesheet" href="../styles/hero.css"/>
+  <link rel="stylesheet" href="../styles/cards.css"/>
+  <link rel="stylesheet" href="../styles/direct.css"/>
+  <link rel="stylesheet" href="../styles/pages.css"/>
+  <link rel="stylesheet" href="../styles/responsive.css"/>
+</head>
+<body>
+
+<nav class="bf1-navbar" id="mainNavbar">
+  <div class="navbar-inner">
+    <a href="accueil.html" class="navbar-logo">
+      <img src="../logo.png" alt="BF1 TV" style="height:40px;width:auto;"/>
+    </a>
+    <button class="navbar-hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="navbar-links">
+      <li><a href="accueil.html" class="nav-link active"><i class="bi bi-house-fill"></i><span>Accueil</span></a></li>
+      <li><a href="direct.html" class="nav-link"><i class="bi bi-broadcast"></i><span>Direct</span><span class="live-dot ms-1"></span></a></li>
+      <li><a href="programmes.html" class="nav-link"><i class="bi bi-calendar3"></i><span>Programmes</span></a></li>
+      <li><a href="replays.html" class="nav-link"><i class="bi bi-clock-history"></i><span>Replays</span></a></li>
+      <li><a href="reels.html" class="nav-link"><i class="bi bi-tv"></i><span>Reels</span></a></li>
+      <li class="nav-vibes">
+        <a href="vibes.html" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i><span>VIBES</span><i class="bi bi-chevron-down ms-1" style="font-size:0.65rem"></i></a>
+        <div class="vibes-dropdown">
+          <a href="#"><i class="bi bi-phone"></i>Mode FLOW</a>
+          <a href="#"><i class="bi bi-grid-3x3-gap-fill"></i>Mode SOCIAL GRID</a>
+          <a href="#"><i class="bi bi-display"></i>Mode COMFORT</a>
+        </div>
+      </li>
+      <li><a href="flashinfo.html" class="nav-link"><i class="bi bi-lightning-fill"></i><span>Flash Info</span></a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="navbar-search">
+        <input type="text" class="search-input" placeholder="Rechercher..."/>
+        <button class="search-btn"><i class="bi bi-search"></i></button>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+        <i class="bi bi-sun-fill"></i>
+      </button>
+      <button class="notif-btn" title="Notifications">
+        <i class="bi bi-bell-fill"></i>
+        <span class="notif-badge">4</span>
+      </button>
+      <button class="user-btn" onclick="window.location.href='profil.html'" title="Mon compte">
+        <i class="bi bi-person-fill"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="news-ticker">
+  <span class="ticker-label"><i class="bi bi-lightning-fill me-1"></i>EN DIRECT</span>
+  <div class="ticker-track">
+    <span>Journal de 20h — BF1 National</span>
+    <span>CAN 2024 : Match des Étalons en direct sur BF1 Sport</span>
+    <span>Festival International de Ouagadougou — BF1 Culture</span>
+    <span>Débat politique — Édition spéciale ce soir à 21h</span>
+    <span>Championnat d'Afrique de Basket — Suivez le live</span>
+    <span>BF1 et Savane Médias unissent leurs forces</span>
+    <span>Nouveau : Séries TV africaines disponibles sur BF1 TV</span>
+  </div>
+</div>
+
+<aside class="notif-panel">
+  <div class="notif-panel-header">
+    <span class="notif-panel-title"><i class="bi bi-bell-fill me-2" style="color:var(--red)"></i>Notifications</span>
+    <button class="notif-panel-close"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="notif-list">
+    <div class="notif-item unread">
+      <div class="notif-avatar"><i class="bi bi-bell-fill"></i></div>
+      <div>
+        <div class="notif-text">Le film <strong>Comédies familiales</strong> est maintenant disponible sur BF1 TV. Ne le manquez pas!</div>
+        <div class="notif-time">21 mars, 19:39</div>
+      </div>
+    </div>
+    <div class="notif-item unread">
+      <div class="notif-avatar"><i class="bi bi-bell-fill"></i></div>
+      <div>
+        <div class="notif-text">Nouveau programme <strong>dfghj</strong> disponible sur BF1 TV.</div>
+        <div class="notif-time">21 mars, 19:37</div>
+      </div>
+    </div>
+    <div class="notif-item unread">
+      <div class="notif-avatar"><i class="bi bi-bell-fill"></i></div>
+      <div>
+        <div class="notif-text">Bienvenue sur BF1 TV ! Profitez de nos films, séries et émissions.</div>
+        <div class="notif-time">21 mars, 19:35</div>
+      </div>
+    </div>
+    <div class="notif-item">
+      <div class="notif-avatar"><i class="bi bi-trophy-fill"></i></div>
+      <div>
+        <div class="notif-text">CAN 2024 — La finale est en direct ce soir à 18h00 sur BF1 Sport.</div>
+        <div class="notif-time">20 mars, 10:00</div>
+      </div>
+    </div>
+  </div>
+  <div class="notif-panel-footer">
+    <button class="btn-red w-100 justify-content-center">Tout marquer comme lu</button>
+  </div>
+</aside>
+
+<main class="main-content">
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-bg-img"></div>
+    <div class="hero-bg-mesh"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-content">
+      <div class="hero-tag"><i class="bi bi-record-circle-fill"></i>EN DIRECT — Journal de 20h</div>
+      <h1 class="hero-title">Bienvenue<br>sur <span>BF1</span></h1>
+      <p class="hero-sub">La télévision africaine nouvelle génération. Vivez l'info, le sport et la culture en temps réel.</p>
+      <div class="hero-actions">
+        <a href="direct.html" class="btn-red"><i class="bi bi-play-circle-fill"></i>Regarder en direct</a>
+        <a href="programmes.html" class="btn-outline"><i class="bi bi-calendar3"></i>Voir les programmes</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num">45<span>k</span></div>
+          <div class="hero-stat-lbl">Téléspectateurs</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">5</div>
+          <div class="hero-stat-lbl">Directs actifs</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">450<span>+</span></div>
+          <div class="hero-stat-lbl">Émissions</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">15</div>
+          <div class="hero-stat-lbl">Chaînes</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-preview">
+      <div class="hero-preview-thumb">
+        <div class="play-pulse"><i class="bi bi-play-fill"></i></div>
+      </div>
+      <div class="hero-preview-info">
+        <div class="hero-preview-dot"></div>
+        <div>
+          <div class="hero-preview-title">Journal de 20h</div>
+          <div class="hero-preview-sub">BF1 National</div>
+        </div>
+        <div class="hero-preview-viewers"><i class="bi bi-eye-fill"></i>12.3k</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Exploration par catégories -->
+  <section class="section container-fluid">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title"><i class="bi bi-grid-3x3-gap-fill"></i>Explorer par catégories</h2>
+        <p style="font-size:0.85rem;color:var(--text-3);margin-top:4px">Découvrez nos programmes par thématique</p>
+      </div>
+      <div class="display-toggle">
+        <div class="display-btn" data-mode="2">2X</div>
+        <div class="display-btn active" data-mode="3">3X</div>
+        <div class="display-btn" data-mode="4">4X</div>
+      </div>
+    </div>
+    <div class="filter-pills" id="filterPills">
+      <button class="filter-pill active" data-category="all"><i class="bi bi-grid-fill"></i>Tous</button>
+      <button class="filter-pill" data-category="actualites"><i class="bi bi-lightning-fill"></i>Actualités</button>
+      <button class="filter-pill" data-category="sport"><i class="bi bi-trophy-fill"></i>Sport</button>
+      <button class="filter-pill" data-category="culture"><i class="bi bi-palette-fill"></i>Culture</button>
+      <button class="filter-pill" data-category="divertissement"><i class="bi bi-emoji-smile-fill"></i>Divertissement</button>
+      <button class="filter-pill" data-category="musique"><i class="bi bi-music-note-fill"></i>Musique</button>
+      <button class="filter-pill" data-category="documentaire"><i class="bi bi-camera-reels-fill"></i>Documentaire</button>
+      <button class="filter-pill" data-category="archive"><i class="bi bi-archive-fill"></i>Archive</button>
+      <button class="filter-pill" data-category="reportage"><i class="bi bi-camera-fill"></i>Reportage</button>
+      <button class="filter-pill" data-category="jtandmag"><i class="bi bi-journal-text"></i>Journal et Magazine</button>
+    </div>
+    <div class="videos-grid" id="videosGrid">
+      <!-- Les cartes seront chargées dynamiquement par le JS -->
+      <div class="text-center py-5" style="grid-column: 1/-1;">
+        <div class="spinner-border text-danger" role="status">
+          <span class="visually-hidden">Chargement...</span>
+        </div>
+        <p class="mt-3 text-secondary">Chargement des contenus...</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="vibes-section">
+    <div class="vibes-header">
+      <div class="vibes-new-tag">NOUVEAU</div>
+      <h2 class="vibes-title">Choisissez votre <span>VIBES</span></h2>
+      <p class="vibes-sub">Trois expériences uniques pour vivre BF1 à votre façon</p>
+    </div>
+    <div class="vibes-grid">
+      <div class="vibe-card anim-up d1">
+        <span class="vibe-popular">POPULAIRE</span>
+        <div class="vibe-icon"><i class="bi bi-phone"></i></div>
+        <div class="vibe-name">MODE FLOW</div>
+        <div class="vibe-desc">Inspiré de TikTok et YouTube Shorts</div>
+        <div class="vibe-features">
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Navigation verticale infinie</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Vidéos en plein écran</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Interactions simplifiées</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Contenu court et viral</div>
+        </div>
+        <button class="btn-red w-100 justify-content-center">Découvrir <i class="bi bi-arrow-right"></i></button>
+      </div>
+      <div class="vibe-card anim-up d2">
+        <div class="vibe-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+        <div class="vibe-name">SOCIAL GRID</div>
+        <div class="vibe-desc">Inspiré de Facebook et Instagram</div>
+        <div class="vibe-features">
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Grille de contenus sociale</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Stories interactives</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Commentaires en direct</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Groupes de discussion</div>
+        </div>
+        <button class="btn-red w-100 justify-content-center">Découvrir <i class="bi bi-arrow-right"></i></button>
+      </div>
+      <div class="vibe-card anim-up d3">
+        <div class="vibe-icon"><i class="bi bi-display"></i></div>
+        <div class="vibe-name">MODE COMFORT</div>
+        <div class="vibe-desc">Inspiré de Netflix et YouTube</div>
+        <div class="vibe-features">
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Interface classique TV</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Miniatures larges</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Recommandations personnalisées</div>
+          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Mode cinéma</div>
+        </div>
+        <button class="btn-red w-100 justify-content-center">Découvrir <i class="bi bi-arrow-right"></i></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="bf1-footer">
+  <div class="footer-grid">
+    <div>
+      <div class="logo-box" style="width:50px;height:50px"><span class="logo-text">bf<span class="logo-accent">1</span></span></div>
+      <p class="footer-brand-desc">La télévision africaine nouvelle génération. BF1 TV vous connecte à l'Afrique, en direct et en replay, 24h/24.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Navigation</div>
+      <a href="accueil.html" class="footer-link">Accueil</a>
+      <a href="direct.html" class="footer-link">Direct</a>
+      <a href="programmes.html" class="footer-link">Programmes</a>
+      <a href="replays.html" class="footer-link">Replays</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Chaînes</div>
+      <a href="#" class="footer-link">BF1 National</a>
+      <a href="#" class="footer-link">BF1 Sport</a>
+      <a href="#" class="footer-link">BF1 Culture</a>
+      <a href="#" class="footer-link">BF1 Info</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Légal</div>
+      <a href="#" class="footer-link">Conditions d'utilisation</a>
+      <a href="#" class="footer-link">Confidentialité</a>
+      <a href="#" class="footer-link">Droits d'auteur</a>
+      <a href="#" class="footer-link">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">BF1 TV © 2026 — La chaîne au cœur de nos défis</div>
+    <div class="footer-socials">
+      <div class="social-btn"><i class="bi bi-facebook"></i></div>
+      <div class="social-btn"><i class="bi bi-twitter-x"></i></div>
+      <div class="social-btn"><i class="bi bi-instagram"></i></div>
+      <div class="social-btn"><i class="bi bi-youtube"></i></div>
+      <div class="social-btn"><i class="bi bi-tiktok"></i></div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="../js/accueil.js"></script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+/* ═══════════════════════════════════════
+   BF1 — Responsive (Mobile-first polish)
+═══════════════════════════════════════ */
+
+/* ── Tablet ── */
+@media (max-width: 1100px) {
+  .videos-grid { grid-template-columns: repeat(2, 1fr); }
+  .direct-layout { grid-template-columns: 1fr; }
+  .chat-panel { max-height: 400px; }
+  .programme-layout { grid-template-columns: 1fr; }
+  .ala-une-card { position: static; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .filter-bar-row1 { grid-template-columns: repeat(2, 1fr); }
+  .continue-cards { grid-template-columns: repeat(2, 1fr); }
+  .hero-preview { display: none; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  :root { --nav-h: 58px; }
+  .container-fluid, .programme-layout, .flash-layout,
+  .direct-layout, .profile-layout { padding-left: 16px; padding-right: 16px; }
+  .replays-hero, .search-bar-full { margin: 0 16px 20px; padding: 24px 20px; }
+  .section { padding: 40px 0; }
+  .vibes-section { padding: 60px 16px; }
+
+  /* Navbar mobile */
+  .navbar-inner { padding: 0 16px; }
+  .navbar-links { display: none; }
+  .navbar-links.open {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: var(--nav-h);
+    left: 0; right: 0;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px;
+    z-index: 999;
+    animation: slideDown 0.3s ease both;
+    box-shadow: var(--shadow-lg);
+    gap: 4px;
+  }
+  .navbar-links.open .nav-link { padding: 12px 16px; border-radius: var(--radius-md); }
+  .navbar-hamburger { display: flex; }
+  .search-input { width: 160px; }
+  .search-input:focus { width: 200px; }
+
+  /* Hero mobile */
+  .hero { min-height: auto; padding: 40px 0 60px; }
+  .hero-content { padding: 0 16px; }
+  .hero-stats { gap: 20px; }
+  .hero-stat-divider { display: none; }
+
+  /* Cards */
+  .videos-grid { grid-template-columns: 1fr; gap: 16px; }
+  .grid-2x .videos-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .grid-4x .videos-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .continue-cards { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .vibes-grid { grid-template-columns: 1fr; gap: 16px; }
+  .schedule-grid { grid-template-columns: 1fr; }
+
+  /* Channel cards */
+  .channels-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Day selector */
+  .day-selector { overflow-x: auto; }
+  .day-btn { min-width: 70px; }
+
+  /* Flash info */
+  .flash-layout { grid-template-columns: 1fr; }
+  .news-grid { grid-template-columns: 1fr; }
+
+  /* Footer */
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+
+  /* Programme layout */
+  .programme-layout { grid-template-columns: 1fr; padding-top: 20px; }
+
+  /* News ticker shorter on mobile */
+  .ticker-label { padding: 0 10px; font-size: 0.65rem; }
+
+  /* Notif panel full width on mobile */
+  .notif-panel { width: 100%; }
+
+  /* Profile */
+  .profile-layout { padding: 40px 16px; }
+
+  /* Filter bar */
+  .filter-bar-row1 { grid-template-columns: 1fr; }
+
+  /* Page header */
+  .page-header { padding: 40px 16px 28px; }
+  .replays-hero-stats { flex-wrap: wrap; }
+  .search-bar-full { flex-wrap: wrap; }
+}
+
+/* ── Small mobile ── */
+@media (max-width: 420px) {
+  .hero-title { font-size: 2.8rem; }
+  .hero-actions { flex-direction: column; align-items: flex-start; }
+  .hero-actions .btn-red, .hero-actions .btn-outline { width: 100%; justify-content: center; }
+  .filter-pills { gap: 6px; }
+  .filter-pill { font-size: 0.78rem; padding: 6px 12px; }
+  .continue-cards { grid-template-columns: 1fr; }
+  .programme-item { gap: 10px; }
+  .programme-thumb { display: none; }
+}

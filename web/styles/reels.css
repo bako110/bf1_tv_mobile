@@ -1,0 +1,255 @@
+/* ═══════════════════════════════════════
+   BF1 — Reels Page (Style TikTok)
+═══════════════════════════════════════ */
+
+/* Container principal */
+.reels-player-container {
+  position: fixed;
+  top: var(--nav-h, 70px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-primary);
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Stack des reels */
+.reels-stack {
+  height: 100%;
+}
+
+/* Élément reel individuel */
+.reel-item {
+  height: calc(100vh - var(--nav-h, 70px));
+  scroll-snap-align: start;
+  position: relative;
+  background: #000;
+}
+
+/* Conteneur vidéo */
+.reel-video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.reel-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Overlay avec informations */
+.reel-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.reel-info {
+  flex: 1;
+  color: white;
+  pointer-events: auto;
+}
+
+.reel-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.reel-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid white;
+}
+
+.reel-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reel-author-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.reel-follow-btn {
+  background: var(--red);
+  border: none;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.reel-follow-btn:hover {
+  background: #c01d24;
+  transform: scale(1.05);
+}
+
+.reel-caption {
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.reel-caption strong {
+  font-weight: 700;
+  margin-right: 5px;
+}
+
+.reel-music {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.8;
+}
+
+.reel-music i {
+  font-size: 0.7rem;
+}
+
+/* Actions latérales */
+.reel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  pointer-events: auto;
+}
+
+.reel-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: transform var(--transition);
+  color: white;
+  text-align: center;
+}
+
+.reel-action:hover {
+  transform: scale(1.1);
+}
+
+.reel-action i {
+  font-size: 1.8rem;
+}
+
+.reel-action span {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.like-btn i.bi-heart-fill {
+  color: var(--red);
+}
+
+/* Loading et erreurs */
+.reels-loading, .reels-empty, .reels-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.reels-empty i, .reels-error i {
+  font-size: 4rem;
+  color: var(--text-secondary);
+}
+
+.reels-empty p, .reels-error p {
+  color: var(--text-secondary);
+  margin-bottom: 0;
+}
+
+/* Supprimer la barre de navigation par défaut */
+.main-content {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+}
+
+/* Animation de chargement */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reel-overlay {
+    padding: 15px;
+  }
+  
+  .reel-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .reel-author-name {
+    font-size: 0.8rem;
+  }
+  
+  .reel-follow-btn {
+    padding: 3px 10px;
+    font-size: 0.65rem;
+  }
+  
+  .reel-caption {
+    font-size: 0.75rem;
+  }
+  
+  .reel-music {
+    font-size: 0.65rem;
+  }
+  
+  .reel-action i {
+    font-size: 1.5rem;
+  }
+  
+  .reel-action span {
+    font-size: 0.6rem;
+  }
+  
+  .reel-actions {
+    gap: 15px;
+  }
+}
+
+/* Cache la barre de défilement mais garde la fonctionnalité */
+.reels-player-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.reels-player-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.reels-player-container::-webkit-scrollbar-thumb {
+  background: var(--red);
+  border-radius: 4px;
+}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Archive — BF1 TV</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../styles/variables.css"/>
+  <link rel="stylesheet" href="../styles/base.css"/>
+  <link rel="stylesheet" href="../styles/navbar.css"/>
+  <link rel="stylesheet" href="../styles/cards.css"/>
+  <link rel="stylesheet" href="../styles/pages.css"/>
+  <link rel="stylesheet" href="../styles/responsive.css"/>
+  <link rel="stylesheet" href="../styles/pagination.css"/>
+  <link rel="stylesheet" href="../styles/archive.css"/>
+</head>
+<body>
+
+<nav class="bf1-navbar" id="mainNavbar">
+  <div class="navbar-inner">
+    <a href="accueil.html" class="navbar-logo">
+      <img src="../logo.png" alt="BF1 TV" style="height:40px;width:auto;"/>
+    </a>
+    <button class="navbar-hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="navbar-links">
+      <li><a href="accueil.html" class="nav-link"><i class="bi bi-house-fill"></i><span>Accueil</span></a></li>
+      <li><a href="direct.html" class="nav-link"><i class="bi bi-broadcast"></i><span>Direct</span><span class="live-dot ms-1"></span></a></li>
+      <li><a href="programmes.html" class="nav-link"><i class="bi bi-calendar3"></i><span>Programmes</span></a></li>
+      <li><a href="replays.html" class="nav-link"><i class="bi bi-clock-history"></i><span>Replays</span></a></li>
+      <li><a href="chaines.html" class="nav-link"><i class="bi bi-tv"></i><span>Chaînes</span></a></li>
+      <li class="nav-vibes">
+        <a href="vibes.html" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i><span>VIBES</span></a>
+      </li>
+      <li><a href="flashinfo.html" class="nav-link"><i class="bi bi-lightning-fill"></i><span>Flash Info</span></a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="navbar-search">
+        <input type="text" class="search-input" placeholder="Rechercher..."/>
+        <button class="search-btn"><i class="bi bi-search"></i></button>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+        <i class="bi bi-sun-fill"></i>
+      </button>
+      <button class="notif-btn" title="Notifications">
+        <i class="bi bi-bell-fill"></i>
+        <span class="notif-badge">4</span>
+      </button>
+      <button class="user-btn" onclick="window.location.href='profil.html'" title="Mon compte">
+        <i class="bi bi-person-fill"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1 class="page-header-title"><i class="bi bi-archive-fill" style="color:var(--red)"></i> Archive</h1>
+    <p class="page-header-sub">Redécouvrez l'histoire du Burkina Faso et de l'Afrique</p>
+  </div>
+  <div class="flash-layout">
+    <div>
+      <div class="filter-pills mb-4">
+        <!-- Filtres générés dynamiquement -->
+      </div>
+      <!-- News chargées dynamiquement depuis le backend -->
+    </div>
+    <div>
+      <div class="section-title mb-3"><i class="bi bi-fire"></i>Archives Populaires</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <!-- Tendances générées dynamiquement -->
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="bf1-footer">
+  <div class="footer-grid">
+    <div>
+      <div class="logo-box" style="width:50px;height:50px"><span class="logo-text">bf<span class="logo-accent">1</span></span></div>
+      <p class="footer-brand-desc">La télévision africaine nouvelle génération. BF1 TV vous connecte à l'Afrique, en direct et en replay, 24h/24.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Navigation</div>
+      <a href="accueil.html" class="footer-link">Accueil</a>
+      <a href="direct.html" class="footer-link">Direct</a>
+      <a href="programmes.html" class="footer-link">Programmes</a>
+      <a href="replays.html" class="footer-link">Replays</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Chaînes</div>
+      <a href="#" class="footer-link">BF1 National</a>
+      <a href="#" class="footer-link">BF1 Sport</a>
+      <a href="#" class="footer-link">BF1 Culture</a>
+      <a href="#" class="footer-link">BF1 Info</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Légal</div>
+      <a href="#" class="footer-link">Conditions d'utilisation</a>
+      <a href="#" class="footer-link">Confidentialité</a>
+      <a href="#" class="footer-link">Droits d'auteur</a>
+      <a href="#" class="footer-link">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">BF1 TV © 2026 — La chaîne au cœur de nos défis</div>
+    <div class="footer-socials">
+      <div class="social-btn"><i class="bi bi-facebook"></i></div>
+      <div class="social-btn"><i class="bi bi-twitter-x"></i></div>
+      <div class="social-btn"><i class="bi bi-instagram"></i></div>
+      <div class="social-btn"><i class="bi bi-youtube"></i></div>
+      <div class="social-btn"><i class="bi bi-tiktok"></i></div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../app.js"></script>
+<script type="module">
+  import { loadArchiveContent } from '../js/archive.js';
+  
+  // Charger le contenu archive au chargement de la page
+  document.addEventListener('DOMContentLoaded', () => {
+    loadArchiveContent();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Direct — BF1 TV</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../styles/variables.css"/>
+  <link rel="stylesheet" href="../styles/base.css"/>
+  <link rel="stylesheet" href="../styles/navbar.css"/>
+  <link rel="stylesheet" href="../styles/hero.css"/>
+  <link rel="stylesheet" href="../styles/cards.css"/>
+  <link rel="stylesheet" href="../styles/direct.css"/>
+  <link rel="stylesheet" href="../styles/pages.css"/>
+  <link rel="stylesheet" href="../styles/responsive.css"/>
+</head>
+<body>
+
+<nav class="bf1-navbar" id="mainNavbar">
+  <div class="navbar-inner">
+    <a href="accueil.html" class="navbar-logo">
+      <img src="../logo.png" alt="BF1 TV" style="height:40px;width:auto;"/>
+    </a>
+    <button class="navbar-hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="navbar-links">
+      <li><a href="accueil.html" class="nav-link"><i class="bi bi-house-fill"></i><span>Accueil</span></a></li>
+      <li><a href="direct.html" class="nav-link active"><i class="bi bi-broadcast"></i><span>Direct</span><span class="live-dot ms-1"></span></a></li>
+      <li><a href="programmes.html" class="nav-link"><i class="bi bi-calendar3"></i><span>Programmes</span></a></li>
+      <li><a href="replays.html" class="nav-link"><i class="bi bi-clock-history"></i><span>Replays</span></a></li>
+      <li><a href="reels.html" class="nav-link"><i class="bi bi-tv"></i><span>Reels</span></a></li>
+      <li class="nav-vibes">
+        <a href="vibes.html" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i><span>VIBES</span><i class="bi bi-chevron-down ms-1" style="font-size:0.65rem"></i></a>
+        <div class="vibes-dropdown">
+          <a href="#"><i class="bi bi-phone"></i>Mode FLOW</a>
+          <a href="#"><i class="bi bi-grid-3x3-gap-fill"></i>Mode SOCIAL GRID</a>
+          <a href="#"><i class="bi bi-display"></i>Mode COMFORT</a>
+        </div>
+      </li>
+      <li><a href="flashinfo.html" class="nav-link"><i class="bi bi-lightning-fill"></i><span>Flash Info</span></a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="navbar-search">
+        <input type="text" class="search-input" placeholder="Rechercher..."/>
+        <button class="search-btn"><i class="bi bi-search"></i></button>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+        <i class="bi bi-sun-fill"></i>
+      </button>
+      <button class="notif-btn" title="Notifications">
+        <i class="bi bi-bell-fill"></i>
+        <span class="notif-badge">4</span>
+      </button>
+      <button class="user-btn" onclick="window.location.href='profil.html'" title="Mon compte">
+        <i class="bi bi-person-fill"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="news-ticker">
+  <span class="ticker-label"><i class="bi bi-lightning-fill me-1"></i>EN DIRECT</span>
+  <div class="ticker-track">
+    <span>Journal de 20h — BF1 National</span>
+    <span>CAN 2024 : Match des Étalons en direct sur BF1 Sport</span>
+    <span>Festival International de Ouagadougou — BF1 Culture</span>
+    <span>Débat politique — Édition spéciale ce soir à 21h</span>
+  </div>
+</div>
+
+<main class="main-content">
+  <div class="direct-hero">
+    <h1 class="direct-hero-title">En Direct</h1>
+    <p class="direct-hero-sub">Vivez l'instant avec BF1 — Toute l'actualité en temps réel</p>
+    <div class="direct-hero-badges">
+      <span class="direct-badge direct-badge-live"><i class="bi bi-broadcast"></i>5 directs en cours</span>
+      <span class="direct-badge direct-badge-viewers"><i class="bi bi-people-fill"></i>45.2k téléspectateurs</span>
+    </div>
+  </div>
+  <div class="direct-layout">
+    <div>
+      <div class="player-wrap">
+        <div class="player-placeholder">
+          <div class="player-spinner"></div>
+          <div style="font-size:0.85rem;color:rgba(255,255,255,0.3);margin-top:8px">Chargement du direct...</div>
+        </div>
+        <div class="player-controls">
+          <button class="player-btn"><i class="bi bi-play-fill"></i></button>
+          <span class="player-time">0:00</span>
+          <div class="player-progress"><div class="player-progress-fill"></div></div>
+          <button class="player-btn"><i class="bi bi-volume-up-fill"></i></button>
+          <button class="player-btn"><i class="bi bi-fullscreen"></i></button>
+          <button class="player-btn"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+      </div>
+      <div class="player-actions mt-3">
+        <button class="player-action-btn liked"><i class="bi bi-heart-fill"></i>J'aime 4.5k</button>
+        <button class="player-action-btn"><i class="bi bi-share"></i>Partager</button>
+        <button class="player-action-btn"><i class="bi bi-fullscreen"></i>Plein écran</button>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="section-title mb-3"><i class="bi bi-clock-history"></i>À venir</h3>
+        <div class="schedule-grid">
+          <div class="schedule-card">
+            <div class="schedule-time"><i class="bi bi-clock"></i>21:00 - 22:00</div>
+            <div class="schedule-title">Débat politique</div>
+            <div class="schedule-channel"><i class="bi bi-mic-fill"></i>BF1 Info</div>
+            <button class="btn-outline mt-2 w-100 justify-content-center" style="font-size:0.8rem;padding:7px"><i class="bi bi-bell"></i>Rappel</button>
+          </div>
+          <div class="schedule-card">
+            <div class="schedule-time"><i class="bi bi-clock"></i>22:00 - 23:00</div>
+            <div class="schedule-title">CAN 2024 — Analyse</div>
+            <div class="schedule-channel"><i class="bi bi-trophy-fill"></i>BF1 Sport</div>
+            <button class="btn-outline mt-2 w-100 justify-content-center" style="font-size:0.8rem;padding:7px"><i class="bi bi-bell"></i>Rappel</button>
+          </div>
+          <div class="schedule-card">
+            <div class="schedule-time"><i class="bi bi-clock"></i>23:00 - 00:00</div>
+            <div class="schedule-title">Concert live</div>
+            <div class="schedule-channel"><i class="bi bi-music-note-fill"></i>BF1 Musique</div>
+            <button class="btn-outline mt-2 w-100 justify-content-center" style="font-size:0.8rem;padding:7px"><i class="bi bi-bell"></i>Rappel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-header-title"><i class="bi bi-chat-dots-fill"></i>Chat en direct</div>
+          <div class="chat-header-sub"><span class="chat-online-dot"></span>2.3k en ligne</div>
+        </div>
+        <div class="chat-messages">
+          <div class="chat-msg">
+            <div class="chat-msg-avatar" style="background:#3b82f6;color:#fff">O</div>
+            <div>
+              <div class="chat-msg-name">Ousmane Diallo</div>
+              <div class="chat-msg-text">Super émission ! J'adore le nouveau format 🔥</div>
+              <div class="chat-msg-time">à l'instant</div>
+            </div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-msg-avatar" style="background:#8b5cf6;color:#fff">A</div>
+            <div>
+              <div class="chat-msg-name">Aïcha Traoré</div>
+              <div class="chat-msg-text">Bravo à toute l'équipe de BF1 !</div>
+              <div class="chat-msg-time">il y a 1 min</div>
+            </div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-msg-avatar" style="background:#059669;color:#fff">I</div>
+            <div>
+              <div class="chat-msg-name">Ibrahim Koné</div>
+              <div class="chat-msg-text">Enfin une télévision moderne en Afrique !</div>
+              <div class="chat-msg-time">il y a 2 min</div>
+            </div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-msg-avatar" style="background:#f59e0b;color:#fff">F</div>
+            <div>
+              <div class="chat-msg-name">Fatima Diallo</div>
+              <div class="chat-msg-text">Très intéressant !</div>
+              <div class="chat-msg-time">il y a 3 min</div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-wrap">
+          <input type="text" class="chat-input" placeholder="Votre message..."/>
+          <button class="chat-send-btn"><i class="bi bi-send-fill"></i></button>
+        </div>
+      </div>
+
+      <div class="others-directs mt-4">
+        <div class="others-directs-title"><i class="bi bi-broadcast"></i>Autres directs</div>
+        <div class="direct-item active">
+          <div class="direct-item-thumb"><div style="width:100%;height:100%;background:#1a0508;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:1.2rem"><i class="bi bi-camera-video-fill"></i></div></div>
+          <div><div class="direct-item-name">Journal de 20h</div><div class="direct-item-channel">BF1 National</div></div>
+          <div class="direct-item-viewers">12.3k</div>
+        </div>
+        <div class="direct-item">
+          <div class="direct-item-thumb"><img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=120&q=60" alt=""/></div>
+          <div><div class="direct-item-name">CAN 2024 — Match</div><div class="direct-item-channel">BF1 Sport</div></div>
+          <div class="direct-item-viewers">45.2k</div>
+        </div>
+        <div class="direct-item">
+          <div class="direct-item-thumb"><img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=120&q=60" alt=""/></div>
+          <div><div class="direct-item-name">Festival culturel</div><div class="direct-item-channel">BF1 Culture</div></div>
+          <div class="direct-item-viewers">5.2k</div>
+        </div>
+        <div class="direct-item">
+          <div class="direct-item-thumb"><img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=120&q=60" alt=""/></div>
+          <div><div class="direct-item-name">Top 50 en direct</div><div class="direct-item-channel">BF1 Musique</div></div>
+          <div class="direct-item-viewers">3.1k</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="bf1-footer">
+  <div class="footer-grid">
+    <div>
+      <div class="logo-box" style="width:50px;height:50px"><span class="logo-text">bf<span class="logo-accent">1</span></span></div>
+      <p class="footer-brand-desc">La télévision africaine nouvelle génération. BF1 TV vous connecte à l'Afrique, en direct et en replay, 24h/24.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Navigation</div>
+      <a href="accueil.html" class="footer-link">Accueil</a>
+      <a href="direct.html" class="footer-link">Direct</a>
+      <a href="programmes.html" class="footer-link">Programmes</a>
+      <a href="replays.html" class="footer-link">Replays</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Chaînes</div>
+      <a href="#" class="footer-link">BF1 National</a>
+      <a href="#" class="footer-link">BF1 Sport</a>
+      <a href="#" class="footer-link">BF1 Culture</a>
+      <a href="#" class="footer-link">BF1 Info</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Légal</div>
+      <a href="#" class="footer-link">Conditions d'utilisation</a>
+      <a href="#" class="footer-link">Confidentialité</a>
+      <a href="#" class="footer-link">Droits d'auteur</a>
+      <a href="#" class="footer-link">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">BF1 TV © 2026 — La chaîne au cœur de nos défis</div>
+    <div class="footer-socials">
+      <div class="social-btn"><i class="bi bi-facebook"></i></div>
+      <div class="social-btn"><i class="bi bi-twitter-x"></i></div>
+      <div class="social-btn"><i class="bi bi-instagram"></i></div>
+      <div class="social-btn"><i class="bi bi-youtube"></i></div>
+      <div class="social-btn"><i class="bi bi-tiktok"></i></div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../app.js"></script>
+</body>
+</html>
