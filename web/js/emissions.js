@@ -371,19 +371,19 @@ function redirectToDetail(id, type) {
   let page = '';
   switch (type) {
     case 'sport':
-      page = `sport-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=sport`;
       break;
     case 'jtandmag':
-      page = `journal-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=jtandmag`;
       break;
     case 'divertissement':
-      page = `divertissement-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=divertissement`;
       break;
     case 'reportage':
-      page = `reportage-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=reportage`;
       break;
     default:
-      page = `emission-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=unknown`;
   }
   window.location.href = page;
 }
