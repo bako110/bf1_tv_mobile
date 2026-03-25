@@ -287,7 +287,7 @@ function renderFilms() {
     </div>
   `).join('');
   
-  // Ajouter les événements de clic
+  // Ajouter les événements de clic sur les cartes
   document.querySelectorAll('.film-card').forEach(card => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.watch-btn')) return;
@@ -296,6 +296,7 @@ function renderFilms() {
     });
   });
   
+  // Ajouter les événements de clic sur les boutons "Regarder"
   document.querySelectorAll('.watch-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -315,7 +316,6 @@ function renderFilms() {
     });
   });
 }
-
 // Vérifier l'accès premium
 async function checkPremiumAccess(filmId) {
   try {
