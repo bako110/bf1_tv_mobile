@@ -106,7 +106,7 @@ function redirectToDetail(id, type) {
       page = `archive-detail.html?id=${id}&type=archive`;
       break;
     case 'movie':
-      page = `film-detail.html?id=${id}&type=movie`;
+      page = `movie-detail.html?id=${id}&type=movie`;
       break;
     default:
       page = `contenu-detail.html?id=${id}&type=${type}`;

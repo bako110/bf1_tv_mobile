@@ -404,7 +404,7 @@ function showLoginModal() {
 
 // Rediriger vers la page détail du film
 function redirectToFilmDetail(filmId) {
-  window.location.href = `detail-contenu.html?id=${filmId}&type=film`;
+  window.location.href = `detail-contenu.html?id=${filmId}&type=movie`;
 }
 
 // Charger les genres uniques
