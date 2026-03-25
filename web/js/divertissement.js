@@ -378,7 +378,7 @@ function updateTrendsSection(allData) {
   if (!trendsContainer) {
     console.log('⚠️ Conteneur des tendances non trouvé');
     return;
-  }
+  }updateTrendsSection
   
   const trends = [...allData]
     .sort((a, b) => (b.views || 0) - (a.views || 0))
@@ -390,7 +390,7 @@ function updateTrendsSection(allData) {
       const views = item.views || 0;
       
       return `
-        <div class="trend-item" onclick="window.location.href='divertissement-detail.html?id=${item._id}'">
+        <div class="trend-item" onclick="window.location.href='detail-contenu.html?id=${item._id}&type=divertissement'">
           <div class="trend-rank">${idx + 1}</div>
           <div class="trend-content">
             <div class="trend-title">${escapeHtml(title)}</div>

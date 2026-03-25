@@ -381,7 +381,7 @@ function updateTrendsSection(allData) {
       const views = item.views || 0;
       
       return `
-        <div class="trend-item" onclick="window.location.href='journal-detail.html?id=${item._id}'">
+        <div class="trend-item" onclick="window.location.href='detail-contenu.html?id=${item._id}&type=jtandmag'">
           <div class="trend-rank">${idx + 1}</div>
           <div class="trend-content">
             <div class="trend-title">${escapeHtml(title)}</div>
