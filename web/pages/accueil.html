@@ -18,11 +18,6 @@
 <body>
 
 <div id="header-placeholder"></div>
-<script>
-  fetch('../partials/header.html').then(r => r.text()).then(html => {
-    document.getElementById('header-placeholder').innerHTML = html;
-  });
-</script>
 
 <main class="main-content">
   <section class="hero">
@@ -39,27 +34,6 @@
         <a href="direct.html" class="btn-red"><i class="bi bi-play-circle-fill"></i>Regarder en direct</a>
         <a href="programmes.html" class="btn-outline"><i class="bi bi-calendar3"></i>Voir les programmes</a>
       </div>
-      <!-- <div class="hero-stats">
-        <div class="hero-stat">
-          <div class="hero-stat-num">45<span>k</span></div>
-          <div class="hero-stat-lbl">Téléspectateurs</div>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num">5</div>
-          <div class="hero-stat-lbl">Directs actifs</div>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num">450<span>+</span></div>
-          <div class="hero-stat-lbl">Émissions</div>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num">15</div>
-          <div class="hero-stat-lbl">Chaînes</div>
-        </div>
-      </div> -->
     </div>
     <div class="hero-preview">
       <div class="hero-preview-thumb">
@@ -76,7 +50,6 @@
     </div>
   </section>
 
-  <!-- Exploration par catégories -->
   <section class="section container-fluid">
     <div class="section-head">
       <div>
@@ -93,16 +66,12 @@
       <button class="filter-pill active" data-category="all"><i class="bi bi-grid-fill"></i>Tous</button>
       <button class="filter-pill" data-category="actualites"><i class="bi bi-lightning-fill"></i>Actualités</button>
       <button class="filter-pill" data-category="sport"><i class="bi bi-trophy-fill"></i>Sport</button>
-      <!-- <button class="filter-pill" data-category="culture"><i class="bi bi-palette-fill"></i>Culture</button> -->
       <button class="filter-pill" data-category="divertissement"><i class="bi bi-emoji-smile-fill"></i>Divertissement</button>
-      <!-- <button class="filter-pill" data-category="musique"><i class="bi bi-music-note-fill"></i>Musique</button> -->
-      <!-- <button class="filter-pill" data-category="documentaire"><i class="bi bi-camera-reels-fill"></i>Documentaire</button> -->
       <button class="filter-pill" data-category="archive"><i class="bi bi-archive-fill"></i>Archive</button>
       <button class="filter-pill" data-category="reportage"><i class="bi bi-camera-fill"></i>Reportage</button>
       <button class="filter-pill" data-category="jtandmag"><i class="bi bi-journal-text"></i>Journal et Magazine</button>
     </div>
     <div class="videos-grid" id="videosGrid">
-      <!-- Les cartes seront chargées dynamiquement par le JS -->
       <div class="text-center py-5" style="grid-column: 1/-1;">
         <div class="spinner-border text-danger" role="status">
           <span class="visually-hidden">Chargement...</span>
@@ -111,63 +80,67 @@
       </div>
     </div>
   </section>
-
-  <!-- <section class="vibes-section">
-    <div class="vibes-header">
-      <div class="vibes-new-tag">NOUVEAU</div>
-      <h2 class="vibes-title">Choisissez votre <span>VIBES</span></h2>
-      <p class="vibes-sub">Trois expériences uniques pour vivre BF1 à votre façon</p>
-    </div>
-    <div class="vibes-grid">
-      <div class="vibe-card anim-up d1">
-        <span class="vibe-popular">POPULAIRE</span>
-        <div class="vibe-icon"><i class="bi bi-phone"></i></div>
-        <div class="vibe-name">MODE FLOW</div>
-        <div class="vibe-desc">Inspiré de TikTok et YouTube Shorts</div>
-        <div class="vibe-features">
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Navigation verticale infinie</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Vidéos en plein écran</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Interactions simplifiées</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Contenu court et viral</div>
-        </div>
-        <button class="btn-red w-100 justify-content-center">Découvrir <i class="bi bi-arrow-right"></i></button>
-      </div>
-      <div class="vibe-card anim-up d2">
-        <div class="vibe-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
-        <div class="vibe-name">SOCIAL GRID</div>
-        <div class="vibe-desc">Inspiré de Facebook et Instagram</div>
-        <div class="vibe-features">
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Grille de contenus sociale</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Stories interactives</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Commentaires en direct</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Groupes de discussion</div>
-        </div>
-        <button class="btn-red w-100 justify-content-center">Découvrir <i class="bi bi-arrow-right"></i></button>
-      </div>
-      <div class="vibe-card anim-up d3">
-        <div class="vibe-icon"><i class="bi bi-display"></i></div>
-        <div class="vibe-name">MODE COMFORT</div>
-        <div class="vibe-desc">Inspiré de Netflix et YouTube</div>
-        <div class="vibe-features">
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Interface classique TV</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Miniatures larges</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Recommandations personnalisées</div>
-          <div class="vibe-feature"><i class="bi bi-check-circle-fill"></i>Mode cinéma</div>
-        </div>
-        <button class="btn-red w-100 justify-content-center">Découvrir <i class="bi bi-arrow-right"></i></button>
-      </div>
-    </div>
-  </section> -->
 </main>
 
 <div id="footer-placeholder"></div>
-<script>
-  fetch('../partials/footer.html').then(r => r.text()).then(html => {
-    document.getElementById('footer-placeholder').innerHTML = html;
-  });
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  console.log('🚀 Début du chargement...');
+  
+  // Charger le header et le footer
+  const [headerHtml, footerHtml] = await Promise.all([
+    fetch('../partials/header.html').then(r => r.text()),
+    fetch('../partials/footer.html').then(r => r.text())
+  ]);
+  
+  document.getElementById('header-placeholder').innerHTML = headerHtml;
+  document.getElementById('footer-placeholder').innerHTML = footerHtml;
+  
+  console.log('✅ Header et footer chargés');
+  
+  // Fonction pour charger le ticker
+  async function startTicker() {
+    try {
+      const { loadTicker } = await import('../../js/ticker.js');
+      console.log('📡 ticker.js importé');
+      await loadTicker();
+      setInterval(() => {
+        console.log('🔄 Rafraîchissement ticker...');
+        loadTicker();
+      }, 300000);
+    } catch (error) {
+      console.error('❌ Erreur import ticker:', error);
+    }
+  }
+  
+  // Attendre que le DOM soit mis à jour
+  setTimeout(() => {
+    const tickerTrack = document.querySelector('.ticker-track');
+    if (tickerTrack) {
+      console.log('✅ Ticker trouvé, démarrage...');
+      startTicker();
+    } else {
+      console.log('⏳ Attente du ticker...');
+      const observer = new MutationObserver((mutations, obs) => {
+        const ticker = document.querySelector('.ticker-track');
+        if (ticker) {
+          obs.disconnect();
+          console.log('✅ Ticker détecté via observer');
+          startTicker();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      
+      // Timeout de sécurité
+      setTimeout(() => {
+        observer.disconnect();
+        console.log('⚠️ Timeout: démarrage du ticker forcé');
+        startTicker();
+      }, 3000);
+    }
+  }, 200);
+</script>
 <script type="module" src="../js/accueil.js"></script>
 </body>
 </html>

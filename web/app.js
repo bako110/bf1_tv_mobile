@@ -2,7 +2,8 @@
    BF1 TV — Main JavaScript
    Navigation, Theme, Animations, Interactions
 ═══════════════════════════════════════════════ */
-
+// Dans app.js
+import { loadTicker } from './js/ticker.js';
 'use strict';
 
 /* ── Theme Manager ── */
@@ -297,6 +298,13 @@ const Player = {
   }
 };
 
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadTicker();
+  setInterval(() => {
+    loadTicker();
+  }, 300000); // Rafraîchir toutes les 5 minutes
+});
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', () => {
   Theme.init();
