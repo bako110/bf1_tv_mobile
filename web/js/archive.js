@@ -1,3 +1,4 @@
+// js/archives.js
 import * as api from '../../shared/services/api.js';
 
 let archiveData = [];
@@ -33,8 +34,6 @@ export async function loadArchiveContent() {
     console.log('📡 Appel API getArchive()...');
     const response = await api.getArchive();
     console.log('📦 Réponse API brute:', response);
-    console.log('📦 Type de réponse:', typeof response);
-    console.log('📦 Est un tableau?', Array.isArray(response));
     
     // Traiter les données - différents formats possibles
     let rawData = [];
@@ -55,7 +54,6 @@ export async function loadArchiveContent() {
       rawData = response.results;
       console.log('✅ Cas 5: response.results,', rawData.length, 'éléments');
     } else if (response && typeof response === 'object') {
-      // Essayer de collecter toutes les propriétés qui semblent être des articles
       const possibleItems = [];
       for (const key in response) {
         if (response[key] && typeof response[key] === 'object' && response[key].title) {
@@ -268,10 +266,11 @@ function buildArchiveCard(item, index) {
   const views = item.views || 0;
   const likes = item.likes || 0;
   const year = item.year || '';
+  const itemId = item._id || item.id;
 
   return `
     <div class="archive-card anim-up d${(index % 9) + 1}" 
-         onclick="window.location.href='archive-detail.html?id=${item._id}'">
+         onclick="window.location.href='detail-contenu.html?id=${itemId}&type=archive'">
       <div class="archive-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 
@@ -380,9 +379,10 @@ function updateTrendsSection(allArchiveData) {
       const title = item.title || 'Sans titre';
       const views = item.views || 0;
       const year = item.year || '';
+      const itemId = item._id || item.id;
       
       return `
-        <div class="trend-item" onclick="window.location.href='archive-detail.html?id=${item._id}'">
+        <div class="trend-item" onclick="window.location.href='contenu-detail.html?id=${itemId}&type=archive'">
           <div class="trend-rank">${idx + 1}</div>
           <div class="trend-content">
             <div class="trend-title">${escapeHtml(title)}</div>

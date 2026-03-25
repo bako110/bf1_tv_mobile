@@ -274,7 +274,7 @@ function buildReportageCard(item, index) {
 
   return `
     <div class="reportage-card anim-up d${(index % 9) + 1}" 
-         onclick="window.location.href='reportage-detail.html?id=${item._id}'">
+         onclick="window.location.href='detail-contenu.html?id=${item._id}&type=reportage'">
       <div class="reportage-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 

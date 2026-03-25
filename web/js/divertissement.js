@@ -280,7 +280,7 @@ function buildDivertissementCard(item, index) {
 
   return `
     <div class="divertissement-card anim-up d${(index % 9) + 1} ${isUrgent ? 'urgent-flash' : ''}" 
-         onclick="window.location.href='divertissement-detail.html?id=${item._id}'">
+         onclick="window.location.href='detail-contenu.html?id=${item._id}&type=divertissement'">
       <div class="divertissement-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 

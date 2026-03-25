@@ -131,25 +131,25 @@ function redirectToDetail(item, category) {
   let page = '';
   switch (category) {
     case 'sport':
-      page = `sport-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=sport`;
       break;
     case 'culture':
-      page = `culture-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=culture`;
       break;
     case 'divertissement':
-      page = `divertissement-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=divertissement`;
       break;
     case 'musique':
-      page = `musique-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=musique`;
       break;
     case 'reportage':
-      page = `reportage-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=reportage`;
       break;
     case 'archive':
-      page = `archive-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=archive`;
       break;
     case 'jtandmag':
-      page = `journal-detail.html?id=${id}`;
+      page = `detail-contenu.html?id=${id}&type=jtandmag`;
       break;
     default:
       page = `news-detail.html?id=${id}`;

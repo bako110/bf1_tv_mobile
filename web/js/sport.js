@@ -310,7 +310,7 @@ function buildSportCard(item, index) {
 
   return `
     <div class="sport-card anim-up d${(index % 9) + 1} ${isUrgent ? 'urgent-flash' : ''}" 
-         onclick="window.location.href='sport-detail.html?id=${item.id || item._id}'">
+         onclick="window.location.href='detail-contenu.html?id=${item.id || item._id}&type=sport'">
       <div class="sport-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 
@@ -355,7 +355,7 @@ function updateTrendsSection(allSportData) {
       const views = item.views || 0;
       
       return `
-        <div class="trend-item" onclick="window.location.href='sport-detail.html?id=${item.id || item._id}'">
+        <div class="trend-item" onclick="window.location.href='detail-contenu.html?id=${item.id || item._id}&type=sport'">
           <div class="trend-rank">${idx + 1}</div>
           <div class="trend-content">
             <div class="trend-title">${escapeHtml(title)}</div>
