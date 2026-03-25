@@ -11,7 +11,7 @@ const ITEMS_PER_PAGE = 8;
 
 // Mapping des catégories vers les URLs des pages "Voir plus"
 const categoryUrls = {
-  'all': 'flashinfo.html',
+  'all': 'emissions.html',
   'actualites': 'flashinfo.html',
   'sport': 'sport.html',
   'culture': 'culture.html',

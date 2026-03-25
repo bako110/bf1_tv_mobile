@@ -91,25 +91,25 @@ function redirectToDetail(id, type) {
   
   switch (type) {
     case 'sport':
-      page = `sport-detail.html?id=${id}&type=sport`;
+      page = `detail-contenu.html?id=${id}&type=sport`;
       break;
     case 'jtandmag':
-      page = `journal-detail.html?id=${id}&type=jtandmag`;
+      page = `detail-contenu.html?id=${id}&type=jtandmag`;
       break;
     case 'divertissement':
-      page = `divertissement-detail.html?id=${id}&type=divertissement`;
+      page = `detail-contenu.html?id=${id}&type=divertissement`;
       break;
     case 'reportage':
-      page = `reportage-detail.html?id=${id}&type=reportage`;
+      page = `detail-contenu.html?id=${id}&type=reportage`;
       break;
     case 'archive':
-      page = `archive-detail.html?id=${id}&type=archive`;
+      page = `detail-contenu.html?id=${id}&type=archive`;
       break;
     case 'movie':
-      page = `movie-detail.html?id=${id}&type=movie`;
+      page = `detail-contenu.html?id=${id}&type=movie`;
       break;
     default:
-      page = `contenu-detail.html?id=${id}&type=${type}`;
+      page = `detail-contenu.html?id=${id}&type=${type}`;
   }
   
   window.location.href = page;
@@ -133,7 +133,7 @@ function showAccessDenied(message, isLoggedIn = true) {
       <p>${escapeHtml(message)}</p>
       <div class="access-denied-buttons">
         <button onclick="history.back()" class="btn-outline">Retour</button>
-        ${!isLoggedIn ? '<button onclick="window.location.href=\'login.html\'" class="btn-red">Se connecter</button>' : 
+        ${!isLoggedIn ? '<button onclick="window.location.href=\'connexion.html\'" class="btn-red">Se connecter</button>' : 
                         '<button onclick="window.location.href=\'subscription.html\'" class="btn-red">Voir les offres</button>'}
       </div>
     </div>
@@ -331,7 +331,7 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
             </div>
           ` : `
             <div class="comment-login-prompt">
-              <p><a href="login.html">Connectez-vous</a> pour laisser un commentaire</p>
+              <p><a href="connexion.html">Connectez-vous</a> pour laisser un commentaire</p>
             </div>
           `}
         </div>
@@ -450,7 +450,7 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
     likeBtn.addEventListener('click', async () => {
       if (!api.isAuthenticated()) {
         showToast('Connectez-vous pour liker ce contenu', 'error');
-        setTimeout(() => window.location.href = 'login.html', 1500);
+        setTimeout(() => window.location.href = 'connexion.html', 1500);
         return;
       }
       
@@ -479,7 +479,7 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
     favBtn.addEventListener('click', async () => {
       if (!api.isAuthenticated()) {
         showToast('Connectez-vous pour ajouter aux favoris', 'error');
-        setTimeout(() => window.location.href = 'login.html', 1500);
+        setTimeout(() => window.location.href = 'connexion.html', 1500);
         return;
       }
       
@@ -537,7 +537,7 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
       
       if (!api.isAuthenticated()) {
         showToast('Connectez-vous pour commenter', 'error');
-        setTimeout(() => window.location.href = 'login.html', 1500);
+        setTimeout(() => window.location.href = 'connexion.html', 1500);
         return;
       }
       

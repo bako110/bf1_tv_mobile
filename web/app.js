@@ -305,6 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTicker();
   }, 300000); // Rafraîchir toutes les 5 minutes
 });
+
+
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', () => {
   Theme.init();

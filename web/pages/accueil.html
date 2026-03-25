@@ -44,130 +44,348 @@
 </head>
 <body>
 
-<div id="header-placeholder"></div>
+  <!-- Header -->
+  <div id="header-placeholder"></div>
 
-<main class="main-content">
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-bg-img"></div>
-    <div class="hero-bg-mesh"></div>
-    <div class="hero-orb hero-orb-1"></div>
-    <div class="hero-orb hero-orb-2"></div>
-    <div class="hero-content">
-      <div class="hero-tag"><i class="bi bi-record-circle-fill"></i>EN DIRECT — Journal de 20h</div>
-      <h1 class="hero-title">Bienvenue<br>sur <span>BF1</span></h1>
-      <p class="hero-sub">La télévision africaine nouvelle génération. Vivez l'info, le sport et la culture en temps réel.</p>
-      <div class="hero-actions">
-        <a href="direct.html" class="btn-red"><i class="bi bi-play-circle-fill"></i>Regarder en direct</a>
-        <a href="programmes.html" class="btn-outline"><i class="bi bi-calendar3"></i>Voir les programmes</a>
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- ==================== SECTION 1: HERO ==================== -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-bg-img"></div>
+      <div class="hero-bg-mesh"></div>
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-content">
+        <div class="hero-tag">
+          <i class="bi bi-record-circle-fill"></i>EN DIRECT — Journal de 20h
+        </div>
+        <h1 class="hero-title">Bienvenue<br>sur <span>BF1</span></h1>
+        <p class="hero-sub">La télévision africaine nouvelle génération. Vivez l'info, le sport et la culture en temps réel.</p>
+        <div class="hero-actions">
+          <a href="direct.html" class="btn-red">
+            <i class="bi bi-play-circle-fill"></i>Regarder en direct
+          </a>
+          <a href="programmes.html" class="btn-outline">
+            <i class="bi bi-calendar3"></i>Voir les programmes
+          </a>
+        </div>
       </div>
-    </div>
-    <div class="hero-preview">
-      <div class="hero-preview-thumb">
-        <div class="play-pulse"><i class="bi bi-play-fill"></i></div>
+      <div class="hero-preview">
+        <div class="hero-preview-thumb">
+          <div class="play-pulse">
+            <i class="bi bi-play-fill"></i>
+          </div>
+        </div>
+        <div class="hero-preview-info">
+          <div class="hero-preview-dot"></div>
+          <div>
+            <div class="hero-preview-title">Journal de 20h</div>
+            <div class="hero-preview-sub">BF1 National</div>
+          </div>
+          <div class="hero-preview-viewers">
+            <i class="bi bi-eye-fill"></i>12.3k
+          </div>
+        </div>
       </div>
-      <div class="hero-preview-info">
-        <div class="hero-preview-dot"></div>
+    </section>
+
+    <!-- ==================== SECTION 2: BANDE-ANNONCE ==================== -->
+    <section class="bf1-row-section" id="sec-bande-annonce">
+      <div class="brs-header">
+        <span class="brs-arrow">
+          <i class="bi bi-chevron-right"></i>
+        </span>
         <div>
-          <div class="hero-preview-title">Journal de 20h</div>
-          <div class="hero-preview-sub">BF1 National</div>
+          <h2 class="brs-title">Bande-annonce</h2>
+          <p class="brs-sub">Découvrez les films et séries à venir sur BF1 TV</p>
         </div>
-        <div class="hero-preview-viewers"><i class="bi bi-eye-fill"></i>12.3k</div>
+        <a href="#" class="brs-see-all">
+          Tout voir <i class="bi bi-arrow-right"></i>
+        </a>
       </div>
-    </div>
-  </section>
-
-  <section class="section container-fluid">
-    <div class="section-head">
-      <div>
-        <h2 class="section-title"><i class="bi bi-grid-3x3-gap-fill"></i>Explorer par catégories</h2>
-        <p style="font-size:0.85rem;color:var(--text-3);margin-top:4px">Découvrez nos programmes par thématique</p>
-      </div>
-      <div class="display-toggle">
-        <div class="display-btn" data-mode="2">2X</div>
-        <div class="display-btn active" data-mode="3">3X</div>
-        <div class="display-btn" data-mode="4">4X</div>
-      </div>
-    </div>
-    <div class="filter-pills" id="filterPills">
-      <button class="filter-pill active" data-category="all"><i class="bi bi-grid-fill"></i>Tous</button>
-      <button class="filter-pill" data-category="actualites"><i class="bi bi-lightning-fill"></i>Actualités</button>
-      <button class="filter-pill" data-category="sport"><i class="bi bi-trophy-fill"></i>Sport</button>
-      <button class="filter-pill" data-category="divertissement"><i class="bi bi-emoji-smile-fill"></i>Divertissement</button>
-      <button class="filter-pill" data-category="archive"><i class="bi bi-archive-fill"></i>Archive</button>
-      <button class="filter-pill" data-category="reportage"><i class="bi bi-camera-fill"></i>Reportage</button>
-      <button class="filter-pill" data-category="jtandmag"><i class="bi bi-journal-text"></i>Journal et Magazine</button>
-    </div>
-    <div class="videos-grid" id="videosGrid">
-      <div class="text-center py-5" style="grid-column: 1/-1;">
-        <div class="spinner-border text-danger" role="status">
-          <span class="visually-hidden">Chargement...</span>
-        </div>
-        <p class="mt-3 text-secondary">Chargement des contenus...</p>
-      </div>
-    </div>
-  </section>
-</main>
-
-<div id="footer-placeholder"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module">
-  console.log('🚀 Début du chargement...');
-  
-  // Charger le header et le footer
-  const [headerHtml, footerHtml] = await Promise.all([
-    fetch('../partials/header.html').then(r => r.text()),
-    fetch('../partials/footer.html').then(r => r.text())
-  ]);
-  
-  document.getElementById('header-placeholder').innerHTML = headerHtml;
-  document.getElementById('footer-placeholder').innerHTML = footerHtml;
-  
-  console.log('✅ Header et footer chargés');
-  
-  // Fonction pour charger le ticker
-  async function startTicker() {
-    try {
-      const { loadTicker } = await import('../../js/ticker.js');
-      console.log('📡 ticker.js importé');
-      await loadTicker();
-      setInterval(() => {
-        console.log('🔄 Rafraîchissement ticker...');
-        loadTicker();
-      }, 300000);
-    } catch (error) {
-      console.error('❌ Erreur import ticker:', error);
-    }
-  }
-  
-  // Attendre que le DOM soit mis à jour
-  setTimeout(() => {
-    const tickerTrack = document.querySelector('.ticker-track');
-    if (tickerTrack) {
-      console.log('✅ Ticker trouvé, démarrage...');
-      startTicker();
-    } else {
-      console.log('⏳ Attente du ticker...');
-      const observer = new MutationObserver((mutations, obs) => {
-        const ticker = document.querySelector('.ticker-track');
-        if (ticker) {
-          obs.disconnect();
-          console.log('✅ Ticker détecté via observer');
-          startTicker();
-        }
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
       
-      // Timeout de sécurité
-      setTimeout(() => {
-        observer.disconnect();
-        console.log('⚠️ Timeout: démarrage du ticker forcé');
-        startTicker();
-      }, 3000);
+      <div class="brs-track-wrap">
+        <button class="brs-nav brs-nav-prev" data-track="track-bande-annonce">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        
+        <div class="brs-track" id="track-bande-annonce">
+          <!-- Carte 1 - Film Action -->
+          <div class="bpc">
+            <div class="bp-thumb bp-thumb--trailer" style="background:linear-gradient(160deg,#0a2a6e,#1a4ab8)">
+              <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&q=80" alt="Film Action"/>
+              <div class="bp-gradient"></div>
+              <div class="bp-channel-badge bf1-badge">bf<span>1</span></div>
+              <div class="bp-label-overlay">
+                <span class="bp-label-title">BANDE-ANNONCE</span>
+                <span class="bp-label-accent">EXCLU</span>
+              </div>
+              <div class="bp-hover-veil">
+                <div class="bp-hover-content">
+                  <div class="bp-hover-title">LES GUERRIERS DU SAHARA</div>
+                  <div class="bp-hover-meta">
+                    <i class="bi bi-film"></i>2h15 
+                    <span class="mx-2">·</span>
+                    <i class="bi bi-star-fill"></i>4.8
+                  </div>
+                  <div class="bp-hover-desc">Dans les dunes enflammées, un héros se lève pour protéger son peuple.</div>
+                  <button class="bp-hover-btn">
+                    <i class="bi bi-play-fill"></i>Voir la bande-annonce
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carte 2 - Film Drame -->
+          <div class="bpc">
+            <div class="bp-thumb bp-thumb--trailer" style="background:linear-gradient(160deg,#1a0a2a,#4a1a6a)">
+              <img src="https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&q=80" alt="Film Drame"/>
+              <div class="bp-gradient"></div>
+              <div class="bp-channel-badge bf1-badge">bf<span>1</span></div>
+              <div class="bp-new-badge">PROCHAINEMENT</div>
+              <div class="bp-hover-veil">
+                <div class="bp-hover-content">
+                  <div class="bp-hover-title">LES COULEURS DU SILENCE</div>
+                  <div class="bp-hover-meta">
+                    <i class="bi bi-film"></i>1h48 
+                    <span class="mx-2">·</span>
+                    <i class="bi bi-star-fill"></i>4.5
+                  </div>
+                  <div class="bp-hover-desc">L'histoire bouleversante d'une artiste en quête de reconnaissance.</div>
+                  <button class="bp-hover-btn">
+                    <i class="bi bi-play-fill"></i>Voir la bande-annonce
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carte 3 - Série -->
+          <div class="bpc">
+            <div class="bp-thumb bp-thumb--trailer" style="background:linear-gradient(160deg,#0a2a1a,#1a6a3a)">
+              <img src="https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=400&q=80" alt="Série"/>
+              <div class="bp-gradient"></div>
+              <div class="bp-channel-badge" style="background:#8b5cf6;color:#fff">BF1</div>
+              <div class="bp-time-badge" style="background:#166534;color:#4ade80">SÉRIE</div>
+              <div class="bp-hover-veil">
+                <div class="bp-hover-content">
+                  <div class="bp-hover-title">SAGA DES ANCÊTRES</div>
+                  <div class="bp-hover-meta">
+                    <i class="bi bi-tv"></i>Saison 1 
+                    <span class="mx-2">·</span>
+                    <i class="bi bi-clock"></i>8 épisodes
+                  </div>
+                  <div class="bp-hover-desc">Une saga familiale à travers trois générations d'une dynastie africaine.</div>
+                  <button class="bp-hover-btn">
+                    <i class="bi bi-play-fill"></i>Voir la bande-annonce
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carte 4 - Comédie -->
+          <div class="bpc">
+            <div class="bp-thumb bp-thumb--trailer" style="background:linear-gradient(160deg,#4a1a1a,#8b2a2a)">
+              <img src="https://images.unsplash.com/photo-1535016120720-40c646be5580?w=400&q=80" alt="Film Comédie"/>
+              <div class="bp-gradient"></div>
+              <div class="bp-channel-badge bf1-badge">bf<span>1</span></div>
+              <div class="bp-label-overlay">
+                <span class="bp-label-title">COMÉDIE</span>
+                <span class="bp-label-accent">FAMILLE</span>
+              </div>
+              <div class="bp-hover-veil">
+                <div class="bp-hover-content">
+                  <div class="bp-hover-title">PAPA D'UN JOUR</div>
+                  <div class="bp-hover-meta">
+                    <i class="bi bi-film"></i>1h35 
+                    <span class="mx-2">·</span>
+                    <i class="bi bi-star-fill"></i>4.2
+                  </div>
+                  <div class="bp-hover-desc">Un célibataire endurci doit s'occuper de trois enfants pour une semaine.</div>
+                  <button class="bp-hover-btn">
+                    <i class="bi bi-play-fill"></i>Voir la bande-annonce
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carte 5 - Documentaire -->
+          <div class="bpc">
+            <div class="bp-thumb bp-thumb--trailer" style="background:linear-gradient(160deg,#1a0a3a,#4a1a8b)">
+              <img src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&q=80" alt="Documentaire"/>
+              <div class="bp-gradient"></div>
+              <div class="bp-channel-badge bf1-badge">bf<span>1</span></div>
+              <div class="bp-new-badge">DOCUMENTAIRE</div>
+              <div class="bp-hover-veil">
+                <div class="bp-hover-content">
+                  <div class="bp-hover-title">TERRES SAUVAGES</div>
+                  <div class="bp-hover-meta">
+                    <i class="bi bi-film"></i>52min 
+                    <span class="mx-2">·</span>
+                    <i class="bi bi-camera"></i>4K
+                  </div>
+                  <div class="bp-hover-desc">À la découverte des parcs nationaux d'Afrique de l'Ouest.</div>
+                  <button class="bp-hover-btn">
+                    <i class="bi bi-play-fill"></i>Voir la bande-annonce
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carte 6 - Film Action/Aventure -->
+          <div class="bpc">
+            <div class="bp-thumb bp-thumb--trailer" style="background:linear-gradient(160deg,#2a1a0a,#6a3a1a)">
+              <img src="https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=400&q=80" alt="Film Action"/>
+              <div class="bp-gradient"></div>
+              <div class="bp-channel-badge bf1-badge">bf<span>1</span></div>
+              <div class="bp-label-overlay">
+                <span class="bp-label-title">ACTION</span>
+                <span class="bp-label-accent">AVENTURE</span>
+              </div>
+              <div class="bp-hover-veil">
+                <div class="bp-hover-content">
+                  <div class="bp-hover-title">CODE NOIR</div>
+                  <div class="bp-hover-meta">
+                    <i class="bi bi-film"></i>2h05 
+                    <span class="mx-2">·</span>
+                    <i class="bi bi-star-fill"></i>4.9
+                  </div>
+                  <div class="bp-hover-desc">Un agent secret doit déjouer un complot international.</div>
+                  <button class="bp-hover-btn">
+                    <i class="bi bi-play-fill"></i>Voir la bande-annonce
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /brs-track -->
+        
+        <button class="brs-nav brs-nav-next" data-track="track-bande-annonce">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION 3: EXPLORER PAR CATÉGORIES ==================== -->
+    <section class="section container-fluid">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">
+            <i class="bi bi-grid-3x3-gap-fill"></i>Explorer par catégories
+          </h2>
+          <p style="font-size:0.85rem;color:var(--text-3);margin-top:4px">
+            Découvrez nos programmes par thématique
+          </p>
+        </div>
+        <div class="display-toggle">
+          <div class="display-btn" data-mode="2">2X</div>
+          <div class="display-btn active" data-mode="3">3X</div>
+          <div class="display-btn" data-mode="4">4X</div>
+        </div>
+      </div>
+      
+      <div class="filter-pills" id="filterPills">
+        <button class="filter-pill active" data-category="all">
+          <i class="bi bi-grid-fill"></i>Tous
+        </button>
+        <button class="filter-pill" data-category="actualites">
+          <i class="bi bi-lightning-fill"></i>Actualités
+        </button>
+        <button class="filter-pill" data-category="sport">
+          <i class="bi bi-trophy-fill"></i>Sport
+        </button>
+        <button class="filter-pill" data-category="divertissement">
+          <i class="bi bi-emoji-smile-fill"></i>Divertissement
+        </button>
+        <button class="filter-pill" data-category="archive">
+          <i class="bi bi-archive-fill"></i>Archive
+        </button>
+        <button class="filter-pill" data-category="reportage">
+          <i class="bi bi-camera-fill"></i>Reportage
+        </button>
+        <button class="filter-pill" data-category="jtandmag">
+          <i class="bi bi-journal-text"></i>Journal et Magazine
+        </button>
+      </div>
+      
+      <div class="videos-grid" id="videosGrid">
+        <div class="text-center py-5" style="grid-column: 1/-1;">
+          <div class="spinner-border text-danger" role="status">
+            <span class="visually-hidden">Chargement...</span>
+          </div>
+          <p class="mt-3 text-secondary">Chargement des contenus...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    console.log('🚀 Début du chargement...');
+    
+    // Charger le header et le footer
+    const [headerHtml, footerHtml] = await Promise.all([
+      fetch('../partials/header.html').then(r => r.text()),
+      fetch('../partials/footer.html').then(r => r.text())
+    ]);
+    
+    document.getElementById('header-placeholder').innerHTML = headerHtml;
+    document.getElementById('footer-placeholder').innerHTML = footerHtml;
+    
+    console.log('✅ Header et footer chargés');
+    
+    // Fonction pour charger le ticker
+    async function startTicker() {
+      try {
+        const { loadTicker } = await import('../../js/ticker.js');
+        console.log('📡 ticker.js importé');
+        await loadTicker();
+        setInterval(() => {
+          console.log('🔄 Rafraîchissement ticker...');
+          loadTicker();
+        }, 300000);
+      } catch (error) {
+        console.error('❌ Erreur import ticker:', error);
+      }
     }
-  }, 200);
-</script>
-<script type="module" src="../js/accueil.js"></script>
+    
+    // Attendre que le DOM soit mis à jour
+    setTimeout(() => {
+      const tickerTrack = document.querySelector('.ticker-track');
+      if (tickerTrack) {
+        console.log('✅ Ticker trouvé, démarrage...');
+        startTicker();
+      } else {
+        console.log('⏳ Attente du ticker...');
+        const observer = new MutationObserver((mutations, obs) => {
+          const ticker = document.querySelector('.ticker-track');
+          if (ticker) {
+            obs.disconnect();
+            console.log('✅ Ticker détecté via observer');
+            startTicker();
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        // Timeout de sécurité
+        setTimeout(() => {
+          observer.disconnect();
+          console.log('⚠️ Timeout: démarrage du ticker forcé');
+          startTicker();
+        }, 3000);
+      }
+    }, 200);
+  </script>
+  <script type="module" src="../js/accueil.js"></script>
 </body>
 </html>
