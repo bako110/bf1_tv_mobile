@@ -3,7 +3,7 @@
    Navigation, Theme, Animations, Interactions
 ═══════════════════════════════════════════════ */
 // Dans app.js
-import { loadTicker } from './js/ticker.js';
+import { loadTicker } from '../../js/ticker.js';
 'use strict';
 
 /* ── Theme Manager ── */
@@ -69,25 +69,6 @@ const Navbar = {
   }
 };
 
-/* ── Hamburger menu ── */
-const MobileMenu = {
-  init() {
-    const btn = document.querySelector('.navbar-hamburger');
-    const links = document.querySelector('.navbar-links');
-    if (!btn || !links) return;
-    btn.addEventListener('click', () => {
-      btn.classList.toggle('open');
-      links.classList.toggle('open');
-    });
-    document.addEventListener('click', e => {
-      if (!btn.contains(e.target) && !links.contains(e.target)) {
-        btn.classList.remove('open');
-        links.classList.remove('open');
-      }
-    });
-  }
-};
-
 /* ── Filter pills ── */
 const Filters = {
   init() {
@@ -145,8 +126,18 @@ const Notifs = {
     const panel = document.querySelector('.notif-panel');
     const close = document.querySelector('.notif-panel-close');
     if (!btn || !panel) return;
-    btn.addEventListener('click', () => panel.classList.toggle('open'));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      panel.classList.toggle('open');
+    });
     if (close) close.addEventListener('click', () => panel.classList.remove('open'));
+    
+    // Fermer le panneau en cliquant en dehors
+    document.addEventListener('click', (e) => {
+      if (!btn.contains(e.target) && !panel.contains(e.target)) {
+        panel.classList.remove('open');
+      }
+    });
   }
 };
 
@@ -298,17 +289,78 @@ const Player = {
   }
 };
 
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadTicker();
-  setInterval(() => {
-    loadTicker();
-  }, 300000); // Rafraîchir toutes les 5 minutes
-});
-
+/* ── Hamburger menu (CORRIGÉ) ── */
+const MobileMenu = {
+  init() {
+    const btn = document.querySelector('.navbar-hamburger');
+    const links = document.querySelector('.navbar-links');
+    console.log('Bouton hamburger:', document.querySelector('.navbar-hamburger'));
+console.log('Liens:', document.querySelector('.navbar-links'));
+    console.log('🔍 Recherche du menu:', { btn, links });
+    
+    if (!btn || !links) {
+      console.error('❌ Menu hamburger non trouvé!');
+      return;
+    }
+    
+    console.log('✅ Menu hamburger trouvé, attachement des événements');
+    
+    // Supprimer les anciens événements pour éviter les doublons
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    const newLinks = links.cloneNode(true);
+    links.parentNode.replaceChild(newLinks, links);
+    
+    const finalBtn = document.querySelector('.navbar-hamburger');
+    const finalLinks = document.querySelector('.navbar-links');
+    
+    // Ouvrir/fermer le menu au clic
+    finalBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🔄 Clic sur le menu hamburger');
+      finalBtn.classList.toggle('open');
+      finalLinks.classList.toggle('open');
+      
+      // Empêcher le scroll du body
+      if (finalLinks.classList.contains('open')) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+    
+    // Fermer le menu en cliquant sur un lien
+    finalLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        finalBtn.classList.remove('open');
+        finalLinks.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+    
+    // Fermer le menu en cliquant en dehors
+    document.addEventListener('click', (e) => {
+      if (!finalBtn.contains(e.target) && !finalLinks.contains(e.target)) {
+        finalBtn.classList.remove('open');
+        finalLinks.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+};
 
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Initialisation de l\'application');
+  
+  // Charger le ticker
+  loadTicker();
+  setInterval(() => {
+    loadTicker();
+  }, 300000);
+  
+  // Initialiser tous les modules
   Theme.init();
   Router.init();
   Navbar.init();
@@ -322,8 +374,11 @@ document.addEventListener('DOMContentLoaded', () => {
   Tabs.init();
   Player.init();
   injectStyles();
-  // Small delay for scroll reveal to let page render
+  
+  // Small delay for scroll reveal
   setTimeout(() => ScrollReveal.init(), 100);
+  
+  console.log('✅ Tous les modules initialisés');
 });
 
 /* Expose theme toggle to onclick */

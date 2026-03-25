@@ -241,6 +241,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   color: var(--text-2);
 }
 
+
+
 .social-btn:hover {
   background: var(--red);
   color: white;

@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════
-   BF1 — Video Cards
+   BF1 — Video Cards (COMPLET & RESPONSIVE)
 ═══════════════════════════════════════ */
 
 /* ── Grid display toggle ── */
 .grid-2x .videos-grid { grid-template-columns: repeat(2, 1fr) !important; }
+.grid-3x .videos-grid { grid-template-columns: repeat(3, 1fr) !important; }
 .grid-4x .videos-grid { grid-template-columns: repeat(4, 1fr) !important; }
 
 .display-toggle {
@@ -209,6 +210,17 @@
   overflow: hidden;
 }
 
+.card-description {
+  font-size: 0.8rem;
+  color: var(--text-3);
+  line-height: 1.4;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .card-meta {
   display: flex;
   align-items: center;
@@ -242,6 +254,26 @@
   cursor: pointer;
 }
 .card-action-btn:hover { color: var(--red); background: var(--red-soft); }
+
+.btn-see-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 2px solid var(--red);
+  color: var(--red);
+  padding: 10px 24px;
+  border-radius: 40px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-see-more:hover {
+  background: var(--red);
+  color: white;
+  gap: 12px;
+}
 
 /* ── Category Cards (large) ── */
 .category-card {
@@ -723,35 +755,132 @@
   transform: scale(1.05);
 }
 
-/* Responsive */
+/* Styles pour le menu mobile */
+.navbar-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+}
+
+.navbar-hamburger span {
+  width: 100%;
+  height: 2px;
+  background: var(--text-1);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.navbar-hamburger.open span:nth-child(1) {
+  transform: translateY(11px) rotate(45deg);
+}
+
+.navbar-hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.navbar-hamburger.open span:nth-child(3) {
+  transform: translateY(-11px) rotate(-45deg);
+}
+
+/* Responsive mobile */
 @media (max-width: 768px) {
+  .navbar-hamburger {
+    display: flex;
+  }
+  
+  .navbar-links {
+    position: fixed;
+    top: 70px;
+    left: -100%;
+    width: 100%;
+    height: calc(100vh - 70px);
+    background: var(--bg-card);
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 1rem;
+    gap: 1.5rem;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+  }
+  
+  .navbar-links.open {
+    left: 0;
+  }
+  
+  .navbar-links li {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .navbar-links .nav-link {
+    display: flex;
+    justify-content: center;
+    padding: 12px;
+    font-size: 1.1rem;
+  }
+  
+  .navbar-right {
+    gap: 0.5rem;
+  }
+  
+  .navbar-search {
+    display: none;
+  }
+  
+  .navbar-right .theme-toggle,
+  .navbar-right .notif-btn,
+  .navbar-right .user-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+/* ===== RESPONSIVE POUR LA SECTION BANDE-ANNONCE ===== */
+
+/* Tablettes (768px - 991px) */
+@media (max-width: 991px) {
   .brs-header {
-    padding: 0 1rem;
+    padding: 0 1.5rem;
   }
   
   .brs-title {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
   }
   
   .brs-sub {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
+  }
+  
+  .brs-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
   }
   
   .bpc {
-    width: 200px;
+    width: 220px;
   }
   
   .brs-nav {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
   
   .bp-hover-title {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
   
   .bp-hover-desc {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
   
   .bp-hover-btn {
@@ -760,15 +889,427 @@
   }
 }
 
-@media (max-width: 480px) {
-  .bpc {
-    width: 160px;
+/* Mobiles (480px - 767px) */
+@media (max-width: 767px) {
+  .bf1-row-section {
+    padding: 2rem 0;
+  }
+  
+  .brs-header {
+    padding: 0 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .brs-title {
+    font-size: 1.3rem;
+  }
+  
+  .brs-sub {
+    font-size: 0.7rem;
+    display: none; /* Cache la description sur mobile pour gagner de l'espace */
   }
   
   .brs-arrow {
     width: 36px;
     height: 36px;
     font-size: 1rem;
+  }
+  
+  .brs-see-all {
+    font-size: 0.8rem;
+  }
+  
+  .brs-track-wrap {
+    gap: 0.25rem;
+  }
+  
+  .brs-track {
+    gap: 1rem;
+    padding: 0.5rem 0.5rem;
+  }
+  
+  .bpc {
+    width: 180px;
+  }
+  
+  .brs-nav {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .bp-thumb {
+    border-radius: 16px;
+  }
+  
+  .bp-channel-badge,
+  .bp-time-badge,
+  .bp-new-badge {
+    padding: 3px 8px;
+    font-size: 0.6rem;
+  }
+  
+  .bp-label-title {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+  
+  .bp-label-accent {
+    font-size: 0.6rem;
+    padding: 3px 8px;
+  }
+  
+  .bp-hover-title {
+    font-size: 0.8rem;
+  }
+  
+  .bp-hover-meta {
+    font-size: 0.6rem;
+  }
+  
+  .bp-hover-desc {
+    font-size: 0.6rem;
+    -webkit-line-clamp: 2;
+  }
+  
+  .bp-hover-btn {
+    padding: 5px 10px;
+    font-size: 0.65rem;
+  }
+}
+
+/* Très petits mobiles (moins de 480px) */
+@media (max-width: 480px) {
+  .bf1-row-section {
+    padding: 1.5rem 0;
+  }
+  
+  .brs-header {
+    padding: 0 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .brs-title {
+    font-size: 1.1rem;
+  }
+  
+  .brs-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .brs-see-all {
+    font-size: 0.7rem;
+  }
+  
+  .brs-track-wrap {
+    gap: 0.15rem;
+  }
+  
+  .brs-track {
+    gap: 0.8rem;
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .bpc {
+    width: 150px;
+  }
+  
+  .brs-nav {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .brs-nav i {
+    font-size: 0.8rem;
+  }
+  
+  .bp-thumb {
+    border-radius: 12px;
+  }
+  
+  .bp-channel-badge,
+  .bp-time-badge,
+  .bp-new-badge {
+    top: 8px;
+    left: 8px;
+    padding: 2px 6px;
+    font-size: 0.5rem;
+  }
+  
+  .bp-time-badge,
+  .bp-new-badge {
+    left: auto;
+    right: 8px;
+  }
+  
+  .bp-label-overlay {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+  }
+  
+  .bp-label-title {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+  }
+  
+  .bp-label-accent {
+    font-size: 0.5rem;
+    padding: 2px 6px;
+  }
+  
+  .bp-hover-content {
+    padding: 0.5rem;
+  }
+  
+  .bp-hover-title {
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .bp-hover-meta {
+    font-size: 0.55rem;
+    margin-bottom: 0.5rem;
+    gap: 0.25rem;
+  }
+  
+  .bp-hover-desc {
+    font-size: 0.55rem;
+    margin-bottom: 0.5rem;
+    -webkit-line-clamp: 2;
+  }
+  
+  .bp-hover-btn {
+    padding: 4px 8px;
+    font-size: 0.55rem;
+    gap: 0.25rem;
+  }
+  
+  .bp-hover-btn i {
+    font-size: 0.6rem;
+  }
+}
+
+/* ===== RESPONSIVE POUR LA GRILLE VIDÉO ===== */
+
+/* Grands écrans (1200px et plus) */
+@media (min-width: 1200px) {
+  .videos-grid {
+    gap: 24px;
+  }
+  
+  .video-card .card-title {
+    font-size: 1rem;
+  }
+  
+  .video-card .card-description {
+    font-size: 0.85rem;
+  }
+}
+
+/* Desktop (992px - 1199px) */
+@media (max-width: 1199px) and (min-width: 992px) {
+  .videos-grid {
+    gap: 20px;
+  }
+  
+  .video-card .card-title {
+    font-size: 0.95rem;
+  }
+  
+  .video-card .card-body {
+    padding: 12px;
+  }
+}
+
+/* Tablettes (768px - 991px) */
+@media (max-width: 991px) {
+  .videos-grid {
+    gap: 18px;
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  /* Masquer les boutons 3x et 4x sur tablette */
+  .display-btn[data-mode="3"],
+  .display-btn[data-mode="4"] {
+    display: none;
+  }
+  
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+  
+  .video-card .card-title {
+    font-size: 0.9rem;
+  }
+  
+  .video-card .card-description {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 2;
+  }
+  
+  .video-card .card-body {
+    padding: 10px 12px;
+  }
+  
+  .card-channel {
+    margin-bottom: 6px;
+  }
+  
+  .channel-name {
+    font-size: 0.7rem;
+  }
+  
+  .card-stat {
+    font-size: 0.7rem;
+  }
+}
+
+/* Mobiles (480px - 767px) */
+@media (max-width: 767px) {
+  .videos-grid {
+    gap: 14px;
+    grid-template-columns: repeat(1, 1fr) !important;
+  }
+  
+  /* Masquer tous les boutons d'affichage sur mobile */
+  .display-toggle {
+    display: none;
+  }
+  
+  .section-head {
+    margin-bottom: 16px;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+  }
+  
+  .filter-pills {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  
+  .filter-pill {
+    white-space: nowrap;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+  }
+  
+  .video-card {
+    max-width: 100%;
+  }
+  
+  .video-card .card-title {
+    font-size: 0.9rem;
+    -webkit-line-clamp: 2;
+  }
+  
+  .video-card .card-description {
+    display: none;
+  }
+  
+  .video-card .card-body {
+    padding: 10px 12px;
+  }
+  
+  .card-channel {
+    margin-bottom: 6px;
+  }
+  
+  .channel-name {
+    font-size: 0.7rem;
+  }
+  
+  .card-stats {
+    gap: 12px;
+  }
+  
+  .card-stat {
+    font-size: 0.7rem;
+  }
+  
+  .card-stat i {
+    font-size: 0.7rem;
+  }
+  
+  .btn-see-more {
+    padding: 8px 20px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Très petits mobiles (moins de 480px) */
+@media (max-width: 480px) {
+  .videos-grid {
+    gap: 12px;
+  }
+  
+  .section-title {
+    font-size: 1.2rem;
+  }
+  
+  .section-head p {
+    font-size: 0.75rem !important;
+  }
+  
+  .filter-pill {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+  }
+  
+  .video-card .card-title {
+    font-size: 0.85rem;
+  }
+  
+  .video-card .card-body {
+    padding: 8px 10px;
+  }
+  
+  .channel-avatar {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .channel-avatar i {
+    font-size: 0.55rem;
+  }
+  
+  .channel-name {
+    font-size: 0.65rem;
+  }
+  
+  .card-stats {
+    gap: 10px;
+  }
+  
+  .card-stat {
+    font-size: 0.65rem;
+  }
+  
+  .card-stat i {
+    font-size: 0.65rem;
+  }
+  
+  .card-date {
+    font-size: 0.65rem;
+  }
+  
+  .btn-see-more {
+    padding: 6px 16px;
+    font-size: 0.75rem;
   }
 }
 
