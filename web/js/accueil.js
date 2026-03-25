@@ -319,7 +319,7 @@ function renderVideos(category) {
         <p class="mt-3 text-secondary">Aucun contenu disponible dans cette catégorie</p>
       </div>
       <div class="text-center mt-4" style="grid-column: 1/-1;">
-        <a href="${categoryUrls[category] || 'flashinfo.html'}" class="btn btn-outline-danger">
+        <a href="${categoryUrls[category]}" class="btn btn-outline-danger">
           <i class="bi bi-arrow-right-circle-fill"></i>
           Voir plus dans ${categoryNames[category] || 'cette catégorie'}
         </a>
