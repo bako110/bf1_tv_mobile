@@ -820,6 +820,48 @@ async function setupLiveVideoPlayer() {
 
 // ==================== FIN HLS VIDEO PLAYER ====================
 
+// ==================== NAVIGATION CATÉGORIES ====================
+
+/**
+ * Configure la navigation des boutons précédent/suivant pour les catégories
+ */
+function setupCategoryNavigation() {
+  console.log('🔧 Configuration de la navigation des catégories');
+  
+  // Sélectionner tous les boutons de navigation
+  const navButtons = document.querySelectorAll('.brs-nav');
+  
+  navButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const trackAttribute = button.getAttribute('data-track');
+      const track = document.getElementById(trackAttribute);
+      
+      if (!track) {
+        console.warn(`⚠️ Track non trouvée: ${trackAttribute}`);
+        return;
+      }
+      
+      const isNextButton = button.classList.contains('brs-nav-next');
+      const scrollAmount = 300; // Largeur d'une carte (260px) + gap (24px) + buffer
+      
+      if (isNextButton) {
+        console.log('➡️ Scroll suivant');
+        track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      } else {
+        console.log('⬅️ Scroll précédent');
+        track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      }
+    });
+  });
+  
+  console.log('✅ Navigation des catégories configurée');
+}
+
+// ==================== FIN NAVIGATION CATÉGORIES ====================
+
 // Initialisation
 async function init() {
   console.log('🚀 Initialisation de la page accueil - START');
@@ -850,6 +892,9 @@ async function init() {
     carouselImages = await fetchCarouselImages();
     initHeroCarousel();
     console.log('✅ Carousel prêt');
+    
+    // Configurer la navigation des catégories
+    setupCategoryNavigation();
   }, 100);
   
   // Ajouter les événements aux filtres
