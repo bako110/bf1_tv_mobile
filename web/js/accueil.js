@@ -385,16 +385,475 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+/**
+ * Mettre à jour les 6 cartes de catégories avec les vraies données
+ */
+function updateCategoryCards() {
+  console.log('🎬 updateCategoryCards() appelée');
+  console.log('📊 allVideosData length:', allVideosData.length);
+  
+  const track = document.getElementById('track-categories');
+  console.log('🔍 track-categories trouvé?', !!track);
+  
+  if (!track) {
+    console.warn('⚠️ Track-categories non trouvé');
+    return;
+  }
+
+  const cards = track.querySelectorAll('.bpc');
+  console.log('📇 Nombre de cartes trouvées:', cards.length);
+
+  // Mapping: carte → catégorie → premiere donnée
+  const categories = [
+    { name: 'sport', link: 'sport.html', title: 'SPORT', accent: 'FOOTBALL' },
+    { name: 'divertissement', link: 'divertissement.html', title: 'DIVERTISSEMENT', accent: 'SPECTACLE' },
+    { name: 'reportage', link: 'reportage.html', title: 'REPORTAGE', accent: 'DÉCOUVERTE' },
+    { name: 'archive', link: 'archive.html', title: 'ARCHIVE', accent: 'HISTOIRE' },
+    { name: 'jtandmag', link: 'journal-magazine.html', title: 'JOURNAL', accent: 'MAGAZINE' },
+    { name: 'actualites', link: 'flashinfo.html', title: 'FLASHINFO', accent: 'EN DIRECT' }
+  ];
+
+  categories.forEach((cat, idx) => {
+    console.log(`\n🔄 Traitement catégorie ${idx}: ${cat.name}`);
+    
+    if (!cards[idx]) {
+      console.warn(`⚠️ Pas de carte à l'index ${idx}`);
+      return;
+    }
+
+    // Trouver le premier item de cette catégorie
+    const item = allVideosData.find(v => v.category === cat.name);
+    console.log(`🔎 Item trouvé pour ${cat.name}?`, !!item);
+    
+    if (!item) {
+      console.warn(`⚠️ Pas d'item trouvé pour ${cat.name}`);
+      return;
+    }
+
+    const title = item.title || item.name || 'Sans titre';
+    const imageUrl = item.image || 'https://via.placeholder.com/260x390';
+    const views = item.views || Math.floor(Math.random() * 200000);
+
+    console.log(`✅ Mise à jour carte ${idx}: "${title}"`);
+
+    // Remplacer le contenu de la carte
+    cards[idx].innerHTML = `
+      <div class="bp-thumb bp-thumb--category" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center; cursor: pointer;" onclick="window.location.href='${cat.link}';">
+        <img src="${imageUrl}" alt="${title}" style="display:none;"/>
+        <div class="bp-gradient"></div>
+        <div class="bp-label-overlay">
+          <span class="bp-label-title">${cat.title}</span>
+          <span class="bp-label-accent">${cat.accent}</span>
+        </div>
+        <div class="bp-hover-veil">
+          <div class="bp-hover-content">
+            <div class="bp-hover-title">${escapeHtml(title)}</div>
+            <div class="bp-hover-meta">
+              ${cat.accent.toLowerCase()}
+              <span class="mx-2">·</span>
+              ${typeof views === 'string' ? views : formatNumber(views)} vues
+            </div>
+            <div class="bp-hover-desc">${item.description || item.desc || 'Découvrez ce contenu exclusif sur BF1 TV.'}</div>
+            <button class="bp-hover-btn">
+              Voir plus
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  console.log('✅ updateCategoryCards() terminée');
+}
+
+// ==================== CAROUSEL HERO (jusqu'à 24 images - AUTO SCROLL) ====================
+let carouselImages = [];
+let carouselCurrentIndex = 0;
+let carouselAutoScrollInterval = null;
+const CAROUSEL_AUTO_SCROLL_INTERVAL = 5000; // 5 secondes
+
+async function fetchCarouselImages() {
+  try {
+    console.log('📸 Récupération des images du carousel...');
+    
+    // Essayer de récupérer depuis l'API carousel
+    try {
+      const response = await fetch('https://backend-bf1tv.onrender.com/api/carousel', {
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const images = Array.isArray(data) ? data : data.images || data.carousel || [];
+        console.log(`✅ Carousel API: ${images.length} images`);
+        return images.slice(0, 24); // Max 24 images
+      }
+    } catch (err) {
+      console.log('⚠️ Carousel API non disponible, utilisation des données alternatives');
+    }
+    
+    // Fallback: Utiliser les premières images des contenus existants
+    if (allVideosData.length > 0) {
+      const images = allVideosData.slice(0, 24).map(item => ({
+        image: item.image,
+        title: item.title,
+        views: item.views
+      }));
+      console.log(`✅ Fallback: ${images.length} images depuis contenu`);
+      return images;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération du carousel:', error);
+    return [];
+  }
+}
+
+function initHeroCarousel() {
+  const container = document.getElementById('heroCarousel');
+  const dotsContainer = document.getElementById('heroCarouselDots');
+  const prevBtn = document.getElementById('heroCarouselPrev');
+  const nextBtn = document.getElementById('heroCarouselNext');
+  
+  if (!container) {
+    console.log('⚠️ Container carousel non trouvé');
+    return;
+  }
+  
+  if (carouselImages.length === 0) {
+    console.log('ℹ️ Pas d\'images pour le carousel');
+    return;
+  }
+  
+  console.log(`🎬 Initialisation du carousel avec ${carouselImages.length} images (AUTO-SCROLL 5s)`);
+  
+  // Remplir le container avec les images
+  container.innerHTML = '';
+  carouselImages.forEach((img, index) => {
+    const imageUrl = getImageUrl(img.image || img.image_url || img.thumbnail);
+    const div = document.createElement('div');
+    div.className = `hero-carousel-item ${index === 0 ? 'active' : ''}`;
+    div.style.backgroundImage = `url('${imageUrl}')`;
+    div.style.backgroundSize = 'cover';
+    div.style.backgroundPosition = 'center';
+    div.title = img.title || '';
+    container.appendChild(div);
+  });
+  
+  // Créer les points de pagination
+  dotsContainer.innerHTML = '';
+  carouselImages.forEach((_, index) => {
+    const dot = document.createElement('button');
+    dot.className = `hero-carousel-dot ${index === 0 ? 'active' : ''}`;
+    dot.setAttribute('aria-label', `Diapositif ${index + 1}`);
+    dot.addEventListener('click', () => {
+      stopAutoScroll();
+      scrollCarouselTo(index);
+      startAutoScroll();
+    });
+    dotsContainer.appendChild(dot);
+  });
+  
+  // Événements: Prev/Next (arrête l'auto-scroll temporairement)
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      stopAutoScroll();
+      slideCarousel(-1);
+      startAutoScroll();
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      stopAutoScroll();
+      slideCarousel(1);
+      startAutoScroll();
+    });
+  }
+  
+  // Support du swipe sur mobile (arrête l'auto-scroll pendant le swipe)
+  setupCarouselSwipe(container);
+  
+  // Démarrer l'auto-scroll
+  startAutoScroll();
+  
+  console.log('✅ Carousel initialisé avec auto-scroll');
+}
+
+function startAutoScroll() {
+  if (carouselAutoScrollInterval) {
+    clearInterval(carouselAutoScrollInterval);
+  }
+  
+  carouselAutoScrollInterval = setInterval(() => {
+    slideCarousel(1);
+  }, CAROUSEL_AUTO_SCROLL_INTERVAL);
+  
+  console.log('▶️ Auto-scroll démarré (5s)');
+}
+
+function stopAutoScroll() {
+  if (carouselAutoScrollInterval) {
+    clearInterval(carouselAutoScrollInterval);
+    carouselAutoScrollInterval = null;
+    console.log('⏸️ Auto-scroll arrêté');
+  }
+}
+
+function slideCarousel(direction) {
+  const container = document.getElementById('heroCarousel');
+  if (!container) return;
+  
+  const itemWidth = container.children[0]?.offsetWidth || 0;
+  if (itemWidth === 0) return;
+  
+  // Calculer l'index suivant
+  let nextIndex = carouselCurrentIndex + direction;
+  
+  // Boucler aux extrémités
+  if (nextIndex >= carouselImages.length) {
+    nextIndex = 0;
+  } else if (nextIndex < 0) {
+    nextIndex = carouselImages.length - 1;
+  }
+  
+  scrollCarouselTo(nextIndex);
+}
+
+function scrollCarouselTo(index) {
+  const container = document.getElementById('heroCarousel');
+  if (!container || index < 0 || index >= carouselImages.length) return;
+  
+  const item = container.children[index];
+  if (!item) return;
+  
+  item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+  updateCarouselUI(index);
+}
+
+function updateCarouselUI(index) {
+  if (index < 0 || index >= carouselImages.length) return;
+  
+  carouselCurrentIndex = index;
+  
+  // Mettre à jour les items actifs
+  const container = document.getElementById('heroCarousel');
+  if (container) {
+    container.querySelectorAll('.hero-carousel-item').forEach((item, i) => {
+      item.classList.toggle('active', i === index);
+    });
+  }
+  
+  // Mettre à jour les dots
+  const dotsContainer = document.getElementById('heroCarouselDots');
+  if (dotsContainer) {
+    dotsContainer.querySelectorAll('.hero-carousel-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+    });
+  }
+}
+
+function setupCarouselSwipe(container) {
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  container.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  });
+  
+  container.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  });
+  
+  function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        slideCarousel(1); // Swipe left → suivant
+      } else {
+        slideCarousel(-1); // Swipe right → précédent
+      }
+    }
+  }
+}
+
+// ==================== FIN CAROUSEL ====================
+
+// ==================== HLS VIDEO PLAYER ====================
+
+/**
+ * Récupère l'URL du flux HLS depuis l'API
+ */
+async function fetchLiveStreamUrl() {
+  const endpoints = [
+    'https://backend-bf1tv.onrender.com/api/live',
+    'https://backend-bf1tv.onrender.com/api/stream',
+    'https://backend-bf1tv.onrender.com/api/programs/live'
+  ];
+  
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, { timeout: 5000 });
+      if (response.ok) {
+        const data = await response.json();
+        const url = data.stream_url || data.hls_url || data.url || data.video_url;
+        if (url) {
+          console.log(`✅ URL HLS trouvée via: ${endpoint}`);
+          return url;
+        }
+      }
+    } catch (err) {
+      console.log(`⚠️ Endpoint non disponible: ${endpoint}`);
+    }
+  }
+  
+  console.log('⚠️ APIs indisponibles - Utilisation du flux de test');
+  return 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+}
+
+/**
+ * Initialise le lecteur vidéo HLS dans le hero-preview
+ */
+async function setupLiveVideoPlayer() {
+  console.log('🔍 Recherche de .hero-preview-thumb...');
+  const previewThumb = document.querySelector('.hero-preview-thumb');
+  console.log('🔍 previewThumb trouvé?', !!previewThumb);
+  
+  if (!previewThumb) {
+    console.warn('⚠️ hero-preview-thumb non trouvé - Attente 500ms et nouvelle tentative');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const retryThumb = document.querySelector('.hero-preview-thumb');
+    if (!retryThumb) {
+      console.error('❌ IMPOSSIBLE de trouver .hero-preview-thumb après retry');
+      return;
+    }
+    console.log('✅ .hero-preview-thumb trouvé au retry');
+    return setupLiveVideoPlayer(); // Relancer avec le bon élément
+  }
+  
+  try {
+    // Récupérer l'URL du flux HLS
+    console.log('🌐 Récupération de l\'URL du flux HLS...');
+    const hlsUrl = await fetchLiveStreamUrl();
+    console.log('✅ URL HLS reçue:', hlsUrl.substring(0, 50) + '...');
+    console.log('📺 Configuration du lecteur vidéo en direct');
+    
+    // Créer l'élément vidéo DIRECTEMENT (pas de container wrapper)
+    const videoElement = document.createElement('video');
+    videoElement.id = 'heroLiveVideo';
+    videoElement.style.cssText = `
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      z-index: 5;
+      background: #000;
+    `;
+    videoElement.setAttribute('controls', 'true');
+    videoElement.setAttribute('autoplay', 'true');
+    videoElement.setAttribute('playsinline', 'true');
+    videoElement.muted = true;
+    
+    console.log('🔨 Élément vidéo créé:', videoElement);
+    
+    // Insérer la vidéo AU DÉBUT du preview-thumb (avant le play-pulse)
+    previewThumb.insertBefore(videoElement, previewThumb.firstChild);
+    console.log('✅ Vidéo injectée dans le DOM');
+    console.log('📐 Taille du preview:', previewThumb.offsetWidth, 'x', previewThumb.offsetHeight);
+    
+    // Ajouter position: relative au preview-thumb si nécessaire
+    if (getComputedStyle(previewThumb).position === 'static') {
+      previewThumb.style.position = 'relative';
+      console.log('🔧 Position relative appliquée au preview-thumb');
+    }
+    
+    // Stocker l'URL dans sessionStorage pour direct.html
+    sessionStorage.setItem('liveStreamUrl', hlsUrl);
+    
+    // Initialiser le lecteur HLS
+    console.log('🎬 Vérification du support HLS...');
+    console.log('📊 canPlayType HLS natif?', videoElement.canPlayType('application/vnd.apple.mpegurl'));
+    console.log('📊 Hls disponible?', typeof Hls !== 'undefined');
+    console.log('📊 Hls.isSupported()?', typeof Hls !== 'undefined' ? Hls.isSupported() : 'N/A');
+    
+    if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+      // Support natif HLS (Safari, etc.)
+      console.log('🔧 Utilisation du lecteur HLS NATIF');
+      videoElement.src = hlsUrl;
+      videoElement.play().catch(e => console.log('⚠️ Auto-play bloqué:', e));
+      console.log('✅ Lecteur HLS natif utilisé');
+    } 
+    else if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+      // Utiliser HLS.js pour les navigateurs Chromium
+      console.log('🔧 Utilisation de HLS.js');
+      const hls = new Hls({ enableWorker: true, autoStartLoad: true, debug: true });
+      
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        console.error('❌ Erreur HLS:', data);
+      });
+      
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(videoElement);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log('✅ Manifest HLS parsé, démarrage de la lecture');
+        videoElement.play().catch(e => console.log('⚠️ Auto-play bloqué:', e));
+      });
+      console.log('✅ Lecteur HLS.js utilisé');
+    } 
+    else {
+      // Fallback: Aucun support HLS - enlever la vidéo et garder le play-pulse
+      console.warn('❌ Aucun support HLS détecté');
+      videoElement.remove();
+      console.warn('❌ Aucun lecteur HLS disponible');
+    }
+    
+  } catch (error) {
+    console.error('❌ Erreur installation lecteur vidéo:', error);
+    // Le play-pulse reste visible par défaut
+  }
+}
+
+// ==================== FIN HLS VIDEO PLAYER ====================
+
 // Initialisation
 async function init() {
-  console.log('🚀 Initialisation de la page accueil...');
+  console.log('🚀 Initialisation de la page accueil - START');
+  console.log('📄 document.readyState:', document.readyState);
   
-  // Charger le thème sauvegardé
-  // thème déjà appliqué par theme.js
+  // Petit délai pour s'assurer que le DOM est bien chargé
+  console.log('⏳ Attente de 100ms pour stabiliser le DOM...');
+  await new Promise(resolve => setTimeout(resolve, 100));
   
+  // Initialiser le lecteur vidéo HLS pour le preview en direct
+  console.log('📺 Initialisation du lecteur vidéo en direct...');
+  await setupLiveVideoPlayer();
+  console.log('✅ Lecteur vidéo prêt');
+  
+  console.log('📡 Appel loadAllData()...');
   await loadAllData();
+  console.log('✅ LoadAllData() terminé');
+  
+  // Petit délai pour laisser les données se mettre en place
+  setTimeout(async () => {
+    console.log('🎬 MAINTENANT on appelle updateCategoryCards()');
+    console.log('allVideosData.length:', allVideosData.length);
+    updateCategoryCards();
+    console.log('✅ updateCategoryCards() TERMINÉE');
+    
+    // Initialiser le carousel
+    console.log('📸 Initialisation du carousel...');
+    carouselImages = await fetchCarouselImages();
+    initHeroCarousel();
+    console.log('✅ Carousel prêt');
+  }, 100);
   
   // Ajouter les événements aux filtres
+  console.log('🔘 Setup des filter pills...');
   document.querySelectorAll('.filter-pill').forEach(pill => {
     pill.addEventListener('click', (e) => {
       e.preventDefault();
@@ -422,4 +881,13 @@ async function init() {
 // Rendre la fonction toggleTheme accessible globalement
 // toggleTheme exposé par theme.js
 
-document.addEventListener('DOMContentLoaded', init);
+console.log('🔧 accueil.js chargé');
+
+// Vérifier si le DOM est déjà chargé
+if (document.readyState === 'loading') {
+  console.log('⏳ DOM pas encore chargé, attente...');
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  console.log('✅ DOM déjà chargé, appel direct init()');
+  init();
+}

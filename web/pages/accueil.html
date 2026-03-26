@@ -54,42 +54,61 @@
   <!-- Main Content -->
   <main class="main-content">
 
-    <!-- ==================== SECTION 1: HERO ==================== -->
+    <!-- ==================== SECTION 1: HERO (2 colonnes) ==================== -->
     <section class="hero">
       <div class="hero-bg"></div>
       <div class="hero-bg-img"></div>
       <div class="hero-bg-mesh"></div>
       <div class="hero-orb hero-orb-1"></div>
       <div class="hero-orb hero-orb-2"></div>
-      <div class="hero-content">
-        <div class="hero-tag">
-          <i class="bi bi-record-circle-fill"></i>EN DIRECT – Journal de 20h
-        </div>
-        <h1 class="hero-title">Bienvenue<br>sur <span>BF1</span></h1>
-        <p class="hero-sub">La télévision africaine nouvelle génération. Vivez l'info, le sport et la culture en temps réel.</p>
-        <div class="hero-actions">
-          <a href="direct.html" class="btn-red">
-            <i class="bi bi-play-circle-fill"></i>Regarder en direct
-          </a>
-          <a href="programmes.html" class="btn-outline">
-            <i class="bi bi-calendar3"></i>Voir les programmes
-          </a>
-        </div>
-      </div>
-      <div class="hero-preview">
-        <div class="hero-preview-thumb">
-          <div class="play-pulse">
-            <i class="bi bi-play-fill"></i>
+
+      <div class="hero-container">
+        <!-- COLONNE GAUCHE: CONTENU -->
+        <div class="hero-left">
+          <div class="hero-content">
+            <div class="hero-tag">
+              <i class="bi bi-record-circle-fill"></i>EN DIRECT – Journal de 20h
+            </div>
+            <h1 class="hero-title">Bienvenue<br>sur <span>BF1</span></h1>
+            <p class="hero-sub">La télévision africaine nouvelle génération. Vivez l'info, le sport et la culture en temps réel.</p>
+            <div class="hero-actions">
+              <a href="direct.html" class="btn-red">
+                <i class="bi bi-play-circle-fill"></i>Regarder en direct
+              </a>
+              <a href="programmes.html" class="btn-outline">
+                <i class="bi bi-calendar3"></i>Voir les programmes
+              </a>
+            </div>
+          </div>
+          <div class="hero-preview">
+            <div class="hero-preview-thumb">
+              <div class="play-pulse">
+                <i class="bi bi-play-fill"></i>
+              </div>
+            </div>
+            <div class="hero-preview-info">
+            </div>
           </div>
         </div>
-        <div class="hero-preview-info">
-          <div class="hero-preview-dot"></div>
-          <div>
-            <div class="hero-preview-title">Journal de 20h</div>
-            <div class="hero-preview-sub">BF1 National</div>
-          </div>
-          <div class="hero-preview-viewers">
-            <i class="bi bi-eye-fill"></i>12.3k
+
+        <!-- COLONNE DROITE: CAROUSEL -->
+        <div class="hero-right">
+          <div class="hero-carousel-wrapper">
+            <div class="hero-carousel-container" id="heroCarousel">
+              <!-- Les images seront injectées par JavaScript -->
+            </div>
+            <!-- Navigation: Previous -->
+            <button class="hero-carousel-nav hero-carousel-prev" id="heroCarouselPrev" aria-label="Précédent">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <!-- Navigation: Next -->
+            <button class="hero-carousel-nav hero-carousel-next" id="heroCarouselNext" aria-label="Suivant">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <!-- Pagination: Points -->
+            <div class="hero-carousel-dots" id="heroCarouselDots">
+              <!-- Les points seront injectés par JavaScript -->
+            </div>
           </div>
         </div>
       </div>
@@ -118,158 +137,56 @@
     </button>
     
     <div class="brs-track" id="track-categories">
-      <!-- Carte 1 - SPORT -->
+      <!-- Carte 1 - SPORT (données chargées par JS) -->
       <div class="bpc">
-        <div class="bp-thumb bp-thumb--category" style="background:linear-gradient(160deg,#0a2a6e,#1a4ab8)">
-          <img src="https://imagedelivery.net/ZOzttCtd1EWM3Py5n9BsOA/maliactu.net/2024/03/etalons-burkina-faso.jpeg/w=1765,h=1280" alt="Sport"/>
-          <div class="bp-gradient"></div>
-          <div class="bp-label-overlay">
-            <span class="bp-label-title">SPORT</span>
-            <span class="bp-label-accent">FOOTBALL</span>
-          </div>
-          <div class="bp-hover-veil">
-            <div class="bp-hover-content">
-              <div class="bp-hover-title">CAN 2025 : LES MOMENTS FORTS</div>
-              <div class="bp-hover-meta">
-                Matchs 
-                <span class="mx-2">Â·</span>
-                125K vues
-              </div>
-              <div class="bp-hover-desc">Revivez les meilleurs moments de la Coupe d'Afrique des Nations.</div>
-              <button class="bp-hover-btn">
-                Voir la bande-annonce
-              </button>
-            </div>
+        <div class="bp-thumb bp-thumb--category">
+          <div style="width:100%; height:100%; background: rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+            <div class="spinner-border text-danger" role="status" style="width:3rem; height:3rem;"></div>
           </div>
         </div>
       </div>
 
-      <!-- Carte 2 - DIVERTISSEMENT -->
+      <!-- Carte 2 - DIVERTISSEMENT (données chargées par JS) -->
       <div class="bpc">
-        <div class="bp-thumb bp-thumb--category" style="background:linear-gradient(160deg,#1a0a2a,#4a1a6a)">
-          <img src="https://res.cloudinary.com/dgw62ulgb/image/upload/v1772628927/bf1/cp4hpmyesld5kboa3agy.jpg" alt="Divertissement"/>
-          <div class="bp-gradient"></div>
-          <div class="bp-label-overlay">
-            <span class="bp-label-title">DIVERTISSEMENT</span>
-            <span class="bp-label-accent">SPECTACLE</span>
-          </div>
-          <div class="bp-hover-veil">
-            <div class="bp-hover-content">
-              <div class="bp-hover-title">CONCERT EXCEPTIONNEL</div>
-              <div class="bp-hover-meta">
-                Musique 
-                <span class="mx-2">·</span>
-                4.9
-              </div>
-              <div class="bp-hover-desc">Les plus grands artistes africains réunis pour un concert unique.</div>
-              <button class="bp-hover-btn">
-                Voir la bande-annonce
-              </button>
-            </div>
+        <div class="bp-thumb bp-thumb--category">
+          <div style="width:100%; height:100%; background: rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+            <div class="spinner-border text-danger" role="status" style="width:3rem; height:3rem;"></div>
           </div>
         </div>
       </div>
 
-      <!-- Carte 3 - REPORTAGE -->
+      <!-- Carte 3 - REPORTAGE (données chargées par JS) -->
       <div class="bpc">
-        <div class="bp-thumb bp-thumb--category" style="background:linear-gradient(160deg,#0a2a1a,#1a6a3a)">
-          <img src="https://res.cloudinary.com/dgw62ulgb/image/upload/v1771478172/bf1/ptgdak0tmw7htpg4pjwh.jpg" alt="Reportage"/>
-          <div class="bp-gradient"></div>
-          <div class="bp-label-overlay">
-            <span class="bp-label-title">REPORTAGE</span>
-            <span class="bp-label-accent">DÉCOUVERTE</span>
-          </div>
-          <div class="bp-hover-veil">
-            <div class="bp-hover-content">
-              <div class="bp-hover-title">TERRES D'AFRIQUE</div>
-              <div class="bp-hover-meta">
-                52min 
-                <span class="mx-2">·</span>
-                85K vues
-              </div>
-              <div class="bp-hover-desc">À la découverte des merveilles naturelles du continent africain.</div>
-              <button class="bp-hover-btn">
-                Voir la bande-annonce
-              </button>
-            </div>
+        <div class="bp-thumb bp-thumb--category">
+          <div style="width:100%; height:100%; background: rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+            <div class="spinner-border text-danger" role="status" style="width:3rem; height:3rem;"></div>
           </div>
         </div>
       </div>
 
-      <!-- Carte 4 - ARCHIVE -->
+      <!-- Carte 4 - ARCHIVE (données chargées par JS) -->
       <div class="bpc">
-        <div class="bp-thumb bp-thumb--category" style="background:linear-gradient(160deg,#4a1a1a,#8b2a2a)">
-          <img src="https://faso7.com/wp-content/uploads/2023/04/342784144_978404639841729_6778246477742999533_n.jpg" alt="Archive"/>
-          <div class="bp-gradient"></div>
-          <div class="bp-label-overlay">
-            <span class="bp-label-title">ARCHIVE</span>
-            <span class="bp-label-accent">HISTOIRE</span>
-          </div>
-          <div class="bp-hover-veil">
-            <div class="bp-hover-content">
-              <div class="bp-hover-title">LES ANNÉES 80</div>
-              <div class="bp-hover-meta">
-                Époque 
-                <span class="mx-2">·</span>
-                4.7
-              </div>
-              <div class="bp-hover-desc">Plongez dans les archives inédites des années 80.</div>
-              <button class="bp-hover-btn">
-                Voir la bande-annonce
-              </button>
-            </div>
+        <div class="bp-thumb bp-thumb--category">
+          <div style="width:100%; height:100%; background: rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+            <div class="spinner-border text-danger" role="status" style="width:3rem; height:3rem;"></div>
           </div>
         </div>
       </div>
 
-      <!-- Carte 5 - JOURNAL & MAGAZINE -->
+      <!-- Carte 5 - JOURNAL & MAGAZINE (données chargées par JS) -->
       <div class="bpc">
-        <div class="bp-thumb bp-thumb--category" style="background:linear-gradient(160deg,#1a0a3a,#4a1a8b)">
-          <img src="	https://res.cloudinary.com/dgw62ulgb/image/upload/v1772114607/bf1/o2q6tbmy8thjnxptcln7.jpg" alt="Journal Magazine"/>
-          <div class="bp-gradient"></div>
-          <div class="bp-label-overlay">
-            <span class="bp-label-title">JOURNAL</span>
-            <span class="bp-label-accent">MAGAZINE</span>
-          </div>
-          <div class="bp-hover-veil">
-            <div class="bp-hover-content">
-              <div class="bp-hover-title">LE JOURNAL DE LA RÉDACTION</div>
-              <div class="bp-hover-meta">
-                Info 
-                <span class="mx-2">·</span>
-                230K vues
-              </div>
-              <div class="bp-hover-desc">Toute l'actualité nationale et internationale en 30 minutes.</div>
-              <button class="bp-hover-btn">
-                Voir la bande-annonce
-              </button>
-            </div>
+        <div class="bp-thumb bp-thumb--category">
+          <div style="width:100%; height:100%; background: rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+            <div class="spinner-border text-danger" role="status" style="width:3rem; height:3rem;"></div>
           </div>
         </div>
       </div>
 
-      <!-- Carte 6 - FLASHINFO -->
+      <!-- Carte 6 - FLASHINFO (données chargées par JS) -->
       <div class="bpc">
-        <div class="bp-thumb bp-thumb--category" style="background:linear-gradient(160deg,#2a1a0a,#6a3a1a)">
-          <img src="https://www.uem-metz.fr/wp-content/themes/uem/assets/images/Info-flash-blue.png" alt="FlashInfo"/>
-          <div class="bp-gradient"></div>
-          <div class="bp-label-overlay">
-            <span class="bp-label-title">FLASHINFO</span>
-            <span class="bp-label-accent">EN DIRECT</span>
-          </div>
-          <div class="bp-hover-veil">
-            <div class="bp-hover-content">
-              <div class="bp-hover-title">FLASHINFO : ÉDITION SPÉCIALE</div>
-              <div class="bp-hover-meta">
-                Direct 
-                <span class="mx-2">·</span>
-                5min
-              </div>
-              <div class="bp-hover-desc">Les dernières informations en temps réel sur BF1 TV.</div>
-              <button class="bp-hover-btn">
-                Voir la bande-annonce
-              </button>
-            </div>
+        <div class="bp-thumb bp-thumb--category">
+          <div style="width:100%; height:100%; background: rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+            <div class="spinner-border text-danger" role="status" style="width:3rem; height:3rem;"></div>
           </div>
         </div>
       </div>
@@ -456,6 +373,8 @@
       }
     }, 200);
   </script>
+  <!-- HLS.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.10/dist/hls.min.js"></script>
   <script type="module" src="../js/accueil.js"></script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/theme.js"></script>

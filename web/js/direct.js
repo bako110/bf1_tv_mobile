@@ -38,7 +38,7 @@ export class DirectService {
     this.videoElement.setAttribute('controls', 'true');
     this.videoElement.setAttribute('autoplay', 'true');
     this.videoElement.setAttribute('playsinline', 'true');
-    this.videoElement.muted = false;
+    this.videoElement.muted = true;
     
     playerContainer.appendChild(this.videoElement);
 
