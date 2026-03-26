@@ -1,12 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <!-- Base -->
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- Title -->
-  <title>Reportage — BF1 TV</title>
+  <title>Reportage – BF1 TV</title>
 
   <!-- SEO -->
   <meta name="description" content="Découvrez les reportages sur BF1 TV : flashinfo, émissions et contenus variés disponibles pour une expérience simple et rapide.">
@@ -21,7 +22,7 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="BF1 TV - Reportages et Flashinfo">
-  <meta name="twitter:description" content="Flashinfo, reportages et émissions sur BF1 TV pour profiter d’une expérience complète et rapide.">
+  <meta name="twitter:description" content="Flashinfo, reportages et Ã©missions sur BF1 TV pour profiter dâ€™une expÃ©rience complÃ¨te et rapide.">
   <meta name="twitter:image" content="https://res.cloudinary.com/dhamjjdf5/image/upload/v1774432549/logo_jtuhgd.png">
 
   <!-- Favicon -->
@@ -41,6 +42,9 @@
   <link rel="stylesheet" href="../styles/responsive.css"/>
   <link rel="stylesheet" href="../styles/pagination.css"/>
   <link rel="stylesheet" href="../styles/reportage.css"/>
+  
+  <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
 </head>
 <body>
 
@@ -58,14 +62,14 @@
   <div class="flash-layout">
     <div>
       <div class="filter-pills mb-4">
-        <!-- Filtres générés dynamiquement -->
+        <!-- Filtres gÃ©nÃ©rÃ©s dynamiquement -->
       </div>
-      <!-- News chargées dynamiquement depuis le backend -->
+      <!-- News chargÃ©es dynamiquement depuis le backend -->
     </div>
     <div>
       <div class="section-title mb-3"><i class="bi bi-fire"></i>Reportages Populaires</div>
       <div style="display:flex;flex-direction:column;gap:12px">
-        <!-- Tendances générées dynamiquement -->
+        <!-- Tendances gÃ©nÃ©rÃ©es dynamiquement -->
       </div>
     </div>
   </div>
@@ -89,5 +93,6 @@
 </script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/ticker.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

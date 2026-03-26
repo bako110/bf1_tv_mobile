@@ -37,53 +37,7 @@ const categoryNames = {
   'jtandmag': 'Journal et Magazine'
 };
 
-// ===== FONCTIONS DE THÈME =====
-function toggleTheme() {
-  const html = document.documentElement;
-  const currentTheme = html.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  
-  html.setAttribute('data-theme', newTheme);
-  
-  // Sauvegarder la préférence dans localStorage
-  try {
-    localStorage.setItem('bf1_theme', newTheme);
-  } catch (err) {
-    console.warn('Impossible de sauvegarder le thème:', err);
-  }
-  
-  // Changer l'icône du bouton
-  const themeBtn = document.querySelector('.theme-toggle i');
-  if (themeBtn) {
-    if (newTheme === 'dark') {
-      themeBtn.className = 'bi bi-sun-fill';
-    } else {
-      themeBtn.className = 'bi bi-moon-fill';
-    }
-  }
-}
-
-function loadSavedTheme() {
-  try {
-    const savedTheme = localStorage.getItem('bf1_theme');
-    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      
-      // Mettre à jour l'icône du bouton
-      const themeBtn = document.querySelector('.theme-toggle i');
-      if (themeBtn) {
-        if (savedTheme === 'dark') {
-          themeBtn.className = 'bi bi-sun-fill';
-        } else {
-          themeBtn.className = 'bi bi-moon-fill';
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('Impossible de charger le thème:', err);
-  }
-}
-// ===== FIN FONCTIONS DE THÈME =====
+// Thème géré par theme.js (auto-init)
 
 // Fonction pour obtenir l'URL complète de l'image
 function getImageUrl(imagePath) {
@@ -436,7 +390,7 @@ async function init() {
   console.log('🚀 Initialisation de la page accueil...');
   
   // Charger le thème sauvegardé
-  loadSavedTheme();
+  // thème déjà appliqué par theme.js
   
   await loadAllData();
   
@@ -466,6 +420,6 @@ async function init() {
 
 
 // Rendre la fonction toggleTheme accessible globalement
-window.toggleTheme = toggleTheme;
+// toggleTheme exposé par theme.js
 
 document.addEventListener('DOMContentLoaded', init);

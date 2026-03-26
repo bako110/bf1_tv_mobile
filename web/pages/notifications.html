@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Notifications — BF1 TV</title>
+  <title>Notifications – BF1 TV</title>
   <meta name="description" content="Vos notifications BF1 TV : actualités, alertes émissions et informations en temps réel.">
   <link rel="icon" type="image/png" href="../logo.png"/>
   <link rel="shortcut icon" type="image/png" href="../logo.png"/>
@@ -15,6 +16,10 @@
   <link rel="stylesheet" href="../styles/cards.css"/>
   <link rel="stylesheet" href="../styles/pages.css"/>
   <link rel="stylesheet" href="../styles/responsive.css"/>
+  
+  <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
+  
   <style>
     .notif-page-item {
       display: flex;
@@ -144,5 +149,6 @@
   // Charger les notifications
   import('../js/notifications-page.js').then(m => m.loadNotificationsPage());
 </script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

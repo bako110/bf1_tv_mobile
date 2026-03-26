@@ -9,12 +9,12 @@ import { loadTicker } from '../js/ticker.js';
 /* ── Theme Manager ── */
 const Theme = {
   init() {
-    const saved = localStorage.getItem('bf1-theme') || 'dark';
+    const saved = localStorage.getItem('bf1_theme') || 'dark';
     this.apply(saved);
   },
   apply(t) {
     document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('bf1-theme', t);
+    localStorage.setItem('bf1_theme', t);
     const btn = document.querySelector('.theme-toggle');
     if (btn) btn.innerHTML = `<i class="bi bi-${t === 'dark' ? 'sun' : 'moon-stars'}-fill"></i>`;
   },

@@ -1,15 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <!-- Base -->
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- Title -->
-  <title>Accueil — BF1 TV</title>
+  <title>Accueil – BF1 TV</title>
 
   <!-- SEO -->
-  <meta name="description" content="BF1 TV est une plateforme moderne pour regarder la télévision en direct, des films, des émissions et des reels. Profitez d’un accès simple et rapide à vos contenus préférés en streaming.">
+  <meta name="description" content="BF1 TV est une plateforme moderne pour regarder la télévision en direct, des films, des émissions et des reels. Profitez d'un accès simple et rapide à vos contenus préférés en streaming.">
 
   <!-- Open Graph (Facebook, WhatsApp, etc.) -->
   <meta property="og:title" content="BF1 TV - Direct, Films, Émissions et Reels">
@@ -41,6 +42,9 @@
   <link rel="stylesheet" href="../styles/direct.css"/>
   <link rel="stylesheet" href="../styles/pages.css"/>
   <link rel="stylesheet" href="../styles/responsive.css"/>
+  
+  <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
 </head>
 <body>
 
@@ -59,7 +63,7 @@
       <div class="hero-orb hero-orb-2"></div>
       <div class="hero-content">
         <div class="hero-tag">
-          <i class="bi bi-record-circle-fill"></i>EN DIRECT — Journal de 20h
+          <i class="bi bi-record-circle-fill"></i>EN DIRECT – Journal de 20h
         </div>
         <h1 class="hero-title">Bienvenue<br>sur <span>BF1</span></h1>
         <p class="hero-sub">La télévision africaine nouvelle génération. Vivez l'info, le sport et la culture en temps réel.</p>
@@ -128,7 +132,7 @@
               <div class="bp-hover-title">CAN 2025 : LES MOMENTS FORTS</div>
               <div class="bp-hover-meta">
                 Matchs 
-                <span class="mx-2">·</span>
+                <span class="mx-2">Â·</span>
                 125K vues
               </div>
               <div class="bp-hover-desc">Revivez les meilleurs moments de la Coupe d'Afrique des Nations.</div>
@@ -336,7 +340,7 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    console.log('🚀 Début du chargement...');
+    console.log('ðŸš€ DÃ©but du chargement...');
     
     // Charger le header et le footer
     const [headerHtml, footerHtml] = await Promise.all([
@@ -358,7 +362,7 @@
       if (hamburger && navLinks) {
         console.log('✅ Menu trouvé, initialisation...');
         
-        // Supprimer les anciens événements en clonant
+        // Supprimer les anciens Ã©vÃ©nements en clonant
         const newHamburger = hamburger.cloneNode(true);
         hamburger.parentNode.replaceChild(newHamburger, hamburger);
         
@@ -372,7 +376,7 @@
         finalHamburger.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
-          console.log('🔄 Clic sur le menu hamburger');
+          console.log('ðŸ”„ Clic sur le menu hamburger');
           this.classList.toggle('open');
           finalNavLinks.classList.toggle('open');
           
@@ -415,10 +419,10 @@
     async function startTicker() {
       try {
         const { loadTicker } = await import('../../js/ticker.js');
-        console.log('📡 ticker.js importé');
+        console.log('ðŸ“¡ ticker.js importÃ©');
         await loadTicker();
         setInterval(() => {
-          console.log('🔄 Rafraîchissement ticker...');
+          console.log('📱 Rafraîchissement ticker...');
           loadTicker();
         }, 300000);
       } catch (error) {
@@ -454,5 +458,6 @@
   </script>
   <script type="module" src="../js/accueil.js"></script>
   <script type="module" src="../js/notifications.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

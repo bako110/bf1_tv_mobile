@@ -12,14 +12,19 @@
   --bg:           #ffffff;
   --bg-2:         #f4f5f7;
   --bg-3:         #eceef2;
+  --bg-hover:     rgba(0,0,0,0.04);
   --bg-card:      #ffffff;
+  --bg-primary:   var(--bg);
   --bg-nav:       rgba(255,255,255,0.92);
   --bg-overlay:   rgba(0,0,0,0.55);
 
   --text-1:       #0d0f14;
   --text-2:       #3a3d4a;
   --text-3:       #6b7080;
+  --text-primary: var(--text-1);
+  --text-secondary: var(--text-2);
   --text-inv:     #ffffff;
+  --text-on-gradient: #ffffff;
 
   --border:       rgba(0,0,0,0.08);
   --border-focus: var(--red);
@@ -47,13 +52,18 @@
   --bg:           #0a0b0e;
   --bg-2:         #111318;
   --bg-3:         #1a1d24;
+  --bg-hover:     rgba(255,255,255,0.05);
   --bg-card:      #141720;
+  --bg-primary:   var(--bg);
   --bg-nav:       rgba(10,11,14,0.92);
   --bg-overlay:   rgba(0,0,0,0.75);
 
   --text-1:       #f0f2f8;
   --text-2:       #9ba3b8;
   --text-3:       #5a6070;
+  --text-primary: var(--text-1);
+  --text-secondary: var(--text-2);
+  --text-on-gradient: #ffffff;
 
   --border:       rgba(255,255,255,0.07);
   --shadow-sm:    0 2px 8px rgba(0,0,0,0.4);

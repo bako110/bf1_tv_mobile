@@ -1,12 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <!-- Base -->
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- Title -->
-  <title>Flash Info — BF1 TV</title>
+  <title>Flash Info – BF1 TV</title>
 
   <!-- SEO -->
   <meta name="description" content="Suivez les flashinfos sur BF1 TV : les dernières actualités, reels et émissions disponibles à tout moment pour une expérience simple et rapide.">
@@ -21,7 +22,7 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="BF1 TV - Flash Info">
-  <meta name="twitter:description" content="Dernières actualités, reels et émissions sur BF1 TV. Profitez d’un accès rapide aux flashinfos.">
+  <meta name="twitter:description" content="Dernières actualités, reels et émissions sur BF1 TV. Profitez d'un accès rapide aux flashinfos.">
   <meta name="twitter:image" content="https://res.cloudinary.com/dhamjjdf5/image/upload/v1774432549/logo_jtuhgd.png">
 
   <!-- Favicon -->
@@ -40,6 +41,9 @@
   <link rel="stylesheet" href="../styles/pages.css"/>
   <link rel="stylesheet" href="../styles/responsive.css"/>
   <link rel="stylesheet" href="../styles/pagination.css"/>
+  
+  <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
 </head>
 <body>
 
@@ -106,7 +110,7 @@
       finalHamburger.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔄 Clic sur le menu hamburger');
+        console.log('🔔 Clic sur le menu hamburger');
         this.classList.toggle('open');
         finalNavLinks.classList.toggle('open');
         
@@ -153,5 +157,6 @@
 </script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/ticker.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

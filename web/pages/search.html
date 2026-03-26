@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Recherche — BF1 TV</title>
+  <title>Recherche – BF1 TV</title>
   <meta name="description" content="Recherchez des émissions, reportages, flash infos et bien plus sur BF1 TV.">
   <link rel="icon" type="image/png" href="../logo.png"/>
   <link rel="shortcut icon" type="image/png" href="../logo.png"/>
@@ -15,6 +16,10 @@
   <link rel="stylesheet" href="../styles/cards.css"/>
   <link rel="stylesheet" href="../styles/pages.css"/>
   <link rel="stylesheet" href="../styles/responsive.css"/>
+  
+  <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
+  
   <style>
     .search-page-bar {
       position: relative;
@@ -171,7 +176,7 @@
 <main class="main-content">
   <div class="page-header">
     <h1 class="page-header-title">Recherche</h1>
-    <p class="page-header-sub">Trouvez vos émissions, reportages, flash infos et plus</p>
+    <p class="page-header-sub">Trouvez vos Ã©missions, reportages, flash infos et plus</p>
   </div>
 
   <div class="container-fluid" style="max-width:900px; margin: 0 auto; padding: 0 16px 60px;">
@@ -186,9 +191,9 @@
     </div>
     <p class="srch-count" id="srch-count"></p>
 
-    <!-- Suggestions catégories (affiché quand pas de recherche) -->
+    <!-- Suggestions catÃ©gories (affichÃ© quand pas de recherche) -->
     <div id="srch-suggestions">
-      <p style="font-size:12px;font-weight:700;color:var(--text-3,#555);text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;">Parcourir par catégorie</p>
+      <p style="font-size:12px;font-weight:700;color:var(--text-3,#555);text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;">Parcourir par catÃ©gorie</p>
       <div class="srch-suggestions-grid">
         <a href="sport.html" class="srch-suggestion-card">
           <i class="bi bi-trophy-fill" style="color:#1DA1F2"></i>
@@ -216,7 +221,7 @@
         </a>
         <a href="emissions.html" class="srch-suggestion-card">
           <i class="bi bi-mic-fill" style="color:#10B981"></i>
-          <span>Émissions</span>
+          <span>Ã‰missions</span>
         </a>
         <a href="reels.html" class="srch-suggestion-card">
           <i class="bi bi-play-circle-fill" style="color:#F97316"></i>
@@ -225,7 +230,7 @@
       </div>
     </div>
 
-    <!-- Zone résultats -->
+    <!-- Zone rÃ©sultats -->
     <div id="srch-results"></div>
   </div>
 </main>
@@ -278,5 +283,6 @@
 </script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/ticker.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

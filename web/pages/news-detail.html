@@ -1,27 +1,28 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <!-- Base -->
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- Title -->
-  <title>Détail Actualité — BF1 TV</title>
+  <title>Détail Actualité – BF1 TV</title>
 
   <!-- SEO -->
-  <meta name="description" content="Découvrez le détail complet d’une actualité sur BF1 TV : flashinfo, reels et contenus variés avec toutes les informations disponibles pour une expérience simple et rapide.">
+  <meta name="description" content="Découvrez le détail complet d'une actualité sur BF1 TV : flashinfo, reels et contenus variés avec toutes les informations disponibles pour une expérience simple et rapide.">
 
   <!-- Open Graph (Facebook, WhatsApp, etc.) -->
   <meta property="og:title" content="BF1 TV - Détail Actualité et Flashinfo">
-  <meta property="og:description" content="Consultez le détail d’une actualité sur BF1 TV avec flashinfo, reels et contenus variés. Accès facile et rapide aux informations.">
+  <meta property="og:description" content="Consultez le détail d'une actualité sur BF1 TV avec flashinfo, reels et contenus variés. Accès facile et rapide aux informations.">
   <meta property="og:image" content="https://res.cloudinary.com/dhamjjdf5/image/upload/v1774432549/logo_jtuhgd.png">
   <meta property="og:url" content="https://tonsite.com/news-detail">
   <meta property="og:type" content="website">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="BF1 TV - Détail Actualité et Flashinfo">
-  <meta name="twitter:description" content="Flashinfo et détails d’actualités sur BF1 TV pour profiter d’une expérience complète et rapide.">
+  <meta name="twitter:title" content="BF1 TV - DÃ©tail ActualitÃ© et Flashinfo">
+  <meta name="twitter:description" content="Flashinfo et dÃ©tails dâ€™actualitÃ©s sur BF1 TV pour profiter dâ€™une expÃ©rience complÃ¨te et rapide.">
   <meta name="twitter:image" content="https://res.cloudinary.com/dhamjjdf5/image/upload/v1774432549/logo_jtuhgd.png">
 
   <!-- Favicon -->
@@ -40,6 +41,9 @@
   <link rel="stylesheet" href="../styles/pages.css"/>
   <link rel="stylesheet" href="../styles/responsive.css"/>
   <link rel="stylesheet" href="../styles/news-detail.css"/>
+  
+  <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
 </head>
 <body>
 
@@ -65,7 +69,7 @@
     <div class="related-news">
       <h2 class="section-title mb-4"><i class="bi bi-newspaper"></i> Articles similaires</h2>
       <div id="relatedNewsContainer" class="related-news-scroll">
-        <!-- Articles similaires chargés dynamiquement -->
+        <!-- Articles similaires chargÃ©s dynamiquement -->
       </div>
     </div>
   </div>
@@ -87,7 +91,7 @@
     const hamburger = document.querySelector('.navbar-hamburger');
     const navLinks = document.querySelector('.navbar-links');
     if (hamburger && navLinks) {
-      // Supprimer les anciens événements en clonant
+      // Supprimer les anciens Ã©vÃ©nements en clonant
       const newHamburger = hamburger.cloneNode(true);
       hamburger.parentNode.replaceChild(newHamburger, hamburger);
       const newNavLinks = navLinks.cloneNode(true);
@@ -125,12 +129,13 @@
   };
   setTimeout(initMobileMenu, 100);
 
-  // Charger le JS spécifique à la page
+  // Charger le JS spÃ©cifique Ã  la page
   import('../js/news-detail.js').then(module => {
     module.loadNewsDetail();
   });
 </script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/ticker.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

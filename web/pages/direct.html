@@ -1,19 +1,20 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <!-- Base -->
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- Title -->
-  <title>Direct — BF1 TV</title>
+  <title>Direct – BF1 TV</title>
 
   <!-- SEO -->
   <meta name="description" content="Regardez le direct sur BF1 TV : flashinfo, émissions et reels disponibles en streaming simple et rapide.">
 
   <!-- Open Graph (Facebook, WhatsApp, etc.) -->
   <meta property="og:title" content="BF1 TV - Direct, Flashinfo, Émissions et Reels">
-  <meta property="og:description" content="Suivez le direct sur BF1 TV avec flashinfo, émissions et reels. Profitez d’une plateforme simple et accessible partout.">
+  <meta property="og:description" content="Suivez le direct sur BF1 TV avec flashinfo, émissions et reels. Profitez d'une plateforme simple et accessible partout.">
   <meta property="og:image" content="https://res.cloudinary.com/dhamjjdf5/image/upload/v1774432549/logo_jtuhgd.png">
   <meta property="og:url" content="https://tonsite.com/direct">
   <meta property="og:type" content="website">
@@ -43,6 +44,7 @@
   <link rel="stylesheet" href="../styles/responsive.css"/>
 
   <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
@@ -57,20 +59,20 @@
 <div class="news-ticker">
   <span class="ticker-label"><i class="bi bi-lightning-fill me-1"></i>EN DIRECT</span>
   <div class="ticker-track">
-    <span>Journal de 20h — BF1 National</span>
+    <span>Journal de 20h – BF1 National</span>
     <span>CAN 2024 : Match des Étalons en direct sur BF1 Sport</span>
-    <span>Festival International de Ouagadougou — BF1 Culture</span>
-    <span>Débat politique — Édition spéciale ce soir à 21h</span>
+    <span>Festival International de Ouagadougou – BF1 Culture</span>
+    <span>Débat politique – Édition spéciale ce soir à 21h</span>
   </div>
 </div>
 
 <main class="main-content">
   <div class="page-header">
     <h1 class="page-header-title">En Direct</h1>
-    <p class="page-header-sub">Vivez l'instant avec BF1 — Toute l'actualité en temps réel</p>
+    <p class="page-header-sub">Vivez l'instant avec BF1 – Toute l'actualité en temps réel</p>
     <div class="page-header-badges">
       <!-- <span class="page-header-badge page-header-badge-live"><i class="bi bi-broadcast"></i>5 directs en cours</span>
-      <span class="page-header-badge page-header  -badge-viewers"><i class="bi bi-people-fill"></i>45.2k téléspectateurs</span> -->
+      <span class="page-header-badge page-header  -badge-viewers"><i class="bi bi-people-fill"></i>45.2k tÃ©lÃ©spectateurs</span> -->
     </div>
   </div>
   <div class="direct-layout"> 
@@ -153,7 +155,7 @@
             <div class="chat-msg-avatar" style="background:#f59e0b;color:#fff">F</div>
             <div>
               <div class="chat-msg-name">Fatima Diallo</div>
-              <div class="chat-msg-text">Très intéressant !</div>
+              <div class="chat-msg-text">TrÃ¨s intÃ©ressant !</div>
               <div class="chat-msg-time">il y a 3 min</div>
             </div>
           </div>
@@ -183,7 +185,7 @@
     const hamburger = document.querySelector('.navbar-hamburger');
     const navLinks = document.querySelector('.navbar-links');
     if (hamburger && navLinks) {
-      // Supprimer les anciens événements en clonant
+      // Supprimer les anciens Ã©vÃ©nements en clonant
       const newHamburger = hamburger.cloneNode(true);
       hamburger.parentNode.replaceChild(newHamburger, hamburger);
       const newNavLinks = navLinks.cloneNode(true);
@@ -221,10 +223,11 @@
   };
   setTimeout(initMobileMenu, 100);
 
-  // Charger le JS spécifique à la page
+  // Charger le JS spÃ©cifique Ã  la page
   import('../js/direct.js');
 </script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/ticker.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

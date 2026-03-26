@@ -53,7 +53,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: #000;
+  background: var(--bg);
   overflow: hidden;
   display: flex;
   align-items: stretch;
@@ -78,7 +78,7 @@
   height: 100%;
   position: absolute;
   top: 0; left: 0;
-  background: #000;
+  background: var(--bg);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -119,7 +119,7 @@
 
 .reel-info {
   flex: 1;
-  color: white;
+  color: var(--text-1);
   pointer-events: auto;
 }
 
@@ -135,7 +135,7 @@
   height: 40px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid white;
+  border: 2px solid var(--bg);
 }
 
 .reel-avatar img {
@@ -204,7 +204,7 @@
   gap: 5px;
   cursor: pointer;
   transition: transform var(--transition);
-  color: white;
+  color: var(--text-1);
   text-align: center;
 }
 
@@ -488,7 +488,7 @@
   width: 0;
   height: 78vh;
   max-height: 680px;
-  background: #111;
+  background: var(--bg-2);
   border-radius: 14px;
   flex-shrink: 0;
   overflow: hidden;
@@ -498,7 +498,7 @@
               visibility 0s linear 0.35s;
   display: flex;
   flex-direction: column;
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
   pointer-events: auto;
   z-index: 20;
   position: relative;
@@ -518,14 +518,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 15px 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .reel-comments-title {
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -534,63 +534,63 @@
 .reel-comments-count {
   font-size: 13px;
   font-weight: 500;
-  color: #888;
+  color: var(--text-3);
   margin-left: 4px;
 }
 
 .reel-comments-close-btn {
   width: 30px; height: 30px;
-  background: rgba(255,255,255,0.08);
+  background: var(--bg-3);
   border: none; border-radius: 50%;
-  color: #aaa; cursor: pointer;
+  color: var(--text-3); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   font-size: 13px;
   transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
 }
-.reel-comments-close-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.reel-comments-close-btn:hover { background: var(--bg-hover); color: var(--text-1); }
 
 .reel-comments-list {
   flex: 1;
   overflow-y: auto;
   padding: 4px 0;
   scrollbar-width: thin;
-  scrollbar-color: #E23E3E transparent;
+  scrollbar-color: var(--red) transparent;
 }
 .reel-comments-list::-webkit-scrollbar { width: 3px; }
-.reel-comments-list::-webkit-scrollbar-thumb { background: #E23E3E; border-radius: 3px; }
+.reel-comments-list::-webkit-scrollbar-thumb { background: var(--red); border-radius: 3px; }
 
 .reel-comment-item {
   display: flex;
   gap: 10px;
   padding: 10px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }
-.reel-comment-item:hover { background: rgba(255,255,255,0.03); }
+.reel-comment-item:hover { background: var(--bg-hover); }
 
 .reel-comment-avatar {
   width: 34px; height: 34px;
   border-radius: 50%;
-  background: #2a2a2a;
+  background: var(--bg-3);
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 13px; font-weight: 700;
+  color: var(--text-1); font-size: 13px; font-weight: 700;
   flex-shrink: 0;
 }
 
 .reel-comment-content { flex: 1; min-width: 0; }
 
 .reel-comment-author {
-  font-size: 13px; font-weight: 600; color: #fff;
+  font-size: 13px; font-weight: 600; color: var(--text-1);
   margin-bottom: 3px;
 }
 
 .reel-comment-text {
-  font-size: 13px; color: #ccc; line-height: 1.45;
+  font-size: 13px; color: var(--text-2); line-height: 1.45;
   word-break: break-word;
 }
 
-.reel-comment-time { font-size: 11px; color: #555; margin-top: 4px; }
+.reel-comment-time { font-size: 11px; color: var(--text-3); margin-top: 4px; }
 
 /* Edit / Delete comment action buttons */
 .rc-action-btn {
@@ -598,21 +598,21 @@
   border: none;
   padding: 2px 6px;
   cursor: pointer;
-  color: #666;
+  color: var(--text-3);
   font-size: 12px;
   border-radius: 4px;
   transition: color 0.2s, background 0.2s;
   line-height: 1;
 }
-.rc-action-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.rc-action-btn:hover { color: var(--text-1); background: var(--bg-hover); }
 .rc-action-btn.rc-del:hover { color: #ff4d4d; background: rgba(255,77,77,0.12); }
-.rc-action-btn.rc-like { display: inline-flex; align-items: center; gap: 3px; color: #888; }
+.rc-action-btn.rc-like { display: inline-flex; align-items: center; gap: 3px; color: var(--text-3); }
 .rc-action-btn.rc-like .bi-heart-fill { color: #ff4d4d; }
 .rc-action-btn.rc-like:hover { color: #ff4d4d; background: rgba(255,77,77,0.1); }
 .rc-action-btn.rc-like:disabled { opacity: 0.6; cursor: default; }
 
 .reel-comments-empty {
-  text-align: center; padding: 50px 20px; color: #555;
+  text-align: center; padding: 50px 20px; color: var(--text-3);
 }
 .reel-comments-empty i { font-size: 36px; display: block; margin-bottom: 12px; }
 .reel-comments-empty p { font-size: 14px; margin: 0; }
@@ -620,25 +620,25 @@
 .reel-comments-input-row {
   display: flex; gap: 8px;
   padding: 12px 14px;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid var(--border);
   flex-shrink: 0; align-items: center;
 }
 
 .reel-comment-input {
   flex: 1;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 8px 14px;
-  color: #fff; font-size: 13px; outline: none;
+  color: var(--text-1); font-size: 13px; outline: none;
   transition: border-color 0.2s;
 }
-.reel-comment-input:focus { border-color: #E23E3E; }
-.reel-comment-input::placeholder { color: #555; }
+.reel-comment-input:focus { border-color: var(--red); }
+.reel-comment-input::placeholder { color: var(--text-3); }
 
 .reel-comment-send-btn {
   width: 36px; height: 36px;
-  background: #E23E3E; border: none; border-radius: 50%;
+  background: var(--red); border: none; border-radius: 50%;
   color: #fff; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; flex-shrink: 0;
@@ -655,7 +655,7 @@
   border-radius: 16px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #000;
+  background: var(--bg);
   box-shadow: 0 24px 60px rgba(0,0,0,0.6);
   pointer-events: auto;
 }
@@ -673,7 +673,7 @@
     rgba(0,0,0,0.88) 0%,
     rgba(0,0,0,0.3) 60%,
     transparent 100%);
-  color: #fff;
+  color: var(--text-on-gradient);
   pointer-events: none;
 }
 
@@ -684,7 +684,7 @@
 
 .reel-author-bar .reel-avatar {
   width: 38px; height: 38px; border-radius: 50%;
-  overflow: hidden; border: 2px solid #fff; flex-shrink: 0;
+  overflow: hidden; border: 2px solid var(--text-on-gradient); flex-shrink: 0;
 }
 .reel-author-bar .reel-avatar img { width: 100%; height: 100%; object-fit: cover; }
 

@@ -1,19 +1,20 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <!-- Base -->
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- Title -->
-  <title>Divertissement — BF1 TV</title>
+  <title>Divertissement â€” BF1 TV</title>
 
   <!-- SEO -->
-  <meta name="description" content="Profitez du divertissement sur BF1 TV : flashinfo, émissions et reels disponibles à tout moment pour une expérience simple et rapide.">
+  <meta name="description" content="Profitez du divertissement sur BF1 TV : flashinfo, Ã©missions et reels disponibles Ã  tout moment pour une expÃ©rience simple et rapide.">
 
   <!-- Open Graph (Facebook, WhatsApp, etc.) -->
   <meta property="og:title" content="BF1 TV - Divertissement et Flashinfo">
-  <meta property="og:description" content="Suivez le divertissement sur BF1 TV : flashinfo, émissions et reels pour tous vos contenus préférés.">
+  <meta property="og:description" content="Suivez le divertissement sur BF1 TV : flashinfo, Ã©missions et reels pour tous vos contenus prÃ©fÃ©rÃ©s.">
   <meta property="og:image" content="https://res.cloudinary.com/dhamjjdf5/image/upload/v1774432549/logo_jtuhgd.png">
   <meta property="og:url" content="https://tonsite.com/divertissement">
   <meta property="og:type" content="website">
@@ -21,7 +22,7 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="BF1 TV - Divertissement et Flashinfo">
-  <meta name="twitter:description" content="Flashinfo, émissions et reels disponibles sur BF1 TV pour une expérience de divertissement complète.">
+  <meta name="twitter:description" content="Flashinfo, Ã©missions et reels disponibles sur BF1 TV pour une expÃ©rience de divertissement complÃ¨te.">
   <meta name="twitter:image" content="https://res.cloudinary.com/dhamjjdf5/image/upload/v1774432549/logo_jtuhgd.png">
 
   <!-- Favicon -->
@@ -50,19 +51,19 @@
 <main class="main-content">
   <div class="page-header">
     <h1 class="page-header-title"><i class="bi bi-emoji-smile-fill" style="color:var(--red)"></i> Divertissement</h1>
-    <p class="page-header-sub">Émissions, spectacles et divertissement africain</p>
+    <p class="page-header-sub">Ã‰missions, spectacles et divertissement africain</p>
   </div>
   <div class="flash-layout">
     <div>
       <div class="filter-pills mb-4">
-        <!-- Filtres générés dynamiquement -->
+        <!-- Filtres gÃ©nÃ©rÃ©s dynamiquement -->
       </div>
-      <!-- News chargées dynamiquement depuis le backend -->
+      <!-- News chargÃ©es dynamiquement depuis le backend -->
     </div>
     <div>
       <div class="section-title mb-3"><i class="bi bi-fire"></i>Tendances Divertissement</div>
       <div style="display:flex;flex-direction:column;gap:12px">
-        <!-- Tendances générées dynamiquement -->
+        <!-- Tendances gÃ©nÃ©rÃ©es dynamiquement -->
       </div>
     </div>
   </div>
@@ -84,7 +85,7 @@
     const hamburger = document.querySelector('.navbar-hamburger');
     const navLinks = document.querySelector('.navbar-links');
     if (hamburger && navLinks) {
-      // Supprimer les anciens événements en clonant
+      // Supprimer les anciens Ã©vÃ©nements en clonant
       const newHamburger = hamburger.cloneNode(true);
       hamburger.parentNode.replaceChild(newHamburger, hamburger);
       const newNavLinks = navLinks.cloneNode(true);
@@ -122,12 +123,13 @@
   };
   setTimeout(initMobileMenu, 100);
 
-  // Charger le JS spécifique à la page
+  // Charger le JS spÃ©cifique Ã  la page
   import('../js/divertissement.js').then(module => {
     module.loadDivertissementContent();
   });
 </script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/ticker.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

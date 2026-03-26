@@ -1,15 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <!-- Base -->
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- Title -->
-  <title>Archive — BF1 TV</title>
+  <title>Archive – BF1 TV</title>
 
   <!-- SEO -->
-  <meta name="description" content="Découvrez les archives de BF1 TV : émissions, flashinfo, reels et contenus passés disponibles à tout moment. Profitez d’un accès simple et rapide à vos contenus préférés en streaming.">
+  <meta name="description" content="Découvrez les archives de BF1 TV : émissions, flashinfo, reels et contenus passés disponibles à tout moment. Profitez d'un accès simple et rapide à vos contenus préférés en streaming.">
 
   <!-- Open Graph (Facebook, WhatsApp, etc.) -->
   <meta property="og:title" content="BF1 TV - Archives et contenus passés">
@@ -107,7 +108,7 @@
       finalHamburger.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔄 Clic sur le menu hamburger');
+        console.log('🔔 Clic sur le menu hamburger');
         this.classList.toggle('open');
         finalNavLinks.classList.toggle('open');
         
@@ -154,5 +155,6 @@
 </script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/ticker.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>

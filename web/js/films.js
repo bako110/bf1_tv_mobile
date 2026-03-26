@@ -21,40 +21,7 @@ let heroStatsEl;
 const ITEMS_PER_PAGE = 12;
 let currentPage = 1;
 
-// Fonction de thème
-window.toggleTheme = function() {
-  const html = document.documentElement;
-  const currentTheme = html.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  
-  html.setAttribute('data-theme', newTheme);
-  
-  try {
-    localStorage.setItem('bf1_theme', newTheme);
-  } catch (err) {
-    console.warn('Impossible de sauvegarder le thème:', err);
-  }
-  
-  const themeBtn = document.querySelector('.theme-toggle i');
-  if (themeBtn) {
-    themeBtn.className = newTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
-  }
-};
-
-function loadSavedTheme() {
-  try {
-    const savedTheme = localStorage.getItem('bf1_theme');
-    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      const themeBtn = document.querySelector('.theme-toggle i');
-      if (themeBtn) {
-        themeBtn.className = savedTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
-      }
-    }
-  } catch (err) {
-    console.warn('Impossible de charger le thème:', err);
-  }
-}
+// Thème géré par theme.js (auto-init)
 
 function formatNumber(num) {
   if (!num) return '0';
@@ -491,7 +458,7 @@ function escapeHtml(str) {
 async function init() {
   console.log('🚀 Initialisation de la page Films...');
   
-  loadSavedTheme();
+  // thème déjà appliqué par theme.js
   
   // Récupérer les conteneurs
   filmsGrid = document.querySelector('.films-grid');

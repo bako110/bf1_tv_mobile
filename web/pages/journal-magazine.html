@@ -1,12 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
   <!-- Base -->
   <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- Title -->
-  <title>Journal et Magazine — BF1 TV</title>
+  <title>Journal et Magazine – BF1 TV</title>
 
   <!-- SEO -->
   <meta name="description" content="Consultez le journal et magazine sur BF1 TV : flashinfo, reels et contenus variés disponibles à tout moment pour une expérience simple et rapide.">
@@ -21,7 +22,7 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="BF1 TV - Journal, Magazine et Flashinfo">
-  <meta name="twitter:description" content="Flashinfo, journal et magazine sur BF1 TV pour profiter d’une expérience complète de streaming et d’actualités.">
+  <meta name="twitter:description" content="Flashinfo, journal et magazine sur BF1 TV pour profiter dâ€™une expÃ©rience complÃ¨te de streaming et dâ€™actualitÃ©s.">
   <meta name="twitter:image" content="https://res.cloudinary.com/dhamjjdf5/image/upload/v1774432549/logo_jtuhgd.png">
 
   <!-- Favicon -->
@@ -41,6 +42,9 @@
   <link rel="stylesheet" href="../styles/responsive.css"/>
   <link rel="stylesheet" href="../styles/pagination.css"/>
   <link rel="stylesheet" href="../styles/journal-magazine.css"/>
+  
+  <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
 </head>
 <body>
 
@@ -48,19 +52,19 @@
 <main class="main-content">
   <div class="page-header">
     <h1 class="page-header-title"><i class="bi bi-journal-text" style="color:var(--red)"></i> Journal et Magazine</h1>
-    <p class="page-header-sub">Journaux télévisés et magazines d'information</p>
+    <p class="page-header-sub">Journaux tÃ©lÃ©visÃ©s et magazines d'information</p>
   </div>
   <div class="flash-layout">
     <div>
       <div class="filter-pills mb-4">
-        <!-- Filtres générés dynamiquement -->
+        <!-- Filtres gÃ©nÃ©rÃ©s dynamiquement -->
       </div>
-      <!-- News chargées dynamiquement depuis le backend -->
+      <!-- News chargÃ©es dynamiquement depuis le backend -->
     </div>
     <div>
-      <div class="section-title mb-3"><i class="bi bi-fire"></i>Éditions Populaires</div>
+      <div class="section-title mb-3"><i class="bi bi-fire"></i>Ã‰ditions Populaires</div>
       <div style="display:flex;flex-direction:column;gap:12px">
-        <!-- Tendances générées dynamiquement -->
+        <!-- Tendances gÃ©nÃ©rÃ©es dynamiquement -->
       </div>
     </div>
   </div>
@@ -82,7 +86,7 @@
     const hamburger = document.querySelector('.navbar-hamburger');
     const navLinks = document.querySelector('.navbar-links');
     if (hamburger && navLinks) {
-      // Supprimer les anciens événements en clonant
+      // Supprimer les anciens Ã©vÃ©nements en clonant
       const newHamburger = hamburger.cloneNode(true);
       hamburger.parentNode.replaceChild(newHamburger, hamburger);
       const newNavLinks = navLinks.cloneNode(true);
@@ -120,12 +124,13 @@
   };
   setTimeout(initMobileMenu, 100);
 
-  // Charger le JS spécifique à la page
+  // Charger le JS spÃ©cifique Ã  la page
   import('../js/journal-magazine.js').then(module => {
     module.loadJournalMagazineContent();
   });
 </script>
   <script type="module" src="../js/notifications.js"></script>
   <script type="module" src="../js/ticker.js"></script>
+  <script type="module" src="../js/theme.js"></script>
 </body>
 </html>
