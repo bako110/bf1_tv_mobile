@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recherche — BF1 TV</title>
+  <meta name="description" content="Recherchez des émissions, reportages, flash infos et bien plus sur BF1 TV.">
+  <link rel="icon" type="image/png" href="../logo.png"/>
+  <link rel="shortcut icon" type="image/png" href="../logo.png"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../styles/variables.css"/>
+  <link rel="stylesheet" href="../styles/base.css"/>
+  <link rel="stylesheet" href="../styles/navbar.css"/>
+  <link rel="stylesheet" href="../styles/cards.css"/>
+  <link rel="stylesheet" href="../styles/pages.css"/>
+  <link rel="stylesheet" href="../styles/responsive.css"/>
+  <style>
+    .search-page-bar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--bg-2, #111);
+      border: 1.5px solid var(--border, #222);
+      border-radius: 14px;
+      overflow: hidden;
+      max-width: 700px;
+      margin: 0 auto 8px;
+    }
+    .search-page-bar i {
+      position: absolute;
+      left: 16px;
+      color: var(--text-3, #555);
+      font-size: 18px;
+      pointer-events: none;
+    }
+    .search-page-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 16px 52px 16px 48px;
+      color: var(--text-1, #fff);
+      font-size: 16px;
+      width: 100%;
+    }
+    .search-page-bar input:focus { outline: none; }
+    .search-page-bar input::placeholder { color: var(--text-3, #555); }
+    .search-page-bar .srch-spinner {
+      position: absolute;
+      right: 16px;
+    }
+    @keyframes srchSpin { to { transform: rotate(360deg); } }
+    .srch-spinner-ring {
+      width: 18px; height: 18px;
+      border: 2px solid #333;
+      border-top-color: var(--red, #E23E3E);
+      border-radius: 50%;
+      animation: srchSpin .6s linear infinite;
+    }
+    .srch-count {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-3, #555);
+      margin-bottom: 24px;
+      min-height: 20px;
+    }
+    .srch-section-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border, #222);
+    }
+    .srch-section-label span {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text-1, #fff);
+    }
+    .srch-section-label small {
+      font-size: 12px;
+      color: var(--text-3, #555);
+    }
+    .srch-result-item {
+      display: flex;
+      gap: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .srch-result-item:hover { background: var(--bg-2, #111); }
+    .srch-result-thumb {
+      flex-shrink: 0;
+      width: 90px;
+      height: 60px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-2, #1a1a1a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .srch-result-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .srch-result-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+    .srch-result-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1, #fff);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .srch-result-desc {
+      font-size: 12px;
+      color: var(--text-3, #666);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+    }
+    .srch-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      color: #fff;
+    }
+    .srch-suggestions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .srch-suggestion-card {
+      background: var(--bg-2, #111);
+      border: 1px solid var(--border, #222);
+      border-radius: 12px;
+      padding: 20px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s, transform .15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .srch-suggestion-card:hover { background: var(--bg-3, #1a1a1a); transform: translateY(-2px); }
+    .srch-suggestion-card i { font-size: 28px; display: block; margin-bottom: 8px; }
+    .srch-suggestion-card span { font-size: 13px; font-weight: 600; color: var(--text-2, #ccc); }
+    .srch-empty {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .srch-empty i { font-size: 52px; color: var(--text-3, #333); display: block; margin-bottom: 14px; }
+    .srch-empty p { color: var(--text-3, #666); margin: 0; }
+  </style>
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1 class="page-header-title">Recherche</h1>
+    <p class="page-header-sub">Trouvez vos émissions, reportages, flash infos et plus</p>
+  </div>
+
+  <div class="container-fluid" style="max-width:900px; margin: 0 auto; padding: 0 16px 60px;">
+
+    <!-- Barre de recherche -->
+    <div class="search-page-bar">
+      <i class="bi bi-search"></i>
+      <input id="srch-input" type="search" placeholder="Rechercher un titre, sujet..." autocomplete="off"/>
+      <div class="srch-spinner d-none">
+        <div class="srch-spinner-ring"></div>
+      </div>
+    </div>
+    <p class="srch-count" id="srch-count"></p>
+
+    <!-- Suggestions catégories (affiché quand pas de recherche) -->
+    <div id="srch-suggestions">
+      <p style="font-size:12px;font-weight:700;color:var(--text-3,#555);text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;">Parcourir par catégorie</p>
+      <div class="srch-suggestions-grid">
+        <a href="sport.html" class="srch-suggestion-card">
+          <i class="bi bi-trophy-fill" style="color:#1DA1F2"></i>
+          <span>Sport</span>
+        </a>
+        <a href="journal-magazine.html" class="srch-suggestion-card">
+          <i class="bi bi-camera-video-fill" style="color:#E23E3E"></i>
+          <span>JT & Magazine</span>
+        </a>
+        <a href="divertissement.html" class="srch-suggestion-card">
+          <i class="bi bi-music-note-beamed" style="color:#A855F7"></i>
+          <span>Divertissement</span>
+        </a>
+        <a href="reportage.html" class="srch-suggestion-card">
+          <i class="bi bi-film" style="color:#F59E0B"></i>
+          <span>Reportages</span>
+        </a>
+        <a href="flashinfo.html" class="srch-suggestion-card">
+          <i class="bi bi-lightning-fill" style="color:#E23E3E"></i>
+          <span>Flash Info</span>
+        </a>
+        <a href="archive.html" class="srch-suggestion-card">
+          <i class="bi bi-archive-fill" style="color:#6B7280"></i>
+          <span>Archives</span>
+        </a>
+        <a href="emissions.html" class="srch-suggestion-card">
+          <i class="bi bi-mic-fill" style="color:#10B981"></i>
+          <span>Émissions</span>
+        </a>
+        <a href="reels.html" class="srch-suggestion-card">
+          <i class="bi bi-play-circle-fill" style="color:#F97316"></i>
+          <span>Reels</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Zone résultats -->
+    <div id="srch-results"></div>
+  </div>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  const [headerHtml, footerHtml] = await Promise.all([
+    fetch('../partials/header.html').then(r => r.text()),
+    fetch('../partials/footer.html').then(r => r.text())
+  ]);
+  document.getElementById('header-placeholder').innerHTML = headerHtml;
+  document.getElementById('footer-placeholder').innerHTML = footerHtml;
+
+  // Menu mobile
+  const initMobileMenu = () => {
+    const hamburger = document.querySelector('.navbar-hamburger');
+    const navLinks = document.querySelector('.navbar-links');
+    if (hamburger && navLinks) {
+      const newH = hamburger.cloneNode(true);
+      hamburger.parentNode.replaceChild(newH, hamburger);
+      const newN = navLinks.cloneNode(true);
+      navLinks.parentNode.replaceChild(newN, navLinks);
+      const fH = document.querySelector('.navbar-hamburger');
+      const fN = document.querySelector('.navbar-links');
+      fH.addEventListener('click', function(e) {
+        e.preventDefault(); e.stopPropagation();
+        this.classList.toggle('open');
+        fN.classList.toggle('open');
+        document.body.style.overflow = fN.classList.contains('open') ? 'hidden' : '';
+      });
+      fN.querySelectorAll('a').forEach(l => l.addEventListener('click', () => {
+        fH.classList.remove('open'); fN.classList.remove('open'); document.body.style.overflow = '';
+      }));
+      document.addEventListener('click', (e) => {
+        if (!fH.contains(e.target) && !fN.contains(e.target)) {
+          fH.classList.remove('open'); fN.classList.remove('open'); document.body.style.overflow = '';
+        }
+      });
+    } else {
+      setTimeout(initMobileMenu, 100);
+    }
+  };
+  setTimeout(initMobileMenu, 100);
+
+  // Charger et initialiser la recherche
+  const { initSearch } = await import('../js/search.js');
+  initSearch();
+</script>
+</body>
+</html>
