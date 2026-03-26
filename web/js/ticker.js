@@ -1,5 +1,5 @@
 // js/ticker.js
-import { getProgramWeek, getProgramGrid } from '../shared/services/api.js';
+import { getProgramWeek, getProgramGrid } from '../../shared/services/api.js';
 
 export async function loadTicker() {
   let tickerTrack = document.querySelector('.ticker-track');
@@ -121,3 +121,22 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+// ─── Auto-initialisation ──────────────────────────────────────────────────────
+// Se déclenche automatiquement dès que .ticker-track apparaît dans le DOM.
+// Aucun appel explicite nécessaire depuis les pages.
+(function autoInit() {
+  function tryInit() {
+    if (document.querySelector('.ticker-track')) {
+      loadTicker();
+      return true;
+    }
+    return false;
+  }
+  if (!tryInit()) {
+    const obs = new MutationObserver(() => {
+      if (tryInit()) obs.disconnect();
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  }
+})();

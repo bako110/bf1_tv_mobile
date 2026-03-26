@@ -5,6 +5,7 @@ let currentIndex = 0;
 let isLoading = false;
 let observer = null;
 let currentVideo = null;
+let likedReelIds = new Set();
 
 export async function loadReelsContent() {
   const container = document.getElementById('reelsContainer');
@@ -75,6 +76,12 @@ export async function loadReelsContent() {
     container.innerHTML = '<div class="reels-stack" id="reelsStack"></div>';
     const stack = document.getElementById('reelsStack');
     
+    // Charger les likes de l'utilisateur pour initialiser l'état des cœurs
+    try {
+      const myLikes = await api.getMyLikes('reel');
+      likedReelIds = new Set(myLikes.map(l => String(l.content_id)));
+    } catch (e) { likedReelIds = new Set(); }
+
     // Ajouter les reels
     reelsData.forEach((reel, index) => {
       stack.appendChild(createReelElement(reel, index));
@@ -85,14 +92,11 @@ export async function loadReelsContent() {
     
     // Démarrer le premier reel
     setTimeout(() => {
+      navigateToReel(0);
       const firstReel = document.querySelector('.reel-item');
       if (firstReel) {
-        playVideoInReel(firstReel);
-        // Charger les commentaires du premier reel
         const firstReelId = firstReel.dataset.id;
-        if (firstReelId) {
-          loadComments(firstReelId);
-        }
+        if (firstReelId) loadComments(firstReelId);
       }
     }, 500);
     
@@ -134,100 +138,92 @@ function createReelElement(reel, index) {
   div.setAttribute('data-id', reel._id);
   
   div.innerHTML = `
-    <div class="reel-video-container">
-      <video class="reel-video" loop muted playsinline preload="metadata">
-        <source src="${reel.video_url}" type="video/mp4">
-        Votre navigateur ne supporte pas la lecture vidéo.
-      </video>
-      
-      <!-- Section commentaires à gauche (desktop) -->
-      <div class="reel-comments-section" id="comments-${reel._id}">
+    <div class="reel-layout">
+
+      <!-- GAUCHE : Panel commentaires (TikTok style) -->
+      <div class="reel-comments-panel" id="comments-panel-${reel._id}">
         <div class="reel-comments-header">
-          <span>Commentaires</span>
-          <span class="comment-count">${formatNumber(reel.comments || 0)}</span>
+          <span class="reel-comments-title">
+            <i class="bi bi-chat-fill" style="color:var(--red,#E23E3E);margin-right:6px;"></i>
+            Commentaires
+            <span class="reel-comments-count" id="ccount-${reel._id}">${formatNumber(reel.comments || 0)}</span>
+          </span>
+          <button class="reel-comments-close-btn" onclick="window.closeCommentPanel('${reel._id}')">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
         <div class="reel-comments-list" id="comments-list-${reel._id}">
-          <!-- Les commentaires seront chargés ici -->
+          <div class="reel-comments-empty">
+            <i class="bi bi-chat-dots"></i>
+            <p>Chargement...</p>
+          </div>
         </div>
-        <div class="reel-comment-input-wrapper">
-          <input type="text" class="reel-comment-input" placeholder="Ajouter un commentaire..." 
-                 id="comment-input-${reel._id}" maxlength="200">
-          <button class="reel-comment-send" onclick="submitComment('${reel._id}')">
+        <div class="reel-comments-input-row">
+          <input type="text" class="reel-comment-input"
+                 id="comment-input-${reel._id}"
+                 placeholder="Ajouter un commentaire..."
+                 maxlength="200">
+          <button class="reel-comment-send-btn" onclick="submitComment('${reel._id}')">
             <i class="bi bi-send-fill"></i>
           </button>
         </div>
       </div>
-      
-      <div class="reel-overlay">
-        <div class="reel-info">
-          <div class="reel-author">
+
+      <!-- CENTRE : Vidéo -->
+      <div class="reel-video-wrapper">
+        <video class="reel-video" loop muted playsinline preload="metadata">
+          <source src="${reel.video_url}" type="video/mp4">
+        </video>
+        <div class="reel-video-overlay">
+          <div class="reel-author-bar">
             <div class="reel-avatar">
               <img src="${reel.avatar || '/logo.png'}" alt="${escapeHtml(reel.author)}" onerror="this.src='/logo.png'">
             </div>
-            <div class="reel-author-name">${escapeHtml(reel.author)}</div>
+            <span class="reel-author-name">${escapeHtml(reel.author)}</span>
             <button class="reel-follow-btn">Suivre</button>
           </div>
-          <div class="reel-caption">
-            <strong>${escapeHtml(reel.author)}</strong> ${escapeHtml(reel.description.substring(0, 100))}${reel.description.length > 100 ? '...' : ''}
-          </div>
+          <p class="reel-caption">${escapeHtml(reel.description.substring(0, 120))}${reel.description.length > 120 ? '...' : ''}</p>
           <div class="reel-music">
-            <i class="bi bi-music-note-beamed"></i> ${escapeHtml(reel.title)}
-          </div>
-        </div>
-        <div class="reel-actions">
-          <div class="reel-action like-btn" data-id="${reel._id}">
-            <i class="bi bi-heart"></i>
-            <span class="like-count">${formatNumber(reel.likes)}</span>
-          </div>
-          <div class="reel-action comment-btn" data-id="${reel._id}">
-            <i class="bi bi-chat"></i>
-            <span class="comment-count">${formatNumber(reel.comments || 0)}</span>
-          </div>
-          <div class="reel-action share-btn" data-id="${reel._id}" data-title="${escapeHtml(reel.title)}">
-            <i class="bi bi-share"></i>
-            <span>Partager</span>
+            <i class="bi bi-music-note-beamed"></i>
+            <span>${escapeHtml(reel.title)}</span>
           </div>
         </div>
       </div>
+
+      <!-- DROITE : Actions TikTok -->
+      <div class="reel-side-actions">
+        <div class="reel-side-action like-btn" data-id="${reel._id}">
+          <div class="reel-side-action-icon"><i class="bi ${likedReelIds.has(String(reel._id)) ? 'bi-heart-fill' : 'bi-heart'}" style="${likedReelIds.has(String(reel._id)) ? 'color:var(--red)' : ''}"></i></div>
+          <span class="like-count">${formatNumber(reel.likes)}</span>
+        </div>
+        <div class="reel-side-action comment-btn" data-id="${reel._id}">
+          <div class="reel-side-action-icon"><i class="bi bi-chat-fill"></i></div>
+          <span class="comment-count">${formatNumber(reel.comments || 0)}</span>
+        </div>
+        <div class="reel-side-action share-btn" data-id="${reel._id}" data-title="${escapeHtml(reel.title)}">
+          <div class="reel-side-action-icon"><i class="bi bi-share-fill"></i></div>
+          <span>Partager</span>
+        </div>
+      </div>
+
     </div>
   `;
-  
-  // Ajouter les écouteurs d'événements
+
+  // Événements
   const likeBtn = div.querySelector('.like-btn');
-  if (likeBtn) {
-    likeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleLike(likeBtn, reel._id);
-    });
-  }
-  
+  if (likeBtn) likeBtn.addEventListener('click', e => { e.stopPropagation(); toggleLike(likeBtn, reel._id); });
+
   const commentBtn = div.querySelector('.comment-btn');
-  if (commentBtn) {
-    commentBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openComments(reel._id);
-    });
-  }
-  
+  if (commentBtn) commentBtn.addEventListener('click', e => { e.stopPropagation(); openComments(reel._id); });
+
   const shareBtn = div.querySelector('.share-btn');
-  if (shareBtn) {
-    shareBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      shareReel(reel._id, reel.title);
-    });
-  }
-  
-  // Écouteur pour l'input de commentaire
+  if (shareBtn) shareBtn.addEventListener('click', e => { e.stopPropagation(); shareReel(reel._id, reel.title); });
+
   const commentInput = div.querySelector('.reel-comment-input');
-  if (commentInput) {
-    commentInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        submitComment(reel._id);
-      }
-    });
-  }
-  
+  if (commentInput) commentInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(reel._id); }
+  });
+
   return div;
 }
 
@@ -340,31 +336,40 @@ async function toggleLike(btn, reelId) {
   const icon = btn.querySelector('i');
   const countSpan = btn.querySelector('.like-count');
   let currentCount = parseInt(countSpan.textContent) || 0;
-  
-  if (icon.classList.contains('bi-heart')) {
-    icon.classList.remove('bi-heart');
-    icon.classList.add('bi-heart-fill');
-    icon.style.color = 'var(--red)';
-    countSpan.textContent = formatNumber(currentCount + 1);
-    
-    // Appel API pour liker (optionnel)
-    try {
-      await api.toggleLike('reel', reelId);
-    } catch (error) {
-      console.error('Erreur like:', error);
-    }
-  } else {
-    icon.classList.remove('bi-heart-fill');
-    icon.classList.add('bi-heart');
+  const liked = icon.classList.contains('bi-heart-fill');
+
+  // Optimistic update
+  if (liked) {
+    icon.classList.replace('bi-heart-fill', 'bi-heart');
     icon.style.color = '';
     countSpan.textContent = formatNumber(Math.max(0, currentCount - 1));
-    
-    // Appel API pour unliker (optionnel)
-    try {
-      await api.toggleLike('reel', reelId);
-    } catch (error) {
-      console.error('Erreur unlike:', error);
+    likedReelIds.delete(String(reelId));
+  } else {
+    icon.classList.replace('bi-heart', 'bi-heart-fill');
+    icon.style.color = 'var(--red)';
+    countSpan.textContent = formatNumber(currentCount + 1);
+    likedReelIds.add(String(reelId));
+  }
+
+  btn.style.pointerEvents = 'none';
+  try {
+    await api.toggleLike('reel', reelId);
+  } catch (error) {
+    console.error('Erreur like:', error);
+    // Rollback
+    if (liked) {
+      icon.classList.replace('bi-heart', 'bi-heart-fill');
+      icon.style.color = 'var(--red)';
+      countSpan.textContent = formatNumber(currentCount);
+      likedReelIds.add(String(reelId));
+    } else {
+      icon.classList.replace('bi-heart-fill', 'bi-heart');
+      icon.style.color = '';
+      countSpan.textContent = formatNumber(currentCount);
+      likedReelIds.delete(String(reelId));
     }
+  } finally {
+    btn.style.pointerEvents = '';
   }
 }
 
@@ -408,34 +413,20 @@ function escapeHtml(str) {
 // Navigation TikTok Web
 function navigateToReel(index) {
   if (index < 0 || index >= reelsData.length) return;
-  
+
   const reels = document.querySelectorAll('.reel-item');
-  const targetReel = reels[index];
-  
-  if (targetReel) {
-    // Mettre à jour les classes pour les animations desktop
-    reels.forEach((reel, i) => {
-      reel.classList.remove('active', 'prev', 'next');
-      if (i === index) {
-        reel.classList.add('active');
-      } else if (i < index) {
-        reel.classList.add('prev');
-      } else {
-        reel.classList.add('next');
-      }
-    });
-    
-    // Scroll vers le reel cible
-    targetReel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
-    // Mettre à jour l'index
-    currentIndex = index;
-    
-    // Démarrer la vidéo
-    setTimeout(() => {
-      playVideoInReel(targetReel);
-    }, 300);
-  }
+  reels.forEach((reel, i) => {
+    reel.classList.remove('active', 'prev', 'next');
+    if (i === index) reel.classList.add('active');
+    else if (i < index) reel.classList.add('prev');
+    else reel.classList.add('next');
+  });
+
+  currentIndex = index;
+
+  setTimeout(() => {
+    playVideoInReel(reels[index]);
+  }, 50);
 }
 
 function togglePlayPause() {
@@ -465,22 +456,8 @@ function toggleFullscreen() {
 
 // Ajouter la navigation avec les boutons fléchés pour desktop
 function addDesktopNavigation() {
-  const container = document.getElementById('reelsContainer');
-  if (!container) return;
-  
-  // Créer les boutons de navigation
-  const navHTML = `
-    <div class="reels-nav">
-      <button class="reel-nav-btn" onclick="navigateToReel(currentIndex - 1)">
-        <i class="bi bi-chevron-up"></i>
-      </button>
-      <button class="reel-nav-btn" onclick="navigateToReel(currentIndex + 1)">
-        <i class="bi bi-chevron-down"></i>
-      </button>
-    </div>
-  `;
-  
-  container.insertAdjacentHTML('beforeend', navHTML);
+  // Navigation gérée par scroll/wheel/keyboard — pas de boutons flottants
+  // qui bloqueraient les clics sur les actions like/commentaire
 }
 
 // Ajouter les indicateurs de progression
@@ -541,8 +518,7 @@ async function submitComment(reelId) {
   if (!text) return;
   
   try {
-    // Appel API pour poster le commentaire
-    await api.postComment('reel', reelId, text);
+    await api.addComment('reel', reelId, text);
     
     // Vider l'input
     input.value = '';
@@ -563,57 +539,180 @@ async function submitComment(reelId) {
 async function loadComments(reelId) {
   const commentsList = document.getElementById(`comments-list-${reelId}`);
   if (!commentsList) return;
-  
+
   try {
-    const comments = await api.getComments('reel', reelId);
-    
-    if (comments.length === 0) {
+    const [comments, myCommentLikes] = await Promise.all([
+      api.getComments('reel', reelId),
+      api.getMyLikes('comment').catch(() => [])
+    ]);
+    const likedCids = new Set(myCommentLikes.map(l => String(l.content_id)));
+    const me = JSON.parse(localStorage.getItem('bf1_user') || 'null');
+    const myId = me?.id || me?._id || me?.user_id;
+
+    if (!comments.length) {
       commentsList.innerHTML = `
-        <div class="reel-comments-empty" style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 1.2rem; color: #ccc;">
-          <i class="bi bi-chat-dots" style="font-size: 2rem; margin-bottom: 10px;"></i>
-          Soyez le premier à commenter !
-        </div>
-      `;
+        <div class="reel-comments-empty">
+          <i class="bi bi-chat-dots"></i>
+          <p>Soyez le premier à commenter !</p>
+        </div>`;
       return;
     }
-    
-    commentsList.innerHTML = comments.map(comment => `
-      <div class="reel-comment-item">
-        <div class="reel-comment-avatar">${(comment.author?.name || 'U')[0].toUpperCase()}</div>
+
+    commentsList.innerHTML = comments.map(comment => {
+      const cid = comment.id || comment._id;
+      const authorName = comment.username || comment.author?.name || 'Anonyme';
+      const authorInitial = authorName[0].toUpperCase();
+      const isOwner = myId && comment.user_id && String(myId) === String(comment.user_id);
+      const alreadyLiked = likedCids.has(String(cid));
+      return `
+      <div class="reel-comment-item" id="comment-row-${cid}" data-reelid="${reelId}">
+        <div class="reel-comment-avatar">${authorInitial}</div>
         <div class="reel-comment-content">
-          <div class="reel-comment-author">${escapeHtml(comment.author?.name || 'Anonyme')}</div>
-          <div class="reel-comment-text">${escapeHtml(comment.text)}</div>
-          <div class="reel-comment-time">${timeAgo(comment.created_at)}</div>
+          <div class="reel-comment-author">${escapeHtml(authorName)}</div>
+          <div class="reel-comment-text" id="comment-text-${cid}">${escapeHtml(comment.text)}</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+            <span class="reel-comment-time">${timeAgo(comment.created_at)}</span>
+            <button class="rc-action-btn rc-like" id="clbtn-${cid}" onclick="window.likeReelComment('${cid}',this)" title="J'aime">
+              <i class="bi ${alreadyLiked ? 'bi-heart-fill' : 'bi-heart'}" style="${alreadyLiked ? 'color:#ff4d4d' : ''}"></i>
+              <span class="rc-like-count">0</span>
+            </button>
+            ${isOwner ? `
+              <button class="rc-action-btn" onclick="window.editComment('${cid}','${reelId}')" title="Modifier">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="rc-action-btn rc-del" onclick="window.deleteReelComment('${cid}','${reelId}')" title="Supprimer">
+                <i class="bi bi-trash3"></i>
+              </button>` : ''}
+          </div>
         </div>
-      </div>
-    `).join('');
-    
-  } catch (error) {
-    console.error('Erreur chargement commentaires:', error);
-    commentsList.innerHTML = `
-      <div class="reel-comments-empty" style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 1.2rem; color: #ccc;">
-        Impossible de charger les commentaires
-      </div>
-    `;
+      </div>`;
+    }).join('');
+
+  } catch (e) {
+    console.error('Erreur chargement commentaires:', e);
+    commentsList.innerHTML = `<div class="reel-comments-empty"><i class="bi bi-exclamation-circle"></i><p>Impossible de charger</p></div>`;
   }
 }
 
+window.editComment = function(commentId, reelId) {
+  const textEl = document.getElementById(`comment-text-${commentId}`);
+  if (!textEl) return;
+  const currentText = textEl.textContent;
+  textEl.innerHTML = `
+    <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+      <input id="edit-input-${commentId}" value="${escapeHtml(currentText)}"
+        style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);
+               border-radius:8px;padding:5px 10px;color:#fff;font-size:13px;outline:none;"
+        maxlength="200"/>
+      <button onclick="window.confirmEditComment('${commentId}','${reelId}')"
+        style="background:#E23E3E;border:none;border-radius:6px;color:#fff;padding:5px 10px;cursor:pointer;font-size:12px;">
+        OK
+      </button>
+      <button onclick="window.cancelEdit('${commentId}','${escapeHtml(currentText).replace(/'/g,"\\'")}','${reelId}')"
+        style="background:rgba(255,255,255,0.1);border:none;border-radius:6px;color:#aaa;padding:5px 10px;cursor:pointer;font-size:12px;">
+        ✕
+      </button>
+    </div>`;
+  document.getElementById(`edit-input-${commentId}`)?.focus();
+};
+
+window.cancelEdit = function(commentId, originalText, reelId) {
+  const textEl = document.getElementById(`comment-text-${commentId}`);
+  if (textEl) textEl.innerHTML = escapeHtml(originalText);
+};
+
+window.confirmEditComment = async function(commentId, reelId) {
+  const input = document.getElementById(`edit-input-${commentId}`);
+  const newText = input?.value?.trim();
+  if (!newText) return;
+  try {
+    await api.updateComment(commentId, newText);
+    const textEl = document.getElementById(`comment-text-${commentId}`);
+    if (textEl) textEl.innerHTML = escapeHtml(newText);
+    showNotification('Commentaire modifié', 'success');
+  } catch (e) {
+    console.error(e);
+    showNotification('Erreur lors de la modification', 'error');
+  }
+};
+
+window.deleteReelComment = async function(commentId, reelId) {
+  const row = document.getElementById(`comment-row-${commentId}`);
+  if (!confirm('Supprimer ce commentaire ?')) return;
+  if (row) { row.style.opacity = '0.4'; row.style.pointerEvents = 'none'; }
+  try {
+    await api.deleteComment(commentId);
+    row?.remove();
+    updateCommentCount(reelId, -1);
+    showNotification('Commentaire supprimé', 'success');
+  } catch (e) {
+    console.error(e);
+    if (row) { row.style.opacity = '1'; row.style.pointerEvents = ''; }
+    showNotification('Erreur lors de la suppression', 'error');
+  }
+};
+
+window.likeReelComment = async function(commentId, btn) {
+  const icon = btn.querySelector('i');
+  const countSpan = btn.querySelector('.rc-like-count');
+  const liked = icon.classList.contains('bi-heart-fill');
+  const current = parseInt(countSpan.textContent) || 0;
+
+  // Optimistic update
+  if (liked) {
+    icon.classList.replace('bi-heart-fill', 'bi-heart');
+    icon.style.color = '';
+    countSpan.textContent = Math.max(0, current - 1);
+  } else {
+    icon.classList.replace('bi-heart', 'bi-heart-fill');
+    icon.style.color = '#ff4d4d';
+    countSpan.textContent = current + 1;
+  }
+  btn.disabled = true;
+  try {
+    await api.toggleLike('comment', commentId);
+  } catch (e) {
+    // Rollback on error
+    if (liked) {
+      icon.classList.replace('bi-heart', 'bi-heart-fill');
+      icon.style.color = '#ff4d4d';
+      countSpan.textContent = current;
+    } else {
+      icon.classList.replace('bi-heart-fill', 'bi-heart');
+      icon.style.color = '';
+      countSpan.textContent = current;
+    }
+    console.error('Erreur like commentaire:', e);
+  } finally {
+    btn.disabled = false;
+  }
+};
+
 function openComments(reelId) {
-  // Sur mobile, ouvrir le drawer
   if (window.innerWidth <= 768) {
     injectCommentDrawer();
     openCommentDrawer(reelId);
   } else {
-    // Sur desktop, scroller vers la section commentaires
-    const commentsSection = document.getElementById(`comments-${reelId}`);
-    if (commentsSection) {
-      commentsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Focus sur l'input
-      const input = document.getElementById(`comment-input-${reelId}`);
-      if (input) input.focus();
+    const panel = document.getElementById(`comments-panel-${reelId}`);
+    if (!panel) return;
+    if (panel.classList.contains('open')) {
+      panel.classList.remove('open');
+    } else {
+      panel.classList.add('open');
+      loadComments(reelId);
+      setTimeout(() => {
+        const input = document.getElementById(`comment-input-${reelId}`);
+        if (input) input.focus();
+      }, 380);
     }
   }
 }
+
+function closeCommentPanel(reelId) {
+  const panel = document.getElementById(`comments-panel-${reelId}`);
+  if (panel) panel.classList.remove('open');
+}
+window.closeCommentPanel = closeCommentPanel;
 
 function updateCommentCount(reelId, delta) {
   // Mettre à jour tous les compteurs de commentaires pour ce reel
@@ -768,42 +867,65 @@ function closeCommentDrawer() {
 async function loadDrawerComments(reelId) {
   const list = document.getElementById('reels-comment-list');
   if (!list) return;
-  
+
   try {
-    const comments = await api.getComments('reel', reelId);
-    
-    if (comments.length === 0) {
+    const [comments, myCommentLikes] = await Promise.all([
+      api.getComments('reel', reelId),
+      api.getMyLikes('comment').catch(() => [])
+    ]);
+    const likedCids = new Set(myCommentLikes.map(l => String(l.content_id)));
+    const me = JSON.parse(localStorage.getItem('bf1_user') || 'null');
+    const myId = me?.id || me?._id || me?.user_id;
+
+    if (!comments.length) {
       list.innerHTML = `
         <div style="text-align:center;color:var(--text-secondary);padding:40px 20px;">
           <i class="bi bi-chat-dots" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
           <p>Soyez le premier à commenter !</p>
-        </div>
-      `;
+        </div>`;
       return;
     }
-    
-    list.innerHTML = comments.map(comment => `
-      <div style="padding:12px 0;border-bottom:1px solid var(--border);">
-        <div style="display:flex;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-weight:600;">
-            ${(comment.author?.name || 'U')[0].toUpperCase()}
+
+    list.innerHTML = comments.map(comment => {
+      const cid = comment.id || comment._id;
+      const authorName = comment.username || comment.author?.name || 'Anonyme';
+      const authorInitial = authorName[0].toUpperCase();
+      const isOwner = myId && comment.user_id && String(myId) === String(comment.user_id);
+      const alreadyLiked = likedCids.has(String(cid));
+      return `
+      <div id="comment-row-${cid}" style="padding:12px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-weight:600;flex-shrink:0;">
+            ${authorInitial}
           </div>
-          <div style="flex:1;">
-            <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">${escapeHtml(comment.author?.name || 'Anonyme')}</div>
-            <div style="color:var(--text-primary);line-height:1.4;margin-bottom:4px;">${escapeHtml(comment.text)}</div>
-            <div style="color:var(--text-secondary);font-size:0.8rem;">${timeAgo(comment.created_at)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">${escapeHtml(authorName)}</div>
+            <div id="comment-text-${cid}" style="color:var(--text-primary);line-height:1.4;margin-bottom:4px;">${escapeHtml(comment.text)}</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:var(--text-secondary);font-size:0.8rem;">${timeAgo(comment.created_at)}</span>
+              <button class="rc-action-btn rc-like" id="clbtn-${cid}" onclick="window.likeReelComment('${cid}',this)" title="J'aime" style="display:flex;align-items:center;gap:3px;">
+                <i class="bi ${alreadyLiked ? 'bi-heart-fill' : 'bi-heart'}" style="${alreadyLiked ? 'color:#ff4d4d' : ''}"></i>
+                <span class="rc-like-count">0</span>
+              </button>
+              ${isOwner ? `
+                <button class="rc-action-btn" onclick="window.editComment('${cid}','${reelId}')" title="Modifier">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="rc-action-btn rc-del" onclick="window.deleteReelComment('${cid}','${reelId}')" title="Supprimer">
+                  <i class="bi bi-trash3"></i>
+                </button>` : ''}
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
-    
+      </div>`;
+    }).join('');
+
   } catch (error) {
     console.error('Erreur chargement commentaires drawer:', error);
     list.innerHTML = `
       <div style="text-align:center;color:var(--text-secondary);padding:40px 20px;">
         <p>Impossible de charger les commentaires</p>
-      </div>
-    `;
+      </div>`;
   }
 }
 
@@ -816,7 +938,7 @@ async function submitDrawerComment() {
   if (!text || !reelId) return;
   
   try {
-    await api.postComment('reel', reelId, text);
+    await api.addComment('reel', reelId, text);
     input.value = '';
     loadDrawerComments(reelId);
     updateCommentCount(reelId, 1);

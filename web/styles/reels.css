@@ -46,49 +46,47 @@
    BF1 — Reels Page (Style TikTok Web)
 ═══════════════════════════════════════ */
 
-/* Container principal - Style TikTok Web */
+/* Container principal */
 .reels-player-container {
   position: fixed;
-  top: 0;
+  top: calc(var(--nav-h, 68px) + 36px);
   left: 0;
   right: 0;
   bottom: 0;
   background: #000;
   overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Layout Desktop TikTok */
-@media (min-width: 769px) {
-  .reels-player-container {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  }
-  
-  .reels-stack {
-    width: 100%;
-    max-width: 450px;
-    height: 100vh;
-    margin: 0 auto;
-    position: relative;
-    overflow: hidden;
-    border-radius: 20px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  }
+  align-items: stretch;
 }
 
 /* Stack des reels */
 .reels-stack {
+  width: 100%;
   height: 100%;
+  position: relative;
+}
+
+@media (min-width: 769px) {
+  .reels-stack {
+    overflow: hidden;
+  }
 }
 
 /* Élément reel individuel */
 .reel-item {
-  height: calc(100vh - var(--nav-h, 70px));
-  scroll-snap-align: start;
-  position: relative;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0;
   background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.reel-item.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 10;
 }
 
 /* Conteneur vidéo */
@@ -277,32 +275,16 @@
 }
 
 /* Styles TikTok Web avancés */
+/* Desktop : le reel-item prend toute la place, le layout est géré par reel-layout */
 @media (min-width: 769px) {
   .reel-item {
-    height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .reel-item.prev, .reel-item.next {
     opacity: 0;
-    transform: scale(0.9);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .reel-item.active {
-    opacity: 1;
-    transform: scale(1);
-    z-index: 10;
-  }
-  
-  .reel-item.prev {
-    transform: translateY(-100%) scale(0.9);
-    z-index: 5;
-  }
-  
-  .reel-item.next {
-    transform: translateY(100%) scale(0.9);
-    z-index: 5;
+    pointer-events: none;
   }
 }
 
@@ -477,4 +459,290 @@
     rgba(0,0,0,0.7) 0%, 
     rgba(0,0,0,0.3) 40%, 
     rgba(0,0,0,0) 70%);
+}
+
+/* ═══════════════════════════════════════
+   TIKTOK WEB LAYOUT — [Commentaires] [Vidéo] [Actions]
+═══════════════════════════════════════ */
+
+/* Reel item : flex row centré */
+@media (min-width: 769px) {
+  .reel-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+.reel-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  pointer-events: auto;
+}
+
+/* ── GAUCHE : Panel commentaires ── */
+.reel-comments-panel {
+  width: 0;
+  height: 78vh;
+  max-height: 680px;
+  background: #111;
+  border-radius: 14px;
+  flex-shrink: 0;
+  overflow: hidden;
+  visibility: hidden;
+  transition: width 0.35s cubic-bezier(.4,0,.2,1),
+              margin-right 0.35s cubic-bezier(.4,0,.2,1),
+              visibility 0s linear 0.35s;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255,255,255,0.07);
+  pointer-events: auto;
+  z-index: 20;
+  position: relative;
+}
+
+.reel-comments-panel.open {
+  width: 360px;
+  margin-right: 18px;
+  visibility: visible;
+  transition: width 0.35s cubic-bezier(.4,0,.2,1),
+              margin-right 0.35s cubic-bezier(.4,0,.2,1),
+              visibility 0s linear 0s;
+}
+
+.reel-comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
+.reel-comments-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reel-comments-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: #888;
+  margin-left: 4px;
+}
+
+.reel-comments-close-btn {
+  width: 30px; height: 30px;
+  background: rgba(255,255,255,0.08);
+  border: none; border-radius: 50%;
+  color: #aaa; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.reel-comments-close-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+.reel-comments-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #E23E3E transparent;
+}
+.reel-comments-list::-webkit-scrollbar { width: 3px; }
+.reel-comments-list::-webkit-scrollbar-thumb { background: #E23E3E; border-radius: 3px; }
+
+.reel-comment-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s;
+}
+.reel-comment-item:hover { background: rgba(255,255,255,0.03); }
+
+.reel-comment-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: #2a2a2a;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+.reel-comment-content { flex: 1; min-width: 0; }
+
+.reel-comment-author {
+  font-size: 13px; font-weight: 600; color: #fff;
+  margin-bottom: 3px;
+}
+
+.reel-comment-text {
+  font-size: 13px; color: #ccc; line-height: 1.45;
+  word-break: break-word;
+}
+
+.reel-comment-time { font-size: 11px; color: #555; margin-top: 4px; }
+
+/* Edit / Delete comment action buttons */
+.rc-action-btn {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: #666;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+  line-height: 1;
+}
+.rc-action-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.rc-action-btn.rc-del:hover { color: #ff4d4d; background: rgba(255,77,77,0.12); }
+.rc-action-btn.rc-like { display: inline-flex; align-items: center; gap: 3px; color: #888; }
+.rc-action-btn.rc-like .bi-heart-fill { color: #ff4d4d; }
+.rc-action-btn.rc-like:hover { color: #ff4d4d; background: rgba(255,77,77,0.1); }
+.rc-action-btn.rc-like:disabled { opacity: 0.6; cursor: default; }
+
+.reel-comments-empty {
+  text-align: center; padding: 50px 20px; color: #555;
+}
+.reel-comments-empty i { font-size: 36px; display: block; margin-bottom: 12px; }
+.reel-comments-empty p { font-size: 14px; margin: 0; }
+
+.reel-comments-input-row {
+  display: flex; gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0; align-items: center;
+}
+
+.reel-comment-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 8px 14px;
+  color: #fff; font-size: 13px; outline: none;
+  transition: border-color 0.2s;
+}
+.reel-comment-input:focus { border-color: #E23E3E; }
+.reel-comment-input::placeholder { color: #555; }
+
+.reel-comment-send-btn {
+  width: 36px; height: 36px;
+  background: #E23E3E; border: none; border-radius: 50%;
+  color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+  transition: background 0.15s, transform 0.15s;
+}
+.reel-comment-send-btn:hover { background: #c01d24; transform: scale(1.07); }
+
+/* ── CENTRE : Wrapper vidéo ── */
+.reel-video-wrapper {
+  position: relative;
+  width: 390px;
+  height: 78vh;
+  max-height: 680px;
+  border-radius: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #000;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  pointer-events: auto;
+}
+
+.reel-video-wrapper .reel-video {
+  width: 100%; height: 100%; object-fit: cover;
+  pointer-events: none;
+}
+
+.reel-video-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 20px 16px 16px;
+  background: linear-gradient(to top,
+    rgba(0,0,0,0.88) 0%,
+    rgba(0,0,0,0.3) 60%,
+    transparent 100%);
+  color: #fff;
+  pointer-events: none;
+}
+
+.reel-author-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px; pointer-events: auto;
+}
+
+.reel-author-bar .reel-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  overflow: hidden; border: 2px solid #fff; flex-shrink: 0;
+}
+.reel-author-bar .reel-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.reel-author-bar .reel-author-name { font-weight: 600; font-size: 14px; }
+.reel-author-bar .reel-follow-btn { pointer-events: auto; }
+
+.reel-video-overlay .reel-caption {
+  font-size: 13px; line-height: 1.45; margin-bottom: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.reel-video-overlay .reel-music {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: 0.85;
+}
+
+/* ── DROITE : Actions TikTok ── */
+.reel-side-actions {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 22px;
+  margin-left: 18px; flex-shrink: 0;
+  pointer-events: auto;
+  z-index: 20;
+  position: relative;
+}
+
+.reel-side-action {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 5px;
+  cursor: pointer; color: #fff;
+  transition: transform 0.2s;
+}
+.reel-side-action:hover { transform: scale(1.12); }
+
+.reel-side-action-icon {
+  width: 50px; height: 50px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  transition: background 0.2s;
+}
+.reel-side-action:hover .reel-side-action-icon { background: rgba(255,255,255,0.22); }
+
+.reel-side-action span {
+  font-size: 12px; font-weight: 500;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.like-btn .bi-heart-fill { color: #E23E3E !important; }
+
+/* ── MOBILE : masquer panel/actions, garder le drawer ── */
+@media (max-width: 768px) {
+  .reel-comments-panel { display: none !important; }
+  .reel-side-actions { display: none !important; }
+  .reel-video-wrapper {
+    width: 100% !important; height: 100vh !important;
+    max-height: none !important; border-radius: 0 !important;
+  }
+  .reel-layout { display: block; height: 100%; }
+  .reel-video-overlay { position: absolute; bottom: 0; left: 0; right: 0; }
 }
