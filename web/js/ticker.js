@@ -63,13 +63,11 @@ export async function loadTicker() {
         const channel = program.channel_name || 'BF1 TV';
         let timeDisplay = '';
         let dateDisplay = '';
-        
         if (program.start_time) {
           if (typeof program.start_time === 'string') {
             if (program.start_time.includes('T')) {
               const datePart = program.start_time.split('T')[0];
               timeDisplay = program.start_time.split('T')[1].substring(0, 5);
-              // Si la date n'est pas aujourd'hui, afficher la date
               if (datePart !== todayStr) {
                 const dateObj = new Date(datePart);
                 dateDisplay = ` ${dateObj.getDate()}/${dateObj.getMonth() + 1}`;
@@ -79,23 +77,26 @@ export async function loadTicker() {
             }
           }
         }
-        
         const liveIcon = program.is_live ? '<i class="bi bi-record-circle-fill me-1" style="color: #e8222a;"></i>' : '';
-        
         return `<span>${liveIcon}${escapeHtml(title)} — ${escapeHtml(channel)} ${timeDisplay ? `(${timeDisplay}${dateDisplay})` : ''}</span>`;
       }).join('');
-      
-      tickerTrack.innerHTML = tickerItems;
+      tickerTrack.innerHTML = `
+        <div class="ticker-track-inner">${tickerItems}</div>
+        <div class="ticker-track-inner duplicate">${tickerItems}</div>
+      `;
       console.log('✅ Ticker mis à jour avec', allPrograms.length, 'programmes');
-      
     } else {
       // Données par défaut
-      tickerTrack.innerHTML = `
+      const defaultItems = `
         <span><i class="bi bi-record-circle-fill me-1" style="color: #e8222a;"></i>Journal de 20h — BF1 National (20:00)</span>
         <span>CAN 2024 : Match des Étalons — BF1 Sport (18:00)</span>
         <span>Festival International de Ouagadougou — BF1 Culture (15:00)</span>
         <span>Débat politique — BF1 Info (21:00)</span>
         <span>Top 50 — BF1 Musique (22:30)</span>
+      `;
+      tickerTrack.innerHTML = `
+        <div class="ticker-track-inner">${defaultItems}</div>
+        <div class="ticker-track-inner duplicate">${defaultItems}</div>
       `;
       console.log('📺 Utilisation des données par défaut');
     }

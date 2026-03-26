@@ -29,15 +29,26 @@ export class ProgrammesService {
     this.updateDayFilterValue(this.currentSelectedDate);
   }
 
+  // Retourne la date du jour en UTC (Afrique/Ouagadougou = UTC+0)
   getTodayDate() {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
+    const now = new Date();
+    const utcYear = now.getUTCFullYear();
+    const utcMonth = now.getUTCMonth();
+    const utcDate = now.getUTCDate();
+    // Crée une date à minuit UTC
+    const utcMidnight = new Date(Date.UTC(utcYear, utcMonth, utcDate));
+    return utcMidnight.toISOString().split('T')[0];
   }
 
+  // Retourne la date à offset jours en UTC (Afrique/Ouagadougou = UTC+0)
   getDateFromOffset(offsetDays) {
-    const date = new Date();
-    date.setDate(date.getDate() + offsetDays);
-    return date.toISOString().split('T')[0];
+    const now = new Date();
+    const utcYear = now.getUTCFullYear();
+    const utcMonth = now.getUTCMonth();
+    const utcDate = now.getUTCDate();
+    const utcMidnight = new Date(Date.UTC(utcYear, utcMonth, utcDate));
+    utcMidnight.setUTCDate(utcMidnight.getUTCDate() + offsetDays);
+    return utcMidnight.toISOString().split('T')[0];
   }
 
   selectDayByDate(date) {

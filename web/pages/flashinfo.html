@@ -44,11 +44,6 @@
 <body>
 
 <div id="header-placeholder"></div>
-<script>
-  fetch('../partials/header.html').then(r => r.text()).then(html => {
-    document.getElementById('header-placeholder').innerHTML = html;
-  });
-</script>
 
 <main class="main-content">
   <div class="page-header">
@@ -72,20 +67,88 @@
 </main>
 
 <div id="footer-placeholder"></div>
-<script>
-  fetch('../partials/footer.html').then(r => r.text()).then(html => {
-    document.getElementById('footer-placeholder').innerHTML = html;
-  });
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../app.js"></script>
 <script type="module">
-  import { loadFlashInfo } from '../js/news.js';
+  console.log('🚀 Début du chargement de la page Flash Info...');
   
-  // Charger les flash infos au chargement de la page
-  document.addEventListener('DOMContentLoaded', () => {
-    loadFlashInfo();
+  // Charger le header et le footer
+  const [headerHtml, footerHtml] = await Promise.all([
+    fetch('../partials/header.html').then(r => r.text()),
+    fetch('../partials/footer.html').then(r => r.text())
+  ]);
+  
+  document.getElementById('header-placeholder').innerHTML = headerHtml;
+  document.getElementById('footer-placeholder').innerHTML = footerHtml;
+  
+  console.log('✅ Header et footer chargés');
+  
+  // ===== INITIALISATION DU MENU MOBILE =====
+  // Attendre que le header soit injecté dans le DOM
+  const initMobileMenu = () => {
+    const hamburger = document.querySelector('.navbar-hamburger');
+    const navLinks = document.querySelector('.navbar-links');
+    
+    if (hamburger && navLinks) {
+      console.log('✅ Menu trouvé, initialisation...');
+      
+      // Supprimer les anciens événements en clonant
+      const newHamburger = hamburger.cloneNode(true);
+      hamburger.parentNode.replaceChild(newHamburger, hamburger);
+      
+      const newNavLinks = navLinks.cloneNode(true);
+      navLinks.parentNode.replaceChild(newNavLinks, navLinks);
+      
+      const finalHamburger = document.querySelector('.navbar-hamburger');
+      const finalNavLinks = document.querySelector('.navbar-links');
+      
+      // Événement au clic
+      finalHamburger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔄 Clic sur le menu hamburger');
+        this.classList.toggle('open');
+        finalNavLinks.classList.toggle('open');
+        
+        if (finalNavLinks.classList.contains('open')) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+      });
+      
+      // Fermer en cliquant sur un lien
+      finalNavLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          finalHamburger.classList.remove('open');
+          finalNavLinks.classList.remove('open');
+          document.body.style.overflow = '';
+        });
+      });
+      
+      // Fermer en cliquant en dehors
+      document.addEventListener('click', (e) => {
+        if (!finalHamburger.contains(e.target) && !finalNavLinks.contains(e.target)) {
+          finalHamburger.classList.remove('open');
+          finalNavLinks.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      });
+      
+      console.log('✅ Menu mobile initialisé avec succès');
+    } else {
+      console.log('⏳ En attente du menu...');
+      setTimeout(initMobileMenu, 100);
+    }
+  };
+  
+  // Lancer l'initialisation du menu
+  setTimeout(initMobileMenu, 100);
+  
+  // Charger les flash infos
+  import('../js/news.js').then(module => {
+    module.loadFlashInfo();
+    console.log('✅ Flash infos chargées');
   });
 </script>
 </body>

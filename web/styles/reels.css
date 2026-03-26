@@ -1,18 +1,81 @@
+
+/* Responsive : disposition TikTok uniquement sur mobile */
+@media (max-width: 768px) {
+  .reel-overlay {
+    padding: 15px;
+  }
+  .reel-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  .reel-author-name {
+    font-size: 0.8rem;
+  }
+  .reel-follow-btn {
+    padding: 3px 10px;
+    font-size: 0.65rem;
+  }
+  .reel-caption {
+    font-size: 0.75rem;
+  }
+  .reel-music {
+    font-size: 0.65rem;
+  }
+  .reel-action i {
+    font-size: 1.5rem;
+  }
+  .reel-action span {
+    font-size: 0.6rem;
+  }
+  .reel-actions {
+    gap: 15px;
+  }
+  .reels-player-container {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .reels-stack {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+}
+
 /* ═══════════════════════════════════════
-   BF1 — Reels Page (Style TikTok)
+   BF1 — Reels Page (Style TikTok Web)
 ═══════════════════════════════════════ */
 
-/* Container principal */
+/* Container principal - Style TikTok Web */
 .reels-player-container {
   position: fixed;
-  top: var(--nav-h, 70px);
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--bg-primary);
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Layout Desktop TikTok */
+@media (min-width: 769px) {
+  .reels-player-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  }
+  
+  .reels-stack {
+    width: 100%;
+    max-width: 450px;
+    height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
 }
 
 /* Stack des reels */
@@ -199,47 +262,6 @@
   50% { opacity: 0.5; }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .reel-overlay {
-    padding: 15px;
-  }
-  
-  .reel-avatar {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .reel-author-name {
-    font-size: 0.8rem;
-  }
-  
-  .reel-follow-btn {
-    padding: 3px 10px;
-    font-size: 0.65rem;
-  }
-  
-  .reel-caption {
-    font-size: 0.75rem;
-  }
-  
-  .reel-music {
-    font-size: 0.65rem;
-  }
-  
-  .reel-action i {
-    font-size: 1.5rem;
-  }
-  
-  .reel-action span {
-    font-size: 0.6rem;
-  }
-  
-  .reel-actions {
-    gap: 15px;
-  }
-}
-
 /* Cache la barre de défilement mais garde la fonctionnalité */
 .reels-player-container::-webkit-scrollbar {
   width: 4px;
@@ -252,4 +274,207 @@
 .reels-player-container::-webkit-scrollbar-thumb {
   background: var(--red);
   border-radius: 4px;
+}
+
+/* Styles TikTok Web avancés */
+@media (min-width: 769px) {
+  .reel-item {
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .reel-item.active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 10;
+  }
+  
+  .reel-item.prev {
+    transform: translateY(-100%) scale(0.9);
+    z-index: 5;
+  }
+  
+  .reel-item.next {
+    transform: translateY(100%) scale(0.9);
+    z-index: 5;
+  }
+}
+
+/* Navigation TikTok */
+.reels-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+@media (min-width: 769px) {
+  .reels-nav {
+    display: flex;
+  }
+  
+  .reel-nav-btn {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+  }
+  
+  .reel-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+}
+
+/* Indicateur de progression */
+.reel-progress {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  z-index: 20;
+}
+
+.reel-progress-bar {
+  height: 100%;
+  background: var(--red);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* Actions améliorées TikTok */
+.reel-actions {
+  gap: 18px;
+}
+
+.reel-action {
+  position: relative;
+}
+
+.reel-action::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: -1;
+}
+
+.reel-action:hover::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.reel-action i {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Animation like */
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.3); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.reel-action.liking i {
+  animation: heartBeat 0.6s ease-in-out;
+  color: var(--red) !important;
+}
+
+/* Overlay amélioré */
+.reel-overlay {
+  background: linear-gradient(to top, 
+    rgba(0,0,0,0.9) 0%, 
+    rgba(0,0,0,0.4) 40%, 
+    rgba(0,0,0,0) 70%);
+}
+
+/* Musique animée */
+.reel-music {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.reel-music-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Mode plein écran */
+.reels-fullscreen .reels-stack {
+  max-width: 100%;
+  border-radius: 0;
+}
+
+.reels-fullscreen .reel-nav {
+  display: none;
+}
+
+/* Effet de pause */
+.reel-item.paused .reel-video {
+  filter: grayscale(20%);
+}
+
+.reel-item.paused .reel-overlay {
+  background: linear-gradient(to top, 
+    rgba(0,0,0,0.7) 0%, 
+    rgba(0,0,0,0.3) 40%, 
+    rgba(0,0,0,0) 70%);
 }

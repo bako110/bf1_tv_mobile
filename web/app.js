@@ -3,7 +3,7 @@
    Navigation, Theme, Animations, Interactions
 ═══════════════════════════════════════════════ */
 // Dans app.js
-import { loadTicker } from '../../js/ticker.js';
+import { loadTicker } from '../js/ticker.js';
 'use strict';
 
 /* ── Theme Manager ── */
@@ -37,9 +37,7 @@ const Router = {
     this.go('accueil');
   },
   go(page) {
-    // Hide all pages
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    // Show target
     const target = document.getElementById(`page-${page}`);
     if (target) {
       target.classList.add('active');
@@ -49,7 +47,6 @@ const Router = {
         requestAnimationFrame(() => { el.style.animationName = ''; });
       });
     }
-    // Update nav
     document.querySelectorAll('.nav-link').forEach(l => {
       l.classList.toggle('active', l.dataset.page === page);
     });
@@ -131,8 +128,6 @@ const Notifs = {
       panel.classList.toggle('open');
     });
     if (close) close.addEventListener('click', () => panel.classList.remove('open'));
-    
-    // Fermer le panneau en cliquant en dehors
     document.addEventListener('click', (e) => {
       if (!btn.contains(e.target) && !panel.contains(e.target)) {
         panel.classList.remove('open');
@@ -276,7 +271,6 @@ const Player = {
     if (!wrap) return;
     let progress = 0;
     const bar = wrap.querySelector('.player-progress-fill');
-    // Simulate live progress
     setInterval(() => {
       if (bar) { progress = (progress + 0.1) % 100; bar.style.width = progress + '%'; }
     }, 500);
@@ -289,64 +283,83 @@ const Player = {
   }
 };
 
-/* ── Hamburger menu (CORRIGÉ) ── */
+/* ── Hamburger menu (VERSION CORRIGÉE POUR CHARGEMENT DYNAMIQUE) ── */
 const MobileMenu = {
   init() {
-    const btn = document.querySelector('.navbar-hamburger');
-    const links = document.querySelector('.navbar-links');
-    console.log('Bouton hamburger:', document.querySelector('.navbar-hamburger'));
-console.log('Liens:', document.querySelector('.navbar-links'));
-    console.log('🔍 Recherche du menu:', { btn, links });
-    
-    if (!btn || !links) {
-      console.error('❌ Menu hamburger non trouvé!');
-      return;
-    }
-    
-    console.log('✅ Menu hamburger trouvé, attachement des événements');
-    
-    // Supprimer les anciens événements pour éviter les doublons
-    const newBtn = btn.cloneNode(true);
-    btn.parentNode.replaceChild(newBtn, btn);
-    const newLinks = links.cloneNode(true);
-    links.parentNode.replaceChild(newLinks, links);
-    
-    const finalBtn = document.querySelector('.navbar-hamburger');
-    const finalLinks = document.querySelector('.navbar-links');
-    
-    // Ouvrir/fermer le menu au clic
-    finalBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('🔄 Clic sur le menu hamburger');
-      finalBtn.classList.toggle('open');
-      finalLinks.classList.toggle('open');
+    // Attendre que le header soit chargé
+    this.waitForElement('.navbar-hamburger', () => {
+      const btn = document.querySelector('.navbar-hamburger');
+      const links = document.querySelector('.navbar-links');
       
-      // Empêcher le scroll du body
-      if (finalLinks.classList.contains('open')) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = '';
+      console.log('🔍 Menu trouvé:', { btn, links });
+      
+      if (!btn || !links) {
+        console.error('❌ Menu hamburger non trouvé!');
+        return;
       }
-    });
-    
-    // Fermer le menu en cliquant sur un lien
-    finalLinks.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        finalBtn.classList.remove('open');
-        finalLinks.classList.remove('open');
-        document.body.style.overflow = '';
+      
+      console.log('✅ Menu hamburger trouvé, attachement des événements');
+      
+      // Nettoyer les anciens événements en clonant
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      const newLinks = links.cloneNode(true);
+      links.parentNode.replaceChild(newLinks, links);
+      
+      const finalBtn = document.querySelector('.navbar-hamburger');
+      const finalLinks = document.querySelector('.navbar-links');
+      
+      // Ouvrir/fermer le menu
+      finalBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔄 Clic sur le menu hamburger');
+        finalBtn.classList.toggle('open');
+        finalLinks.classList.toggle('open');
+        
+        if (finalLinks.classList.contains('open')) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+      });
+      
+      // Fermer en cliquant sur un lien
+      finalLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          finalBtn.classList.remove('open');
+          finalLinks.classList.remove('open');
+          document.body.style.overflow = '';
+        });
+      });
+      
+      // Fermer en cliquant en dehors
+      document.addEventListener('click', (e) => {
+        if (!finalBtn.contains(e.target) && !finalLinks.contains(e.target)) {
+          finalBtn.classList.remove('open');
+          finalLinks.classList.remove('open');
+          document.body.style.overflow = '';
+        }
       });
     });
+  },
+  
+  // Fonction pour attendre qu'un élément apparaisse dans le DOM
+  waitForElement(selector, callback, timeout = 5000) {
+    const startTime = Date.now();
     
-    // Fermer le menu en cliquant en dehors
-    document.addEventListener('click', (e) => {
-      if (!finalBtn.contains(e.target) && !finalLinks.contains(e.target)) {
-        finalBtn.classList.remove('open');
-        finalLinks.classList.remove('open');
-        document.body.style.overflow = '';
+    const check = () => {
+      const element = document.querySelector(selector);
+      if (element) {
+        callback();
+      } else if (Date.now() - startTime < timeout) {
+        setTimeout(check, 100);
+      } else {
+        console.error(`❌ Élément non trouvé après ${timeout}ms: ${selector}`);
       }
-    });
+    };
+    
+    check();
   }
 };
 
@@ -360,14 +373,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTicker();
   }, 300000);
   
-  // Initialiser tous les modules
+  // Initialiser les modules qui ne dépendent pas du header
   Theme.init();
   Router.init();
   Navbar.init();
-  MobileMenu.init();
   Filters.init();
   GridToggle.init();
-  Notifs.init();
   Chat.init();
   Interactions.init();
   Ticker.init();
@@ -375,7 +386,15 @@ document.addEventListener('DOMContentLoaded', () => {
   Player.init();
   injectStyles();
   
-  // Small delay for scroll reveal
+  // Initialiser le menu mobile (qui attend que le header soit chargé)
+  MobileMenu.init();
+  
+  // Initialiser les notifications (qui dépend du header)
+  setTimeout(() => {
+    Notifs.init();
+  }, 500);
+  
+  // Scroll reveal
   setTimeout(() => ScrollReveal.init(), 100);
   
   console.log('✅ Tous les modules initialisés');

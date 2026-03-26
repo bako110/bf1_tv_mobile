@@ -1,4 +1,5 @@
 <!-- components/header.html -->
+
 <nav class="bf1-navbar" id="mainNavbar">
   <div class="navbar-inner">
     <a href="accueil.html" class="navbar-logo">
@@ -30,12 +31,14 @@
     </a>
   </li>
 
+  <!--
   <li>
     <a href="films.html" class="nav-link">
       <i class="bi bi-camera-reels-fill"></i>
       <span>Films</span>
     </a>
   </li>
+  -->
 
   <li>
     <a href="emissions.html" class="nav-link">
@@ -77,11 +80,16 @@
   </div>
 </nav>
 
-<!-- AJOUTER LE TICKER ICI -->
+<!-- TICKER AU DESSUS DU HEADER -->
 <div class="news-ticker">
   <span class="ticker-label"><i class="bi bi-lightning-fill me-1"></i>Programme du jour <span class="ticker-date"></span></span>
   <div class="ticker-track">
-    <span>Chargement des programmes...</span>
+    <div class="ticker-track-inner">
+      <span>Chargement des programmes...</span>
+    </div>
+    <div class="ticker-track-inner duplicate">
+      <span>Chargement des programmes...</span>
+    </div>
   </div>
 </div>
 
