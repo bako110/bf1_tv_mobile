@@ -371,7 +371,11 @@ async function renderRoute(route) {
       loader.innerHTML = '';
       loader.classList.add('d-none');
     }
-    renderNotFound();
+    if (!navigator.onLine || error?.message?.includes('Failed to fetch') || error?.message?.includes('NetworkError')) {
+      renderOffline();
+    } else {
+      renderNotFound();
+    }
   }
 }
 
@@ -431,11 +435,45 @@ async function loadPageScript(route, detailParams = null) {
 function renderNotFound() {
   const appContent = document.getElementById('app-content');
   appContent.innerHTML = `
-    <div class="text-center py-5">
-      <i class="bi bi-exclamation-circle text-danger" style="font-size: 3rem;"></i>
-      <h1 class="h2 mt-3 mb-4">Page non trouvée</h1>
-      <p class="text-muted mb-4">La page que tu cherches n'existe pas</p>
-      <a href="#/home" class="btn btn-danger">Retour à l'accueil</a>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                min-height:70vh;padding:32px 24px;text-align:center;">
+      <div style="width:80px;height:80px;background:rgba(226,62,62,0.12);border-radius:50%;
+                  display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+        <i class="bi bi-map" style="font-size:36px;color:#E23E3E;"></i>
+      </div>
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;" class="bf1-section-title">Page introuvable</h2>
+      <p style="font-size:14px;color:#888;margin:0 0 28px;line-height:1.6;">
+        Cette page n'existe pas ou a été déplacée.
+      </p>
+      <a href="#/home" style="display:inline-flex;align-items:center;gap:8px;background:#E23E3E;
+                              color:#fff;border-radius:10px;padding:12px 28px;font-size:14px;
+                              font-weight:600;text-decoration:none;">
+        <i class="bi bi-house-fill"></i> Retour à l'accueil
+      </a>
+    </div>
+  `;
+  updateBottomNav();
+}
+
+function renderOffline() {
+  const appContent = document.getElementById('app-content');
+  appContent.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                min-height:70vh;padding:32px 24px;text-align:center;">
+      <div style="width:80px;height:80px;background:rgba(226,62,62,0.12);border-radius:50%;
+                  display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+        <i class="bi bi-wifi-off" style="font-size:36px;color:#E23E3E;"></i>
+      </div>
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;" class="bf1-section-title">Pas de connexion</h2>
+      <p style="font-size:14px;color:#888;margin:0 0 28px;line-height:1.6;">
+        Vérifie ta connexion internet<br>et réessaie.
+      </p>
+      <button onclick="window.location.reload()" 
+              style="display:inline-flex;align-items:center;gap:8px;background:#E23E3E;
+                     color:#fff;border-radius:10px;padding:12px 28px;font-size:14px;
+                     font-weight:600;border:none;cursor:pointer;">
+        <i class="bi bi-arrow-clockwise"></i> Réessayer
+      </button>
     </div>
   `;
   updateBottomNav();
@@ -562,6 +600,14 @@ window.addEventListener('hashchange', (e) => {
   // Mémoriser le hash précédent (utile pour #/premium)
   const prev = e.oldURL ? (e.oldURL.split('#')[1] ? '#' + e.oldURL.split('#')[1] : '#/home') : '#/home';
   if (prev !== '#/premium') window._prevHash = prev;
+  renderRoute(route);
+});
+
+// Détecter la perte de connexion
+window.addEventListener('offline', () => renderOffline());
+window.addEventListener('online', () => {
+  // Quand la connexion revient, recharger la page courante
+  const route = window.location.hash || '#/home';
   renderRoute(route);
 });
 
