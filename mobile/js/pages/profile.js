@@ -192,7 +192,6 @@ async function renderProfile(container, user) {
     <div class="mx-3 mb-3 rounded overflow-hidden" style="background:#1a1a1a;border:1px solid #2a2a2a;">
       ${menuItem('bi-heart-fill', '#E23E3E', 'Mes favoris', '#/favorites')}
       ${menuItem('bi-bell-fill', '#E23E3E', 'Notifications', '#/notifications')}
-      ${menuItem('bi-gear-fill', '#A0A0A0', 'Paramètres', '#/settings')}
       ${menuItem('bi-headset', '#A0A0A0', 'Aide &amp; Support', '#/support')}
       ${menuItem('bi-info-circle-fill', '#A0A0A0', 'À propos', '#/about')}
     </div>
