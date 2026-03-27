@@ -3,7 +3,7 @@
 ═══════════════════════════════════════ */
 .hero {
   position: relative;
-  min-height: 88vh;
+  min-height: 80vh;
   display: flex;
   align-items: stretch;
   overflow: hidden;
@@ -168,12 +168,13 @@
   background: rgba(255,255,255,0.12);
 }
 
-/* Hero right card (mini player preview) */
+/* Mini lecteur En Direct (overlay sur le carousel) */
 .hero-preview {
   position: absolute;
   right: 40px;
-  bottom: 60px;
-  width: 320px;
+  bottom: 0px;
+  width: 280px;
+  z-index: 20;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius-xl);
@@ -266,6 +267,7 @@
   position: relative;
   width: 100%;
   height: 100%;
+  flex: 1;
   z-index: 1;
   overflow: hidden;
   border-radius: 0;
@@ -274,20 +276,26 @@
   background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
 }
 
+/* Carousel pleine largeur dans hero-container (sans hero-right wrapper) */
+.hero-container > .hero-carousel-wrapper {
+  flex: 1;
+  min-height: 80vh;
+  border-radius: 0;
+}
+
 .hero-carousel-container {
   display: flex;
-  overflow-x: hidden;
+  overflow-x: scroll;
+  overflow-y: hidden;
   scroll-behavior: smooth;
   gap: 0;
   padding: 0;
   flex: 1;
-  background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.2) 100%);
+  background: #000;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  /* Masquer la scrollbar */
   scrollbar-width: none;
-  border-radius: 16px;
-  overflow: hidden;
+  border-radius: 0;
 }
 .hero-carousel-container::-webkit-scrollbar {
   display: none;
@@ -298,7 +306,8 @@
   width: 100%;
   min-width: 100%;
   height: 100%;
-  border-radius: 16px;
+  min-height: 80vh;
+  border-radius: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -323,8 +332,72 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%);
-  border-radius: 12px;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.80) 0%,
+    rgba(0,0,0,0.55) 40%,
+    rgba(0,0,0,0.15) 70%,
+    rgba(0,0,0,0.05) 100%
+  );
+  border-radius: 0;
+  pointer-events: none;
+}
+
+/* Slide overlay content (RTI Play style) */
+.hero-slide-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 60px 100px 60px;
+  pointer-events: none;
+}
+
+.hero-slide-content {
+  max-width: 600px;
+  animation: fadeInUp 0.5s ease both;
+}
+
+.hero-slide-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.hero-slide-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.hero-slide-title {
+  font-family: var(--font-display, sans-serif);
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.15;
+  margin: 0 0 14px 0;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+  letter-spacing: 0.01em;
+}
+
+.hero-slide-desc {
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
+  color: rgba(255,255,255,0.78);
+  line-height: 1.65;
+  margin: 0;
+  max-width: 520px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
 
 /* Navigation buttons */
@@ -340,7 +413,7 @@
   color: #fff;
   font-size: 1.2rem;
   cursor: pointer;
-  z-index: 10;
+  z-index: 15;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -364,18 +437,18 @@
   right: 16px;
 }
 
-/* Pagination dots */
+/* Pagination dots — bottom-left like RTI Play */
 .hero-carousel-dots {
   position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 40px;
+  left: 60px;
+  transform: none;
   display: flex;
   gap: 8px;
   z-index: 10;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 90%;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  max-width: 50%;
 }
 
 .hero-carousel-dot {
@@ -405,7 +478,8 @@
     padding: 50px 30px;
   }
   .hero-carousel-item {
-    flex: 0 0 calc(50% - 6px);
+    flex: 0 0 100%;
+    min-width: 100%;
   }
 }
 
@@ -430,28 +504,25 @@
     min-height: 380px;
   }
   .hero-carousel-container {
-    padding: 12px;
-    gap: 8px;
+    padding: 0;
+    gap: 0;
   }
   .hero-carousel-item {
-    flex: 0 0 calc(60% - 4px);
-    min-width: 160px;
-    border-radius: 8px;
+    flex: 0 0 100%;
+    min-width: 100%;
+    border-radius: 0;
+  }
+  .hero-slide-overlay {
+    padding: 0 24px 80px 24px;
+  }
+  .hero-carousel-dots {
+    bottom: 24px;
+    left: 24px;
   }
   .hero-carousel-nav {
     width: 40px;
     height: 40px;
     font-size: 1rem;
-  }
-  .hero-carousel-dots {
-    bottom: 12px;
-  }
-  .hero-carousel-dot {
-    width: 8px;
-    height: 8px;
-  }
-  .hero-carousel-dot.active {
-    width: 24px;
   }
 }
 
@@ -466,7 +537,7 @@
     min-height: 320px;
   }
   .hero-carousel-item {
-    flex: 0 0 calc(70% - 3px);
-    min-width: 140px;
+    flex: 0 0 100%;
+    min-width: 100%;
   }
 }

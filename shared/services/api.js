@@ -78,6 +78,10 @@ export async function getNews() {
   return http.get('/news') || [];
 }
 
+export async function getCarousel() {
+  return http.get('/carousel') || [];
+}
+
 export async function getCategories() {
   return http.get('/categories') || [];
 }

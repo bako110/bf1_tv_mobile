@@ -63,52 +63,38 @@
       <div class="hero-orb hero-orb-2"></div>
 
       <div class="hero-container">
-        <!-- COLONNE GAUCHE: CONTENU -->
-        <div class="hero-left">
-          <div class="hero-content">
-            <div class="hero-tag">
-              <i class="bi bi-record-circle-fill"></i>EN DIRECT – Journal de 20h
-            </div>
-            <h1 class="hero-title">Bienvenue<br>sur <span>BF1</span></h1>
-            <p class="hero-sub">La télévision africaine nouvelle génération. Vivez l'info, le sport et la culture en temps réel.</p>
-            <div class="hero-actions">
-              <a href="direct.html" class="btn-red">
-                <i class="bi bi-play-circle-fill"></i>Regarder en direct
-              </a>
-              <a href="programmes.html" class="btn-outline">
-                <i class="bi bi-calendar3"></i>Voir les programmes
-              </a>
-            </div>
+        <!-- CAROUSEL PLEINE LARGEUR -->
+        <div class="hero-carousel-wrapper">
+          <div class="hero-carousel-container" id="heroCarousel">
+            <!-- Les images seront injectées par JavaScript -->
           </div>
-          <div class="hero-preview">
-            <div class="hero-preview-thumb">
-              <div class="play-pulse">
-                <i class="bi bi-play-fill"></i>
-              </div>
-            </div>
-            <div class="hero-preview-info">
-            </div>
-          </div>
+          <!-- Navigation -->
+          <button class="hero-carousel-nav hero-carousel-prev" id="heroCarouselPrev" aria-label="Précédent">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <button class="hero-carousel-nav hero-carousel-next" id="heroCarouselNext" aria-label="Suivant">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <!-- Pagination -->
+          <div class="hero-carousel-dots" id="heroCarouselDots"></div>
         </div>
 
-        <!-- COLONNE DROITE: CAROUSEL -->
-        <div class="hero-right">
-          <div class="hero-carousel-wrapper">
-            <div class="hero-carousel-container" id="heroCarousel">
-              <!-- Les images seront injectées par JavaScript -->
+        <!-- MINI LECTEUR EN DIRECT (overlay bas-droite) -->
+        <div class="hero-preview">
+          <div class="hero-preview-thumb">
+            <div class="play-pulse">
+              <i class="bi bi-play-fill"></i>
             </div>
-            <!-- Navigation: Previous -->
-            <button class="hero-carousel-nav hero-carousel-prev" id="heroCarouselPrev" aria-label="Précédent">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-            <!-- Navigation: Next -->
-            <button class="hero-carousel-nav hero-carousel-next" id="heroCarouselNext" aria-label="Suivant">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-            <!-- Pagination: Points -->
-            <div class="hero-carousel-dots" id="heroCarouselDots">
-              <!-- Les points seront injectés par JavaScript -->
+          </div>
+          <div class="hero-preview-info">
+            <span class="hero-preview-dot"></span>
+            <div>
+              <div class="hero-preview-title">En Direct</div>
+              <div class="hero-preview-sub">BF1 TV</div>
             </div>
+            <a href="direct.html" class="hero-preview-viewers" style="color:#e8222a;text-decoration:none;">
+              <i class="bi bi-play-fill"></i>Voir
+            </a>
           </div>
         </div>
       </div>

@@ -475,38 +475,54 @@ const CAROUSEL_AUTO_SCROLL_INTERVAL = 5000; // 5 secondes
 async function fetchCarouselImages() {
   try {
     console.log('📸 Récupération des images du carousel...');
-    
-    // Essayer de récupérer depuis l'API carousel
+
+    // Utiliser le service partagé api.getCarousel() → GET /api/v1/carousel
     try {
-      const response = await fetch('https://backend-bf1tv.onrender.com/api/carousel', {
-        headers: { 'Accept': 'application/json' }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const images = Array.isArray(data) ? data : data.images || data.carousel || [];
-        console.log(`✅ Carousel API: ${images.length} images`);
-        return images.slice(0, 24); // Max 24 images
+      const data = await api.getCarousel();
+      let images = Array.isArray(data) ? data : [];
+      // Filtrer actifs, trier par order, fallback image si manquante
+      images = images
+        .filter(img => img && img.is_active !== false && (img.image_url || img.image || img.thumbnail))
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map(img => ({
+          ...img,
+          image_url: img.image_url || img.image || img.thumbnail || 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1200&q=80',
+          title: img.title || '',
+          description: img.description || '',
+        }));
+      if (images.length > 0) {
+        console.log(`✅ Carousel API: ${images.length} slides`);
+        return images.slice(0, 24);
       }
     } catch (err) {
       console.log('⚠️ Carousel API non disponible, utilisation des données alternatives');
     }
-    
-    // Fallback: Utiliser les premières images des contenus existants
-    if (allVideosData.length > 0) {
+
+    // Fallback: utiliser les contenus déjà chargés
+    if (typeof allVideosData !== 'undefined' && allVideosData.length > 0) {
       const images = allVideosData.slice(0, 24).map(item => ({
-        image: item.image,
-        title: item.title,
+        image_url: item.image || 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1200&q=80',
+        title: item.title || '',
+        description: item.description || item.content || '',
         views: item.views
       }));
       console.log(`✅ Fallback: ${images.length} images depuis contenu`);
       return images;
     }
-    
-    return [];
+
+    // Fallback ultime : 1 slide par défaut
+    return [{
+      image_url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1200&q=80',
+      title: 'Bienvenue sur BF1 TV',
+      description: 'Profitez de la TV, des émissions et du direct !',
+    }];
   } catch (error) {
     console.error('❌ Erreur lors de la récupération du carousel:', error);
-    return [];
+    return [{
+      image_url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1200&q=80',
+      title: 'Erreur de chargement',
+      description: 'Impossible de charger le carrousel.',
+    }];
   }
 }
 
@@ -528,16 +544,26 @@ function initHeroCarousel() {
   
   console.log(`🎬 Initialisation du carousel avec ${carouselImages.length} images (AUTO-SCROLL 5s)`);
   
-  // Remplir le container avec les images
+  // Remplir le container avec les slides (style RTI Play)
   container.innerHTML = '';
   carouselImages.forEach((img, index) => {
-    const imageUrl = getImageUrl(img.image || img.image_url || img.thumbnail);
+    const imageUrl = getImageUrl(img.image_url || img.image || img.thumbnail);
+    const title = img.title || '';
+    const description = img.description || '';
     const div = document.createElement('div');
     div.className = `hero-carousel-item ${index === 0 ? 'active' : ''}`;
     div.style.backgroundImage = `url('${imageUrl}')`;
-    div.style.backgroundSize = 'cover';
-    div.style.backgroundPosition = 'center';
-    div.title = img.title || '';
+    div.innerHTML = `
+      <div class="hero-slide-overlay">
+        <div class="hero-slide-content">
+          <div class="hero-slide-badge">
+            <img src="../logo.png" alt="BF1 TV" class="hero-slide-logo" onerror="this.style.display='none'">
+          </div>
+          ${title ? `<h2 class="hero-slide-title">${title}</h2>` : ''}
+          ${description ? `<p class="hero-slide-desc">${description}</p>` : ''}
+        </div>
+      </div>
+    `;
     container.appendChild(div);
   });
   
@@ -571,6 +597,16 @@ function initHeroCarousel() {
     });
   }
   
+  // Sync active dot/item on native scroll (swipe or momentum)
+  container.addEventListener('scroll', () => {
+    const itemWidth = container.clientWidth;
+    if (!itemWidth) return;
+    const idx = Math.round(container.scrollLeft / itemWidth);
+    if (idx !== carouselCurrentIndex) {
+      updateCarouselUI(idx);
+    }
+  }, { passive: true });
+
   // Support du swipe sur mobile (arrête l'auto-scroll pendant le swipe)
   setupCarouselSwipe(container);
   
@@ -624,10 +660,8 @@ function scrollCarouselTo(index) {
   const container = document.getElementById('heroCarousel');
   if (!container || index < 0 || index >= carouselImages.length) return;
   
-  const item = container.children[index];
-  if (!item) return;
-  
-  item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+  const itemWidth = container.clientWidth;
+  container.scrollTo({ left: index * itemWidth, behavior: 'smooth' });
   updateCarouselUI(index);
 }
 
