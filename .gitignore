@@ -5,8 +5,7 @@ node_modules/
 www/
 
 # Plateformes Capacitor (générées par cap add android / cap add ios)
-# Décommentez si vous ne voulez pas versionner les plateformes natives
-# android/
+android/
 # ios/
 
 # Gradle / Android Studio
