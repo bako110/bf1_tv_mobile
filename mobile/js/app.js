@@ -1,6 +1,7 @@
 import { ROUTES, TAB_ROUTES } from './config/routes.js';
-import { isAuthenticated, getUser, login, register, logout } from './services/api.js';
+import { isAuthenticated, getUser, login, register, logout, getUserSettings } from './services/api.js';
 import { createSnakeLoader } from './utils/snakeLoader.js';
+import { themeManager } from './utils/themeManager.js';
 
 // ─── Skeleton shimmer sur toutes les images/vidéos ───────────────────────────
 (function _initSkeletonObserver() {
@@ -581,6 +582,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.warn('⚠️ Accès localStorage bloqué:', err.message);
   }
+
+  // ┌─ Initialiser le thème ─────────────────────────────────────────────┐
+  try {
+    // Essayer de charger les préférences utilisateur
+    const userSettings = await getUserSettings().catch(() => null);
+    const savedTheme = userSettings?.theme || localStorage.getItem('bf1_theme_preference') || 'dark';
+    themeManager.init(savedTheme);
+  } catch (err) {
+    console.warn('⚠️ Impossible de charger le thème:', err.message);
+    themeManager.init('dark'); // Fallback au thème par défaut
+  }
+  // └────────────────────────────────────────────────────────────────────┘
 
   // Si l'app était déjà initialisée dans cette session → pas de splash, juste recharger la page courante
   if (sessionStorage.getItem('bf1_ready')) {

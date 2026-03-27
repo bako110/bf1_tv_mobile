@@ -1,5 +1,6 @@
 import { isAuthenticated, getUser, logout, getMySubscription } from '../services/api.js';
 import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { themeManager } from '../utils/themeManager.js';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,41 @@ function fmtDate(d) {
 
 function fmtOffer(offer) {
   return { monthly: 'Mensuel (1 mois)', quarterly: 'Trimestriel (3 mois)', yearly: 'Annuel (1 an)' }[offer] || offer || 'Premium';
+}
+
+// ─── Section Thème ──────────────────────────────────────────────────────────
+
+function buildThemeCard() {
+  const currentTheme = themeManager.getCurrent();
+  
+  const themeOptions = [
+    { value: 'dark', label: 'Sombre', desc: 'Thème sombre (par défaut)' },
+    { value: 'light', label: 'Clair', desc: 'Thème clair' },
+    { value: 'auto', label: 'Automatique', desc: 'Suit la préférence du système' }
+  ];
+
+  let optionsHtml = themeOptions.map(opt => `
+    <div onclick="window._setTheme('${opt.value}')" 
+         style="display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:10px;
+                 cursor:pointer;transition:background .2s;background:${currentTheme === opt.value ? 'rgba(226,62,62,0.1)' : 'transparent'};">
+      <div style="flex:1;">
+        <div style="font-weight:600;color:#fff;font-size:14px;">${opt.label}</div>
+        <div style="color:#A0A0A0;font-size:12px;">${opt.desc}</div>
+      </div>
+      ${currentTheme === opt.value ? '<i class="bi bi-check2" style="color:#E23E3E;font-size:18px;"></i>' : ''}
+    </div>
+  `).join('');
+
+  return `
+    <div class="mx-3 mb-3 rounded p-3" style="background:#1a1a1a;border:1px solid #2a2a2a;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <i class="bi bi-palette-fill" style="font-size:18px;color:#E23E3E;"></i>
+        <span style="font-weight:600;color:#fff;font-size:14px;">Thème</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${optionsHtml}
+      </div>
+    </div>`;
 }
 
 // ─── écran non connecté ─────────────────────────────────────────────────────
@@ -148,6 +184,9 @@ async function renderProfile(container, user) {
       </div>`;
   }
 
+  // ── Section thème ──
+  const themeSection = buildThemeCard();
+
   // ── Menu ──
   const menu = `
     <div class="mx-3 mb-3 rounded overflow-hidden" style="background:#1a1a1a;border:1px solid #2a2a2a;">
@@ -168,13 +207,23 @@ async function renderProfile(container, user) {
 
     <p class="text-center mb-4" style="color:#444;font-size:11px;">BF1 TV &copy; 2026 &nbsp;·&nbsp; Version 1.0.0</p>`;
 
-  container.innerHTML = header + `<div class="py-3">` + subSection + menu + `</div>`;
+  container.innerHTML = header + `<div class="py-3">` + subSection + themeSection + menu + `</div>`;
 
   window._bf1Logout = () => {
     if (!confirm('Voulez-vous vraiment vous déconnecter ?')) return;
     logout();
     window.location.hash = '#/home';
   };
+
+  // ┌─ Gestionnaire de thème ──────────────────────────────────────┐
+  window._setTheme = (themeName) => {
+    themeManager.setTheme(themeName, true);
+    // Rafraîchir le profil pour mettre à jour l'affichage
+    setTimeout(() => {
+      renderProfile(container, user);
+    }, 100);
+  };
+  // └──────────────────────────────────────────────────────────────┘
 }
 
 function row(label, value) {

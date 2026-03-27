@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Direct - BF1</title>
 </head>
-<body style="background:#000;color:#fff;margin:0;overflow:hidden;">
+<body style="margin:0;overflow:hidden;">
 
 <style>
   @keyframes livePulse {
@@ -40,7 +40,19 @@
     z-index: 1;
     margin-top: -1px;
   }
-  #live-sections::-webkit-scrollbar { display: none; }
+
+  /* Thème clair : sections scrollables */
+  [data-theme="light"] #live-page { background: #F2F2F2; }
+  [data-theme="light"] #live-sections { background: #EEEEEE; border-top: 1px solid #DDDDDD; border-radius: 16px 16px 0 0; }
+  /* Thème clair : barre de statut LIVE */
+  [data-theme="light"] #live-page > div:first-child {
+    background: #FFFFFF !important;
+    border-bottom-color: #DDDDDD !important;
+  }
+  [data-theme="light"] #live-viewers-header {
+    color: #555555 !important;
+  }
+  [data-theme="light"] #live-sections::-webkit-scrollbar { display: none; }
 
   /* ===== PLEIN ÉCRAN PAYSAGE ===== */
   #live-video-container.live-fullscreen {

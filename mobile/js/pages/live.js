@@ -26,16 +26,17 @@ function buildHorizontalCard(item, type) {
              </div>`
         }
         <div style="position:absolute;inset:0;
-                    background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.25) 50%,transparent 72%);"></div>
+                    background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.25) 50%,transparent 72%);"
+             class="bf1-card-overlay"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:28px 9px 10px;">
-          <p style="margin:0;color:#fff;font-size:11.5px;font-weight:600;line-height:1.35;
+          <p class="bf1-card-title" style="margin:0;color:#fff;font-size:11.5px;font-weight:600;line-height:1.35;
                     overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;
                     -webkit-box-orient:vertical;text-shadow:0 1px 3px rgba(0,0,0,0.7);">
             ${title}
           </p>
           ${duration ? `<div style="display:flex;align-items:center;gap:3px;margin-top:4px;">
-            <i class="bi bi-clock" style="font-size:9px;color:rgba(255,255,255,0.45);"></i>
-            <span style="font-size:10px;color:rgba(255,255,255,0.45);">${duration} min</span>
+            <i class="bi bi-clock bf1-card-time" style="font-size:9px;color:rgba(255,255,255,0.45);"></i>
+            <span class="bf1-card-time" style="font-size:10px;color:rgba(255,255,255,0.45);">${duration} min</span>
           </div>` : ''}
         </div>
       </div>
@@ -50,7 +51,7 @@ function buildSection(title, items, route) {
                   padding:0 16px;margin-bottom:12px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="width:3px;height:18px;background:#E23E3E;border-radius:2px;flex-shrink:0;"></div>
-          <h6 style="margin:0;font-weight:700;color:#fff;font-size:15px;">${title}</h6>
+          <h6 class="bf1-section-title" style="margin:0;font-weight:700;color:#fff;font-size:15px;">${title}</h6>
         </div>
         <a href="#/${route}" style="color:#E23E3E;text-decoration:none;display:flex;
                                     align-items:center;gap:4px;font-size:12px;font-weight:600;">

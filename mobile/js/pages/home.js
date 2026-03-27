@@ -300,16 +300,16 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
           <img src="${f.image}" alt="${f.title}"
                style="width:100%; height:100%; object-fit:cover;${f.locked ? ' filter:brightness(0.45);' : ''}"
                onerror="this.src='https://via.placeholder.com/${cardW}x${cardH}/1a1a1a/E23E3E?text=BF1'">
-          <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.85) 100%);"></div>
+          <div class="bf1-card-overlay" style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.85) 100%);"></div>
           ${subBadgeHtml}
           ${genericBadge}
           ${lockOverlay}
           <div style="position:absolute; bottom:8px; left:8px; right:8px;">
-            <p style="color:#fff; font-size:0.7rem; font-weight:600; line-height:1.3; margin:0 0 3px;
+            <p class="bf1-card-title" style="color:#fff; font-size:0.7rem; font-weight:600; line-height:1.3; margin:0 0 3px;
                       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${f.title}</p>
             <div style="display:flex; align-items:center; gap:3px;">
-              <i class="bi bi-clock" style="color:#A0A0A0; font-size:0.55rem;"></i>
-              <span style="color:#A0A0A0; font-size:0.6rem;">${f.duration ? f.duration + 'min · ' : ''}${f.time}</span>
+              <i class="bi bi-clock bf1-card-time" style="color:#A0A0A0; font-size:0.55rem;"></i>
+              <span class="bf1-card-time" style="color:#A0A0A0; font-size:0.6rem;">${f.duration ? f.duration + 'min · ' : ''}${f.time}</span>
             </div>
           </div>
         </div>

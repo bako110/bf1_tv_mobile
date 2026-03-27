@@ -1,5 +1,6 @@
 import { getUserSettings, updateUserSettings, resetUserSettings } from '../services/api.js';
 import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { themeManager } from '../utils/themeManager.js';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,12 @@ async function _save(key, value) {
   try {
     await updateUserSettings({ [key]: value });
     _toast('Paramètre enregistré');
+    
+    // ┌─ Appliquer le thème immédiatement si c'est le thème qui change ─┐
+    if (key === 'theme') {
+      themeManager.setTheme(value, true);
+    }
+    // └──────────────────────────────────────────────────────────────┘
   } catch {
     _settings[key] = old;
     _syncToggleUI(key, old);
@@ -173,9 +180,9 @@ function _closeSheet(id) {
 
 function renderSettings(container, s) {
   const qualityLabel = { auto: 'Automatique', '360p': '360p', '480p': '480p', '720p': '720p (HD)', '1080p': '1080p (Full HD)' };
-  const langLabel    = { fr: '🇫🇷 Français', en: '🇬🇧 English' };
-  const themeLabel   = { dark: '🌑 Sombre', light: '☀️ Clair', auto: '⚙️ Automatique' };
-  const visLabel     = { public: 'Public', private: 'Privé', friends: 'Amis seulement' };
+  const langLabel   = { fr: '🇫🇷 Français', en: '🇬🇧 English' };
+  const themeLabel  = { dark: '🌑 Sombre', light: '☀️ Clair', auto: '⚙️ Automatique' };
+  const visLabel    = { public: 'Public', private: 'Privé', friends: 'Amis seulement' };
 
   container.innerHTML = `
     <!-- En-tête -->
