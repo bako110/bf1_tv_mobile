@@ -1,5 +1,7 @@
 import * as api from '../../shared/services/api.js';
 
+let currentUser = null;
+
 export async function loadNewsDetail() {
   // Récupérer l'ID depuis l'URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -11,16 +13,36 @@ export async function loadNewsDetail() {
   }
 
   try {
-    // Charger les détails de la news
-    const news = await api.getNewsById(newsId);
+    // Charger les détails de la news et les commentaires en parallèle
+    const [news, comments, likesCount] = await Promise.all([
+      api.getNewsById(newsId),
+      api.getComments('breaking_news', newsId).catch(() => []),
+      api.getLikesCount('breaking_news', newsId).catch(() => 0)
+    ]);
     
     if (!news) {
       showError('Actualité introuvable');
       return;
     }
 
+    // Récupérer l'utilisateur courant
+    currentUser = api.getUser();
+
+    // Vérifier les likes et favoris de l'utilisateur
+    let userLiked = false;
+    let userFavorited = false;
+    if (api.isAuthenticated()) {
+      [userLiked, userFavorited] = await Promise.all([
+        api.checkLiked('breaking_news', newsId).catch(() => false),
+        api.checkFavorite('breaking_news', newsId).catch(() => false)
+      ]);
+    }
+
     // Afficher les détails
-    renderNewsDetail(news);
+    renderNewsDetail(news, comments, likesCount, userLiked, userFavorited);
+
+    // Initialiser les événements
+    initNewsEvents(newsId, comments, userLiked, userFavorited, likesCount);
 
     // Charger les articles similaires
     loadRelatedNews(news.category || 'Actualités', newsId);
@@ -31,7 +53,7 @@ export async function loadNewsDetail() {
   }
 }
 
-function renderNewsDetail(news) {
+function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false, userFavorited = false) {
   const container = document.getElementById('newsDetailContainer');
   
   // Construire l'URL de l'image
@@ -81,6 +103,42 @@ function renderNewsDetail(news) {
           <i class="bi bi-chevron-down"></i>
         </button>
       ` : ''}
+
+      <!-- Actions (Like, Favoris, Commentaires) -->
+      <div class="news-actions">
+        <button class="action-btn like-btn ${userLiked ? 'active' : ''}" id="like-btn">
+          <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+          <span id="like-count">${formatNumber(likesCount)}</span>
+        </button>
+        <button class="action-btn favorite-btn ${userFavorited ? 'active' : ''}" id="favorite-btn">
+          <i class="bi ${userFavorited ? 'bi-bookmark-fill' : 'bi-bookmark'}"></i>
+          <span>Favoris</span>
+        </button>
+        <button class="action-btn comment-btn" id="comment-btn">
+          <i class="bi bi-chat-dots"></i>
+          <span id="comment-count">${comments.length}</span>
+        </button>
+      </div>
+
+      <!-- Commentaires -->
+      <div class="comments-section" id="comments-section">
+        <div class="comments-header">
+          <h3><i class="bi bi-chat-dots-fill"></i> Commentaires <span id="comments-count">(${comments.length})</span></h3>
+        </div>
+        <div class="comments-list" id="comments-list">
+          ${renderComments(comments, currentUser)}
+        </div>
+        ${currentUser ? `
+          <div class="comment-form">
+            <textarea id="comment-input" placeholder="Ajouter un commentaire..." maxlength="1000" rows="2"></textarea>
+            <button id="submit-comment" class="btn-red">Envoyer</button>
+          </div>
+        ` : `
+          <div class="comment-login-prompt">
+            <p><a href="connexion.html">Connectez-vous</a> pour laisser un commentaire</p>
+          </div>
+        `}
+      </div>
     </div>
   `;
 
@@ -251,6 +309,212 @@ function showError(message) {
       </a>
     </div>
   `;
+}
+
+function renderComments(comments, user) {
+  if (!comments || !comments.length) {
+    return `<p class="no-comments">Aucun commentaire pour l'instant. Soyez le premier !</p>`;
+  }
+  
+  return comments.map(c => {
+    const isOwn = user && String(c.user_id) === String(user.id);
+    const username = c.username || c.user?.username || 'Utilisateur';
+    const avatar = (username[0] || 'U').toUpperCase();
+    
+    return `
+      <div class="comment-item" data-id="${c.id || c._id}">
+        <div class="comment-avatar" style="background: var(--red);">${escHtml(avatar)}</div>
+        <div class="comment-content">
+          <div class="comment-header">
+            <span class="comment-author">${escHtml(username)}</span>
+            <span class="comment-date">${formatRelative(c.created_at)}</span>
+            ${isOwn ? `
+              <div class="comment-actions">
+                <button class="edit-comment" data-id="${c.id || c._id}"><i class="bi bi-pencil"></i></button>
+                <button class="delete-comment" data-id="${c.id || c._id}"><i class="bi bi-trash"></i></button>
+              </div>
+            ` : ''}
+          </div>
+          <p class="comment-text">${escHtml(c.text)}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function initNewsEvents(newsId, comments, userLiked, userFavorited, likesCount) {
+  let currentLiked = userLiked;
+  let currentFavorited = userFavorited;
+  let currentLikesCount = likesCount;
+  let currentCommentsCount = (comments || []).length;
+
+  // Like
+  const likeBtn = document.getElementById('like-btn');
+  if (likeBtn) {
+    likeBtn.addEventListener('click', async () => {
+      if (!api.isAuthenticated()) {
+        showToast('Connectez-vous pour liker ce contenu', 'error');
+        setTimeout(() => window.location.href = 'connexion.html', 1500);
+        return;
+      }
+      
+      likeBtn.disabled = true;
+      try {
+        const res = await api.toggleLike('breaking_news', newsId);
+        currentLiked = res?.liked ?? !currentLiked;
+        currentLikesCount = res?.count ?? (currentLiked ? currentLikesCount + 1 : Math.max(0, currentLikesCount - 1));
+        
+        const icon = likeBtn.querySelector('i');
+        const countSpan = likeBtn.querySelector('#like-count');
+        
+        if (icon) icon.className = currentLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
+        likeBtn.classList.toggle('active', currentLiked);
+        if (countSpan) countSpan.textContent = formatNumber(currentLikesCount);
+      } catch (err) {
+        console.error('Erreur like:', err);
+      }
+      likeBtn.disabled = false;
+    });
+  }
+
+  // Favoris
+  const favBtn = document.getElementById('favorite-btn');
+  if (favBtn) {
+    favBtn.addEventListener('click', async () => {
+      if (!api.isAuthenticated()) {
+        showToast('Connectez-vous pour ajouter aux favoris', 'error');
+        setTimeout(() => window.location.href = 'connexion.html', 1500);
+        return;
+      }
+      
+      favBtn.disabled = true;
+      try {
+        if (currentFavorited) {
+          await api.removeFavorite('breaking_news', newsId);
+          currentFavorited = false;
+        } else {
+          await api.addFavorite('breaking_news', newsId);
+          currentFavorited = true;
+        }
+        
+        const icon = favBtn.querySelector('i');
+        icon.className = currentFavorited ? 'bi bi-bookmark-fill' : 'bi bi-bookmark';
+        favBtn.classList.toggle('active', currentFavorited);
+        showToast(currentFavorited ? 'Ajouté aux favoris' : 'Retiré des favoris', 'success');
+      } catch (err) {
+        console.error('Erreur favoris:', err);
+      }
+      favBtn.disabled = false;
+    });
+  }
+
+  // Commentaires - Scroll vers la section
+  const commentBtn = document.getElementById('comment-btn');
+  if (commentBtn) {
+    commentBtn.addEventListener('click', () => {
+      const commentsSection = document.getElementById('comments-section');
+      if (commentsSection) {
+        commentsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+
+  // Envoi de commentaire
+  const submitBtn = document.getElementById('submit-comment');
+  const commentInput = document.getElementById('comment-input');
+  if (submitBtn && commentInput) {
+    submitBtn.addEventListener('click', async () => {
+      const text = commentInput.value.trim();
+      if (!text) return;
+      
+      if (!api.isAuthenticated()) {
+        showToast('Connectez-vous pour commenter', 'error');
+        setTimeout(() => window.location.href = 'connexion.html', 1500);
+        return;
+      }
+      
+      submitBtn.disabled = true;
+      try {
+        await api.addComment('breaking_news', newsId, text);
+        commentInput.value = '';
+        
+        const comments = await api.getComments('breaking_news', newsId);
+        const commentsList = document.getElementById('comments-list');
+        if (commentsList) {
+          commentsList.innerHTML = renderComments(comments, currentUser);
+        }
+        
+        currentCommentsCount = comments.length;
+        const commentCountSpan = document.getElementById('comment-count');
+        const commentsCountSpan = document.getElementById('comments-count');
+        if (commentCountSpan) commentCountSpan.textContent = currentCommentsCount;
+        if (commentsCountSpan) commentsCountSpan.textContent = `(${currentCommentsCount})`;
+        
+        showToast('Commentaire ajouté', 'success');
+      } catch (err) {
+        console.error('Erreur commentaire:', err);
+        showToast('Erreur lors de l\'envoi', 'error');
+      }
+      submitBtn.disabled = false;
+    });
+  }
+}
+
+function formatRelative(dateString) {
+  if (!dateString) return 'À l\'instant';
+  
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 60) return `${diffMins}m`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}j`;
+    
+    return formatDate(dateString);
+  } catch {
+    return 'Date inconnue';
+  }
+}
+
+// Afficher un toast
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast-notification ${type}`;
+  toast.innerHTML = `
+    <div class="toast-content">
+      <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}"></i>
+      <span>${escHtml(message)}</span>
+    </div>
+  `;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    z-index: 9999;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Initialisation
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadNewsDetail);
+} else {
+  loadNewsDetail();
 }
 
 // Exporter pour utilisation globale
