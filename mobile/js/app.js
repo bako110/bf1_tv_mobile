@@ -585,13 +585,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ┌─ Initialiser le thème ─────────────────────────────────────────────┐
   try {
-    // Essayer de charger les préférences utilisateur
-    const userSettings = await getUserSettings().catch(() => null);
-    const savedTheme = userSettings?.theme || localStorage.getItem('bf1_theme_preference') || 'dark';
-    themeManager.init(savedTheme);
+    // localStorage a la priorité (choix explicite de l'utilisateur)
+    // Le serveur est utilisé seulement si aucune préférence locale n'existe
+    const localTheme = localStorage.getItem('bf1_theme_preference');
+    if (localTheme) {
+      themeManager.init(localTheme);
+    } else {
+      const userSettings = await getUserSettings().catch(() => null);
+      const savedTheme = userSettings?.theme || 'dark';
+      themeManager.init(savedTheme);
+    }
   } catch (err) {
     console.warn('⚠️ Impossible de charger le thème:', err.message);
-    themeManager.init('dark'); // Fallback au thème par défaut
+    themeManager.init(localStorage.getItem('bf1_theme_preference') || 'dark');
   }
   // └────────────────────────────────────────────────────────────────────┘
 

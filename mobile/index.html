@@ -7,6 +7,20 @@
   <link href="./assets/vendor/bootstrap.min.css" rel="stylesheet">
   <link href="./assets/vendor/bootstrap-icons.min.css" rel="stylesheet">
   <link href="./style.css" rel="stylesheet">
+  <!-- Applique le thème AVANT le premier rendu pour éviter le flash noir -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('bf1_theme_preference') || 'dark';
+        if (t === 'auto') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+      } catch(e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
 </head>
 <body>
   <!-- ===== SPLASH SCREEN ===== -->
