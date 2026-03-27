@@ -8,6 +8,8 @@
   align-items: stretch;
   overflow: hidden;
   background: #0a0b0e;
+  margin-top: calc(-1 * var(--nav-h));
+  padding-top: var(--nav-h);
 }
 
 .hero-container {
@@ -41,9 +43,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 70% 50%, rgba(232,34,42,0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(232,34,42,0.08) 0%, transparent 60%),
-    linear-gradient(135deg, #0a0b0e 0%, #16080a 100%);
+    radial-gradient(ellipse 80% 60% at 70% 50%, rgba(232,34,42,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(232,34,42,0.03) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(10,11,14,0.3) 0%, rgba(22,8,10,0.2) 100%);
 }
 .hero-bg-img {
   position: absolute;
@@ -58,7 +60,7 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right, rgba(10,11,14,0.97) 35%, rgba(10,11,14,0.6) 65%, rgba(10,11,14,0.3) 100%);
+    linear-gradient(to right, rgba(10,11,14,0.4) 35%, rgba(10,11,14,0.2) 65%, rgba(10,11,14,0.05) 100%);
 }
 
 /* Floating orbs */

@@ -351,17 +351,23 @@ function updateTrendsSection(allSportData) {
 
   if (trends.length > 0) {
     trendsContainer.innerHTML = trends.map((item, idx) => {
+      const img = item.image_url || item.image || item.thumbnail || '';
       const title = item.title || 'Sans titre';
       const views = item.views || 0;
+      const category = item.subcategory || item.sport_type || 'Sport';
       
       return `
-        <div class="trend-item" onclick="window.location.href='detail-contenu.html?id=${item.id || item._id}&type=sport'">
-          <div class="trend-rank">${idx + 1}</div>
-          <div class="trend-content">
-            <div class="trend-title">${escapeHtml(title)}</div>
-            <div class="trend-views">
+        <div class="news-item" style="padding:10px;border-radius:var(--radius-md);background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all var(--transition)"
+             onclick="window.location.href='detail-contenu.html?id=${item.id || item._id}&type=sport'">
+          <img class="news-thumb" src="${img || 'https://images.unsplash.com/photo-1505228395891-9a51e7e86e81?w=120&q=60'}" 
+               alt="${escapeHtml(title)}" 
+               style="width:70px;height:50px;border-radius:var(--radius-sm);object-fit:cover"
+               onerror="this.src='https://images.unsplash.com/photo-1505228395891-9a51e7e86e81?w=120&q=60'"/>
+          <div>
+            <span class="news-cat" style="font-size:0.6rem;padding:2px 6px">
               <i class="bi bi-eye-fill"></i> ${formatNumber(views)} vues
-            </div>
+            </span>
+            <div class="news-title" style="font-size:0.8rem">${escapeHtml(title)}</div>
           </div>
         </div>
       `;
