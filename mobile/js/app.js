@@ -585,15 +585,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ┌─ Initialiser le thème ─────────────────────────────────────────────┐
   try {
-    // localStorage a la priorité (choix explicite de l'utilisateur)
-    // Le serveur est utilisé seulement si aucune préférence locale n'existe
+    // localStorage a la priorité absolue (choix explicite de l'utilisateur)
+    // Sans préférence locale ET connecté → interroger le serveur
+    // Sans préférence locale ET non connecté → dark par défaut
     const localTheme = localStorage.getItem('bf1_theme_preference');
     if (localTheme) {
       themeManager.init(localTheme);
-    } else {
+    } else if (isAuthenticated()) {
       const userSettings = await getUserSettings().catch(() => null);
       const savedTheme = userSettings?.theme || 'dark';
       themeManager.init(savedTheme);
+    } else {
+      themeManager.init('dark');
     }
   } catch (err) {
     console.warn('⚠️ Impossible de charger le thème:', err.message);
