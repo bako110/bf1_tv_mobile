@@ -9,14 +9,27 @@ function esc(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// breaking_news → news-detail.html, tout le reste → detail-contenu.html
+function getDetailUrl(type, item) {
+  const id = item._id || item.id || '';
+  if (type === 'news' || type === 'breaking_news') return `news-detail.html?id=${id}`;
+  return `detail-contenu.html?id=${id}&type=${type}`;
+}
+
 const TYPE_CFG = {
-  news:          { label: 'Flash Info',    color: '#E23E3E', icon: 'bi-lightning-fill',   route: item => `flashinfo.html` },
-  sport:         { label: 'Sport',          color: '#1DA1F2', icon: 'bi-trophy-fill',       route: item => `sport.html` },
-  show:          { label: 'Émission',       color: '#10B981', icon: 'bi-tv-fill',           route: item => `emissions.html` },
-  jtandmag:      { label: 'JT & Magazine',  color: '#E23E3E', icon: 'bi-camera-video-fill', route: item => `journal-magazine.html` },
-  divertissement:{ label: 'Divertissement', color: '#A855F7', icon: 'bi-music-note-beamed', route: item => `divertissement.html` },
-  reportage:     { label: 'Reportage',      color: '#F59E0B', icon: 'bi-film',              route: item => `reportage.html` },
-  archive:       { label: 'Archive',        color: '#6B7280', icon: 'bi-archive-fill',      route: item => `archive.html` },
+  news:              { label: 'Flash Info',      color: '#E23E3E', icon: 'bi-lightning-fill'       },
+  breaking_news:     { label: 'Flash Info',      color: '#E23E3E', icon: 'bi-lightning-fill'       },
+  sport:             { label: 'Sport',            color: '#1DA1F2', icon: 'bi-trophy-fill'           },
+  show:              { label: 'Émission',         color: '#10B981', icon: 'bi-tv-fill'               },
+  emission_category: { label: 'Émission',         color: '#10B981', icon: 'bi-tv-fill'               },
+  jtandmag:          { label: 'JT & Magazine',    color: '#E23E3E', icon: 'bi-camera-video-fill'     },
+  divertissement:    { label: 'Divertissement',   color: '#A855F7', icon: 'bi-music-note-beamed'     },
+  reportage:         { label: 'Reportage',        color: '#F59E0B', icon: 'bi-film'                  },
+  archive:           { label: 'Archive',          color: '#6B7280', icon: 'bi-archive-fill'          },
+  movie:             { label: 'Film',             color: '#F97316', icon: 'bi-camera-reels-fill'     },
+  series:            { label: 'Série',            color: '#8B5CF6', icon: 'bi-collection-play-fill'  },
+  reel:              { label: 'Reel',             color: '#EC4899', icon: 'bi-play-circle-fill'      },
+  popular_program:   { label: 'Programme',        color: '#F59E0B', icon: 'bi-star-fill'             },
 };
 
 // ─── Rendu résultats ──────────────────────────────────────────────────────────
@@ -50,14 +63,14 @@ function renderResults(items) {
     grouped[t].push(item);
   });
 
-  const ORDER = ['news', 'sport', 'jtandmag', 'divertissement', 'reportage', 'show', 'archive'];
+  const ORDER = ['news', 'breaking_news', 'sport', 'jtandmag', 'divertissement', 'reportage', 'show', 'emission_category', 'movie', 'series', 'archive', 'reel'];
   const sortedKeys = [
     ...ORDER.filter(k => grouped[k]),
     ...Object.keys(grouped).filter(k => !ORDER.includes(k))
   ];
 
   area.innerHTML = sortedKeys.map(type => {
-    const cfg = TYPE_CFG[type] || { label: type, color: '#888', icon: 'bi-collection', route: () => 'accueil.html' };
+    const cfg = TYPE_CFG[type] || { label: type, color: '#888', icon: 'bi-collection' };
     const list = grouped[type];
     return `
       <div style="margin-bottom:32px;">
@@ -67,7 +80,7 @@ function renderResults(items) {
           <small>(${list.length})</small>
         </div>
         ${list.map(item => {
-          const href = cfg.route(item);
+          const href = getDetailUrl(type, item);
           const imgUrl = item.image_url || item.thumbnail || item.image || '';
           return `
           <a href="${esc(href)}" class="srch-result-item">

@@ -16,10 +16,11 @@ const statsNumbers = document.querySelectorAll('.profile-stat-num');
 const logoutBtn = document.querySelector('.profile-menu-item.danger');
 
 // Éléments de menu
-const notificationsBtn = document.querySelector('.profile-menu-item:first-child');
-const supportBtn = document.querySelector('.profile-menu-item:nth-child(2)');
-const aboutBtn = document.querySelector('.profile-menu-item:nth-child(3)');
-const termsBtn = document.querySelector('.profile-menu-item:nth-child(4)');
+const favoritesBtn = document.getElementById('favoritesBtn');
+const notificationsBtn = document.querySelector('.profile-menu-item:nth-child(2)');
+const supportBtn = document.querySelector('.profile-menu-item:nth-child(3)');
+const aboutBtn = document.querySelector('.profile-menu-item:nth-child(4)');
+const termsBtn = document.querySelector('.profile-menu-item:nth-child(5)');
 
 // ===== FONCTIONS UTILITAIRES =====
 
@@ -199,6 +200,11 @@ async function handleUpgrade() {
   }
 }
 
+// Rediriger vers les favoris
+function goToFavorites() {
+  window.location.href = 'favoris.html';
+}
+
 // Rediriger vers les notifications
 function goToNotifications() {
   window.location.href = 'notifications.html';
@@ -294,6 +300,10 @@ async function init() {
     logoutBtn.addEventListener('click', handleLogout);
   }
   
+  if (favoritesBtn) {
+    favoritesBtn.addEventListener('click', goToFavorites);
+  }
+  
   if (upgradeBtn) {
     upgradeBtn.addEventListener('click', handleUpgrade);
   }
@@ -321,6 +331,7 @@ export {
   refreshUserData,
   handleLogout,
   handleUpgrade,
+  goToFavorites,
   getInitials,
   updateAvatar
 };

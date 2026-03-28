@@ -70,13 +70,20 @@ function getImageUrl(imagePath) {
 
 // Configuration par type
 const TYPE_CONFIG = {
-  sport: { label: 'Sport', icon: 'bi-trophy-fill', color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
-  jtandmag: { label: 'JT & Magazine', icon: 'bi-newspaper', color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
-  divertissement: { label: 'Divertissement', icon: 'bi-emoji-smile-fill', color: '#10b981', bgGradient: 'linear-gradient(135deg, #10b98120, #10b98140)' },
-  reportage: { label: 'Reportage', icon: 'bi-camera-fill', color: '#3b82f6', bgGradient: 'linear-gradient(135deg, #3b82f620, #3b82f640)' },
-  archive: { label: 'Archive', icon: 'bi-archive-fill', color: '#6b7280', bgGradient: 'linear-gradient(135deg, #6b728020, #6b728040)' },
-  movie: { label: 'Film', icon: 'bi-film', color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
-  default: { label: 'Contenu', icon: 'bi-play-circle', color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' }
+  sport:          { label: 'Sport',           icon: 'bi-trophy-fill',            color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
+  jtandmag:       { label: 'JT & Magazine',   icon: 'bi-newspaper',              color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
+  divertissement: { label: 'Divertissement',  icon: 'bi-emoji-smile-fill',       color: '#10b981', bgGradient: 'linear-gradient(135deg, #10b98120, #10b98140)' },
+  reportage:      { label: 'Reportage',       icon: 'bi-camera-fill',            color: '#3b82f6', bgGradient: 'linear-gradient(135deg, #3b82f620, #3b82f640)' },
+  archive:        { label: 'Archive',         icon: 'bi-archive-fill',           color: '#6b7280', bgGradient: 'linear-gradient(135deg, #6b728020, #6b728040)' },
+  movie:          { label: 'Film',            icon: 'bi-film',                   color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
+  show:           { label: 'Émission',        icon: 'bi-tv-fill',                color: '#8b5cf6', bgGradient: 'linear-gradient(135deg, #8b5cf620, #8b5cf640)' },
+  series:         { label: 'Série',           icon: 'bi-collection-play-fill',   color: '#8b5cf6', bgGradient: 'linear-gradient(135deg, #8b5cf620, #8b5cf640)' },
+  reel:           { label: 'Reel',            icon: 'bi-play-circle-fill',       color: '#ec4899', bgGradient: 'linear-gradient(135deg, #ec489920, #ec489940)' },
+  breaking_news:     { label: 'Flash Info',  icon: 'bi-lightning-fill',         color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
+  emission_category:  { label: 'Émission',    icon: 'bi-tv-fill',                color: '#10b981', bgGradient: 'linear-gradient(135deg, #10b98120, #10b98140)' },
+  popular_program:    { label: 'Programme',   icon: 'bi-star-fill',              color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
+  program:            { label: 'Programme',   icon: 'bi-star-fill',              color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
+  default:            { label: 'Contenu',     icon: 'bi-play-circle',            color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' }
 };
 
 // Variables globales

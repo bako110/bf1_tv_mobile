@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">BF1 TV</string>
-    <string name="title_activity_main">BF1 TV</string>
-    <string name="package_name">tv.bf1.app</string>
-    <string name="custom_url_scheme">tv.bf1.app</string>
-</resources>

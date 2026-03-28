@@ -603,13 +603,111 @@ window.addEventListener('hashchange', (e) => {
   renderRoute(route);
 });
 
+// ─── Gestion de la connexion internet ────────────────────────────────────────
+(function _initConnectionHandler() {
+  let _isOffline = false;
+  let _lastRoute = '#/home';
+  let _reconnectTimer = null;
+
+  // Stocker la dernière route valide
+  window.addEventListener('hashchange', () => {
+    const route = window.location.hash || '#/home';
+    if (!route.startsWith('#/')) _lastRoute = '#/home';
+    else _lastRoute = route;
+  });
+
+  // Event: Connexion perdue
+  window.addEventListener('offline', () => {
+    if (_isOffline) return; // Déjà offline
+    _isOffline = true;
+    console.log('🔌 OFFLINE - Connexion perdue');
+    
+    // Afficher le message offline
+    renderOffline();
+    
+    // Afficher un toast d'information
+    _showConnectionToast('Pas de connexion internet', true);
+    
+    // Essayer de se reconnecter chaque 3 secondes
+    if (!_reconnectTimer) {
+      _reconnectTimer = setInterval(() => {
+        _tryReconnect();
+      }, 3000);
+    }
+  });
+
+  // Event: Connexion rétablie
+  window.addEventListener('online', () => {
+    if (!_isOffline) return; // Déjà online
+    _isOffline = false;
+    console.log('✅ ONLINE - Connexion rétablie');
+    
+    // Arrêter les tentatives de reconnexion
+    if (_reconnectTimer) {
+      clearInterval(_reconnectTimer);
+      _reconnectTimer = null;
+    }
+    
+    // Afficher un toast de confirmation
+    _showConnectionToast('Connexion rétablie ✓', false);
+    
+    // Recharger la dernière page en attente
+    setTimeout(() => {
+      renderRoute(_lastRoute);
+    }, 600);
+  });
+
+  // Vérifier la connexion en appelant une ressource minimale
+  async function _tryReconnect() {
+    try {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 5000);
+      
+      const response = await fetch('https://bf1.fly.dev/api/v1/health', {
+        signal: ctrl.signal,
+        cache: 'no-store'
+      });
+      
+      clearTimeout(timeout);
+      
+      if (response.ok && !_isOffline) {
+        // La connexion est effectivement rétablie
+        window.dispatchEvent(new Event('online'));
+      }
+    } catch (err) {
+      // Pas encore connecté
+    }
+  }
+
+  // Toast de notification de connexion
+  function _showConnectionToast(msg, isPersistent) {
+    let t = document.getElementById('_bf1-conn-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = '_bf1-conn-toast';
+      t.style.cssText =
+        'position:fixed;top:env(safe-area-inset-top,0px);' +
+        'left:0;right:0;background:#1a1a1a;color:#fff;padding:12px 16px;' +
+        'font-size:13px;z-index:99998;opacity:0;' +
+        'transition:opacity .3s;text-align:center;' +
+        'border-bottom:1px solid #2a2a2a;';
+      document.body.appendChild(t);
+    }
+    
+    t.textContent = msg;
+    void t.offsetWidth;
+    t.style.opacity = '1';
+    
+    if (!isPersistent) {
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => {
+        t.style.opacity = '0';
+      }, 2500);
+    }
+  }
+})();
+
 // Détecter la perte de connexion
-window.addEventListener('offline', () => renderOffline());
-window.addEventListener('online', () => {
-  // Quand la connexion revient, recharger la page courante
-  const route = window.location.hash || '#/home';
-  renderRoute(route);
-});
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', async () => {

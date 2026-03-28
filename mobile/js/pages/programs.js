@@ -143,11 +143,11 @@ function buildProgramCard(prog) {
         ${image ? `<img src="${image}" style="width:80px;height:60px;border-radius:4px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'" />` : ''}
         <div style="flex:1;min-width:0;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
-            <h5 style="margin:0;font-size:13px;font-weight:600;color:#fff;line-height:1.3;">${title}</h5>
+            <h5 style="margin:0;font-size:13px;font-weight:600;color:var(--text-1,#fff);line-height:1.3;">${title}</h5>
             <span style="background:${statusColor};color:#fff;padding:2px 6px;border-radius:3px;font-size:9px;white-space:nowrap;flex-shrink:0;font-weight:600;">${status}</span>
           </div>
-          <p style="margin:4px 0;font-size:11px;color:#A0A0A0;"><i class="bi bi-tag me-1"></i>${type}</p>
-          ${start ? `<p style="margin:2px 0;font-size:11px;color:#A0A0A0;"><i class="bi bi-clock me-1"></i>${start}</p>` : ''}
+          <p style="margin:4px 0;font-size:11px;color:var(--text-3,#A0A0A0);"><i class="bi bi-tag me-1"></i>${type}</p>
+          ${start ? `<p style="margin:2px 0;font-size:11px;color:var(--text-3,#A0A0A0);"><i class="bi bi-clock me-1"></i>${start}</p>` : ''}
         </div>
       </div>
     </div>`;

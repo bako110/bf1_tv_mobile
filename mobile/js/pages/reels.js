@@ -37,7 +37,7 @@ function _setReelsLayout() {
 }
 
 // ── Reel card builder ─────────────────────────────────────────────────────────
-function buildReel(reel, index) {
+function buildReel(reel, index, isLiked = false) {
   const id          = String(reel.id || reel._id);
   const videoUrl    = reel.video_url || reel.videoUrl || '';
   const title       = reel.title || '';
@@ -53,6 +53,7 @@ function buildReel(reel, index) {
   _likeCount.set(id, likes);
   _commentCount.set(id, comments);
   _shareCount.set(id, shares);
+  _likedState.set(id, isLiked);
 
   return `
     <div class="reel-item" style="
@@ -63,15 +64,16 @@ function buildReel(reel, index) {
         flex-shrink:0;
         overflow:hidden;
         position:relative;
+        border-radius:16px;
+        margin:8px;
     " data-index="${index}" data-id="${id}">
 
       <video class="reel-video"
              src="${videoUrl}"
              loop
-             muted
              playsinline
              preload="metadata"
-             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;cursor:pointer;"
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;cursor:pointer;border-radius:16px;"
              onclick="window.__reelTogglePlay(this)"
       ></video>
 
@@ -84,16 +86,16 @@ function buildReel(reel, index) {
 
       <!-- Bottom gradient + info -->
       <div style="
-          position:absolute;bottom:0;left:0;right:0;
-          background:linear-gradient(transparent, rgba(0,0,0,0.88));
-          padding:60px 76px 20px 14px;pointer-events:none;">
-        ${title       ? `<p style="margin:0 0 4px;font-weight:700;color:#fff;font-size:14px;line-height:1.3;">${title}</p>` : ''}
-        ${description ? `<p style="margin:0;color:rgba(255,255,255,0.75);font-size:12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${description}</p>` : ''}
+          position:absolute;bottom:55px;left:0;right:0;
+          background:linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
+          padding:20px 14px 20px;pointer-events:none;">
+        ${title       ? `<p style="margin:0 0 4px;font-weight:700;color:var(--text-1,#fff);font-size:14px;line-height:1.3;">${title}</p>` : ''}
+        ${description ? `<p style="margin:0;color:var(--text-2,rgba(255,255,255,0.8));font-size:12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${description}</p>` : ''}
       </div>
 
       <!-- Boutons droite -->
-      <div style="position:absolute;right:10px;bottom:24px;
-                  display:flex;flex-direction:column;align-items:center;gap:22px;">
+      <div style="position:absolute;right:12px;bottom:90px;
+                  display:flex;flex-direction:column;align-items:center;gap:20px;z-index:10;">
 
         <!-- Like -->
         <button class="reel-like-btn"
@@ -101,7 +103,7 @@ function buildReel(reel, index) {
                 onclick="window.__reelToggleLike(this)"
                 style="background:none;border:none;padding:0;cursor:pointer;
                        display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <i class="bi bi-heart" style="font-size:30px;color:#fff;transition:color .15s,transform .15s;"></i>
+          <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}" style="font-size:30px;color:${isLiked ? '#E23E3E' : '#fff'};transition:color .15s,transform .15s;"></i>
           <span class="reel-like-count" style="color:#fff;font-size:12px;font-weight:600;">${formatCount(likes)}</span>
         </button>
 
@@ -133,7 +135,7 @@ function buildReel(reel, index) {
 // ── Auto-play (TikTok style) ───────────────────────────────────────────────────
 // Scroll+debounce + scrollend natif pour détection de snap précise
 function setupAutoPlay(container) {
-  let _unmuted = false;
+  let _unmuted = true; // SON ACTIVÉ PAR DÉFAUT
   let _scrollTimer = null;
 
   function _playVisible() {
@@ -149,6 +151,7 @@ function setupAutoPlay(container) {
       const visible = overlap / rect.height >= 0.70;
       if (visible) {
         video.muted = !_unmuted;
+        video.volume = _unmuted ? 1 : 0; // Volume à 100% si son activé
         if (video.paused) video.play().catch(() => {});
       } else {
         if (!video.paused) video.pause();
@@ -168,14 +171,14 @@ function setupAutoPlay(container) {
   // Joue le premier reel au chargement
   setTimeout(_playVisible, 80);
 
-  // Désourdissage au premier tap sur l'écran
+  // Toggle de mute au clic
   document.addEventListener('click', () => {
-    if (_unmuted) return;
-    _unmuted = true;
+    _unmuted = !_unmuted;
     container.querySelectorAll('.reel-video').forEach(v => {
-      if (!v.paused) v.muted = false;
+      v.muted = !_unmuted;
+      v.volume = _unmuted ? 1 : 0;
     });
-  }, { once: true });
+  });
 }
 
 // ── Toggle play/pause ─────────────────────────────────────────────────────────
@@ -497,6 +500,17 @@ export async function loadReels() {
   container.appendChild(loaderWrap);
 
   try {
+    // Charger les likes de l'utilisateur EN PREMIER
+    let likedIds = new Set();
+    if (api.isAuthenticated()) {
+      try {
+        const myLikes = await api.getMyLikes('reel');
+        likedIds = new Set((myLikes || []).map(l => String(l.content_id || l.id)));
+      } catch (e) {
+        likedIds = new Set();
+      }
+    }
+
     const reelsRaw = await api.getReels();
     
     // Trier par date (plus récent en premier) 📅
@@ -517,27 +531,15 @@ export async function loadReels() {
       return;
     }
 
-    container.innerHTML = reels.map((reel, i) => buildReel(reel, i)).join('');
+    // Construire les reels avec les likes déjà initialisés
+    container.innerHTML = reels.map((reel, i) => {
+      const id = String(reel.id || reel._id);
+      const isLiked = likedIds.has(id);
+      _likedState.set(id, isLiked);
+      return buildReel(reel, i, isLiked);
+    }).join('');
     _setReelsLayout();
     setupAutoPlay(container);
-
-    // Initialiser l'état "aimé" si connecté
-    if (api.isAuthenticated()) {
-      api.getMyLikes('reel').then(myLikes => {
-        const likedIds = new Set((myLikes || []).map(l => String(l.content_id || l.id)));
-        container.querySelectorAll('.reel-like-btn').forEach(btn => {
-          const id = String(btn.dataset.id);
-          if (likedIds.has(id)) {
-            _likedState.set(id, true);
-            const icon = btn.querySelector('i');
-            if (icon) {
-              icon.className  = 'bi bi-heart-fill';
-              icon.style.color = '#E23E3E';
-            }
-          }
-        });
-      }).catch(() => {});
-    }
 
   } catch (err) {
     console.error('Erreur loadReels:', err);

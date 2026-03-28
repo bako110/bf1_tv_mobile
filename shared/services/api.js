@@ -165,7 +165,14 @@ export async function getShowById(id, type) {
     case 'reportage':     return http.get(`/reportage/${id}`);
     case 'archive':       return http.get(`/archives/${id}`);
     case 'movie':         return http.get(`/movies/${id}`);
-    default:              return http.get(`/shows/${id}`);
+    case 'show':          return http.get(`/shows/${id}`);
+    case 'series':        return http.get(`/tv/${id}`);
+    case 'reel':          return http.get(`/reels/${id}`);
+    case 'breaking_news':     return http.get(`/news/${id}`);
+    case 'emission_category':  return http.get(`/emission-categories/${id}`);
+    case 'popular_program':    return http.get(`/shows/${id}`);
+    case 'program':            return http.get(`/shows/${id}`);
+    default:                   return http.get(`/shows/${id}`);
   }
 }
 

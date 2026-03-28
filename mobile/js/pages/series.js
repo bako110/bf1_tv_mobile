@@ -48,10 +48,10 @@ function buildCard(serie) {
 
       <!-- Info -->
       <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 8px 8px;">
-        <p style="font-size:12px;font-weight:600;color:#fff;margin:0 0 3px;overflow:hidden;
+        <p style="font-size:12px;font-weight:600;color:var(--text-1,#fff);margin:0 0 3px;overflow:hidden;
             display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;">${esc(title)}</p>
         <div class="d-flex align-items-center gap-1 flex-wrap">
-          ${year ? `<span style="font-size:10px;color:#999;">${year}</span>` : ''}
+          ${year ? `<span style="font-size:10px;color:var(--text-3,#999);">${year}</span>` : ''}
           ${genres.map(g => `<span style="background:rgba(226,62,62,0.2);color:#E23E3E;font-size:9px;padding:1px 5px;border-radius:3px;">${esc(g)}</span>`).join('')}
         </div>
       </div>

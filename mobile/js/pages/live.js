@@ -46,9 +46,11 @@ function buildHorizontalCard(item, type) {
 function buildSection(title, items, route) {
   const cards = items.map(item => buildHorizontalCard(item, route)).join('');
   return `
-    <div style="margin-bottom:24px;">
+    <div style="margin-bottom:24px;margin-left:16px;margin-right:16px;
+                background:rgba(255,255,255,0.02);border-radius:14px;padding:16px;
+                border:1px solid rgba(255,255,255,0.05);">
       <div style="display:flex;justify-content:space-between;align-items:center;
-                  padding:0 16px;margin-bottom:12px;">
+                  margin-bottom:12px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="width:3px;height:18px;background:#E23E3E;border-radius:2px;flex-shrink:0;"></div>
           <h6 class="bf1-section-title" style="margin:0;font-weight:700;color:#fff;font-size:15px;">${title}</h6>
@@ -59,10 +61,9 @@ function buildSection(title, items, route) {
         </a>
       </div>
       ${items.length === 0
-        ? `<p style="color:#444;padding:0 16px;font-size:13px;margin:0;">Aucun contenu disponible</p>`
-        : `<div style="display:flex;overflow-x:auto;overflow-y:hidden;padding:0 16px 8px;
-                       gap:0;scrollbar-width:none;-ms-overflow-style:none;
-                       -webkit-overflow-scrolling:touch;">${cards}</div>`
+        ? `<p style="color:#444;font-size:13px;margin:0;">Aucun contenu disponible</p>`
+        : `<div style="display:flex;overflow-x:auto;overflow-y:hidden;gap:0;scrollbar-width:none;-ms-overflow-style:none;
+                       -webkit-overflow-scrolling:touch;margin:-16px -16px 0 -16px;padding:0 16px 8px;">${cards}</div>`
       }
     </div>`;
 }
@@ -110,9 +111,9 @@ export async function loadLive() {
     if (videoContainer) {
       if (isLive && streamUrl) {
         videoContainer.innerHTML = `
-          <div id="live-player-wrapper" style="position:relative;width:100%;background:#000;">
+          <div id="live-player-wrapper" style="position:relative;width:100%;background:#000;border-radius:12px;overflow:hidden;">
             <div class="live-ratio" style="position:relative;width:100%;aspect-ratio:16/9;">
-              <video id="live-video" autoplay muted playsinline
+              <video id="live-video" autoplay playsinline
                      style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"
                      onerror="document.getElementById('live-error')?.style.setProperty('display','flex')">
               </video>
@@ -123,14 +124,14 @@ export async function loadLive() {
               <i class="bi bi-wifi-off" style="font-size:32px;color:#555;"></i>
               <p style="color:#555;font-size:13px;margin:0;">Impossible de charger le flux</p>
             </div>
-            <!-- Bouton son (muted par défaut → tap pour activer) -->
+            <!-- Bouton son (activé par défaut) -->
             <button id="live-mute-btn" onclick="window.toggleLiveMute()"
                     style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.65);
                            border:1px solid rgba(255,255,255,0.12);border-radius:8px;
                            padding:7px 9px;color:#fff;z-index:20;cursor:pointer;
                            display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;">
-              <i class="bi bi-volume-mute-fill" id="live-mute-icon"></i>
-              <span id="live-mute-label">Son coupé</span>
+              <i class="bi bi-volume-up-fill" id="live-mute-icon"></i>
+              <span id="live-mute-label">Son activé</span>
             </button>
             <!-- Bouton plein écran -->
             <button id="live-fs-btn" onclick="window.toggleLiveFullscreen()"
@@ -224,6 +225,10 @@ export async function loadLive() {
         requestAnimationFrame(() => {
           const video = document.getElementById('live-video');
           if (!video) return;
+          // Initialiser le volume à 100% et s'assurer que le son n'est pas muet
+          video.muted = false;
+          video.volume = 1;
+          
           if (streamUrl.includes('.m3u8')) {
             if (typeof Hls !== 'undefined') {
               _initHls(video, streamUrl);

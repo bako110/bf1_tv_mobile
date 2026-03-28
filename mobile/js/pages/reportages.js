@@ -70,8 +70,8 @@ function buildGridCard(item) {
         </div> -->
         <!-- info bas -->
         <div style="position:absolute;bottom:0;left:0;right:0;padding:12px;">
-          <p class="mb-1 fw-semibold" style="font-size:14px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-          <div class="d-flex align-items-center gap-1" style="font-size:11px;color:#B0B0B0;">
+          <p class="mb-1 fw-semibold" style="font-size:14px;color:var(--text-1,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+          <div class="d-flex align-items-center gap-1" style="font-size:11px;color:var(--text-3,#B0B0B0);"
             <i class="bi bi-eye"></i><span>${views}</span>
             <span>•</span><i class="bi bi-calendar3"></i><span>${date}</span>
           </div>

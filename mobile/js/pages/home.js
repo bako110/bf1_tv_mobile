@@ -236,7 +236,7 @@ async function loadLiveSection(liveData) {
       <div style="position: absolute; bottom: 12px; left: 12px; right: 12px; pointer-events: none;">
         <div style="display: flex; align-items: center; gap: 8px;">
           ${liveData.isLive !== false ? `<span style="width: 8px; height: 8px; background: #E23E3E; border-radius: 50%; display: inline-block; animation: pulse 1.4s ease-in-out infinite;"></span>` : ''}
-          <span style="color:#fff; font-size:0.85rem; font-weight:600;">En direct</span>
+          <span style="color:var(--text-1,#fff); font-size:0.85rem; font-weight:600;">En direct</span>
         </div>
       </div>
     </div>
@@ -248,7 +248,7 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
   if (!container) return;
 
   if (!items || items.length === 0) {
-    container.innerHTML = `<p style="color:#A0A0A0; font-size:13px; padding: 8px 0;">Aucun contenu disponible</p>`;
+    container.innerHTML = `<p style="color:var(--text-3,#A0A0A0); font-size:13px; padding: 8px 0;">Aucun contenu disponible</p>`;
     return;
   }
 
@@ -270,7 +270,7 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
 
     // Subscription tier badge (Basic / Standard / Premium)
     const subBadgeHtml = f.subBadge
-      ? `<span style="position:absolute; top:8px; left:8px; background:${f.subBadge.color}; color:#fff;
+      ? `<span style="position:absolute; top:8px; left:8px; background:${f.subBadge.color}; color:var(--text-1,#fff);
                       font-size:0.6rem; font-weight:700; padding:2px 6px; border-radius:8px;">
            ${f.subBadge.label}
          </span>`
@@ -281,7 +281,7 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
       ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;">
            <div style="width:32px; height:32px; background:rgba(0,0,0,0.7); border-radius:50%;
                        display:flex; align-items:center; justify-content:center; border:1.5px solid rgba(255,255,255,.25);">
-             <i class="bi bi-lock-fill" style="font-size:13px; color:#fff;"></i>
+             <i class="bi bi-lock-fill" style="font-size:13px; color:var(--text-1,#fff);"></i>
            </div>
          </div>`
       : '';
@@ -289,8 +289,8 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
     // Generic badge (news category etc.)
     const genericBadge = (!f.subBadge && f.badge)
       ? `<div style="position:absolute; top:8px; left:8px; display:flex; align-items:center; gap:3px; background:rgba(0,0,0,0.55); padding:2px 6px; border-radius:8px;">
-           <i class="bi ${f.badge.icon}" style="color:#fff; font-size:0.6rem;"></i>
-           <span style="color:#fff; font-size:0.6rem; font-weight:600;">${f.badge.text}</span>
+           <i class="bi ${f.badge.icon}" style="color:var(--text-1,#fff); font-size:0.6rem;"></i>
+           <span style="color:var(--text-1,#fff); font-size:0.6rem; font-weight:600;">${f.badge.text}</span>
          </div>`
       : '';
 
@@ -305,11 +305,11 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
           ${genericBadge}
           ${lockOverlay}
           <div style="position:absolute; bottom:8px; left:8px; right:8px;">
-            <p class="bf1-card-title" style="color:#fff; font-size:0.7rem; font-weight:600; line-height:1.3; margin:0 0 3px;
+            <p class="bf1-card-title" style="color:var(--text-1,#fff); font-size:0.7rem; font-weight:600; line-height:1.3; margin:0 0 3px;
                       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${f.title}</p>
             <div style="display:flex; align-items:center; gap:3px;">
-              <i class="bi bi-clock bf1-card-time" style="color:#A0A0A0; font-size:0.55rem;"></i>
-              <span class="bf1-card-time" style="color:#A0A0A0; font-size:0.6rem;">${f.duration ? f.duration + 'min · ' : ''}${f.time}</span>
+              <i class="bi bi-clock bf1-card-time" style="color:var(--text-3,#A0A0A0); font-size:0.55rem;"></i>
+              <span class="bf1-card-time" style="color:var(--text-3,#A0A0A0); font-size:0.6rem;">${f.duration ? f.duration + 'min · ' : ''}${f.time}</span>
             </div>
           </div>
         </div>

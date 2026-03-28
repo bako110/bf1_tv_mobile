@@ -250,8 +250,8 @@ function buildGridCard(item) {
         </div>` : ''}
         ${dur ? `<div style="position:absolute;top:6px;right:6px;z-index:1;"><span style="background:rgba(0,0,0,0.75);color:#fff;border-radius:4px;padding:2px 6px;font-size:10px;"><i class="bi bi-clock"></i> ${esc(dur)}</span></div>` : ''}
         <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;z-index:1;">
-          <p class="mb-1 fw-semibold" style="font-size:12px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-          <div class="d-flex align-items-center gap-1" style="font-size:10px;color:#aaa;">
+          <p class="mb-1 fw-semibold" style="font-size:12px;color:var(--text-1,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+          <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--text-3,#aaa);"
             <i class="bi bi-eye"></i><span>${views}</span>
             <span>&bull;</span><i class="bi bi-clock"></i><span>${time}</span>
           </div>
@@ -296,9 +296,9 @@ function buildListCard(item) {
           ${badge ? `<span style="display:inline-flex;align-items:center;gap:2px;background:${badge.color};color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-bottom:4px;">
             <i class="bi ${badge.icon}" style="font-size:9px;"></i> ${badge.label}
           </span>` : ''}
-          <p class="mb-1 fw-semibold" style="font-size:13px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+          <p class="mb-1 fw-semibold" style="font-size:13px;color:var(--text-1,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
         </div>
-        <div class="d-flex align-items-center gap-1" style="font-size:11px;color:#888;">
+        <div class="d-flex align-items-center gap-1" style="font-size:11px;color:var(--text-3,#888);">
           <i class="bi bi-eye"></i><span>${views}</span>
           <span>&bull;</span><i class="bi bi-clock"></i><span>${time}</span>
         </div>

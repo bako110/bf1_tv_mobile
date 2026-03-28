@@ -175,9 +175,9 @@ function buildGridCard(item) {
           </span>
         </div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:12px;">
-          <p class="mb-1 fw-semibold" style="font-size:14px;color:#fff;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(title)}</p>
-          <p class="mb-2" style="font-size:12px;color:#B0B0B0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(desc)}</p>
-          <div class="d-flex align-items-center gap-1 flex-wrap" style="font-size:11px;color:#888;">
+          <p class="mb-1 fw-semibold" style="font-size:14px;color:var(--text-1,#fff);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(title)}</p>
+          <p class="mb-2" style="font-size:12px;color:var(--text-2,#B0B0B0);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(desc)}</p>
+          <div class="d-flex align-items-center gap-1 flex-wrap" style="font-size:11px;color:var(--text-3,#888);"
             <i class="bi bi-eye"></i><span>${views}</span>
             ${author ? `<span>•</span><i class="bi bi-person-circle"></i><span>${escHtml(author)}</span>` : ''}
             <span>•</span>
