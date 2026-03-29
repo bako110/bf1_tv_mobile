@@ -146,7 +146,7 @@ function _bottomSheet(id, title, options, current, onSelect) {
 
   return `
     <div id="${id}" onclick="if(event.target===this)this.style.display='none'"
-         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99990;
+         style="display:none;position:fixed;in²²²²²²²²²²²²²²²²²²set:0;background:rgba(0,0,0,0.7);z-index:99990;
                 align-items:flex-end;justify-content:center;">
       <div style="background:#111;border-radius:20px 20px 0 0;width:100%;max-width:480px;
                   padding-bottom:env(safe-area-inset-bottom,16px);

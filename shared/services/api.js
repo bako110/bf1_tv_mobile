@@ -124,6 +124,11 @@ export async function getProgramGrid(startDate = null, endDate = null, type = nu
   return http.get(`/programs/grid/daily?${params.toString()}`).catch(() => ({ days: [] }));
 }
 
+// Créer un rappel pour un programme
+export async function createReminder(programId, { minutes_before = 15, reminder_type = 'notification' } = {}) {
+  return http.post(`/programs/${programId}/reminders`, { minutes_before, reminder_type });
+}
+
 export async function getSports() {
   // L'API retourne { sports: [...], total, page, ... }
   const res = await http.get('/sports');

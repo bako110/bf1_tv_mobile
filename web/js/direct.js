@@ -381,15 +381,24 @@ export class DirectService {
   }
 
   async createReminder(programId) {
+    // Vérifier l'authentification
+    const { isAuthenticated, createReminder } = await import('../../shared/services/api.js');
+    if (!isAuthenticated()) {
+      this.showToast('Connectez-vous pour créer un rappel', 'error');
+      return;
+    }
     try {
-      const { createReminder } = await import('../../shared/services/api.js');
       const reminder = await createReminder(programId, { minutes_before: 15 });
       if (reminder) {
-        this.showToast('Rappel créé avec succès!', 'success');
+        this.showToast('Rappel créé avec succès !', 'success');
       }
     } catch (error) {
       console.error('Erreur création rappel:', error);
-      this.showToast('Rappel créé avec succès!', 'success');
+      if (error?.status === 401 || error?.message?.includes('401')) {
+        this.showToast('Connectez-vous pour créer un rappel', 'error');
+      } else {
+        this.showToast('Impossible de créer le rappel', 'error');
+      }
     }
   }
 

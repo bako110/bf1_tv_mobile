@@ -326,7 +326,7 @@
     // Fonction pour charger le ticker
     async function startTicker() {
       try {
-        const { loadTicker } = await import('../../js/ticker.js');
+        const { loadTicker } = await import('../js/ticker.js');
         console.log('ðŸ“¡ ticker.js importÃ©');
         await loadTicker();
         setInterval(() => {

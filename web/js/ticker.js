@@ -18,44 +18,38 @@ export async function loadTicker() {
   const [inner1, inner2] = tickerEl.querySelectorAll('.ticker-track-inner');
 
   try {
-    console.log('📡 Chargement des programmes pour le ticker...');
-    
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    
-    // Essayer d'abord avec getProgramWeek (comme dans programme.js)
-    console.log('📅 Tentative avec getProgramWeek...');
-    const weekResponse = await getProgramWeek(0);
-    console.log('📡 Réponse getProgramWeek:', weekResponse);
-    
+
     let allPrograms = [];
-    
-    if (weekResponse && weekResponse.days && weekResponse.days.length > 0) {
-      // Récupérer tous les programmes de la semaine
-      weekResponse.days.forEach(day => {
-        if (day.programs && day.programs.length > 0) {
-          allPrograms = [...allPrograms, ...day.programs];
-        }
-      });
-      console.log(`✅ ${allPrograms.length} programmes trouvés dans la semaine`);
+
+    // D'abord les programmes du jour
+    const todayResponse = await getProgramGrid(todayStr, todayStr);
+    if (todayResponse && todayResponse.days && todayResponse.days.length > 0 && todayResponse.days[0].programs) {
+      allPrograms = todayResponse.days[0].programs;
     }
-    
-    // Si aucun programme trouvé, essayer getProgramGrid
+
+    // Si aucun programme aujourd'hui, prendre les prochains jours de la semaine
     if (allPrograms.length === 0) {
-      console.log('⚠️ Aucun programme dans la semaine, essai avec getProgramGrid...');
-      const todayResponse = await getProgramGrid(todayStr, todayStr);
-      if (todayResponse && todayResponse.days && todayResponse.days.length > 0 && todayResponse.days[0].programs) {
-        allPrograms = todayResponse.days[0].programs;
-        console.log(`✅ ${allPrograms.length} programmes trouvés pour aujourd'hui`);
+      const weekResponse = await getProgramWeek(0);
+      if (weekResponse && weekResponse.days) {
+        weekResponse.days.forEach(day => {
+          if (day.programs && day.programs.length > 0) {
+            // Garder seulement à partir d'aujourd'hui
+            const upcoming = day.programs.filter(p => {
+              if (!p.start_time) return false;
+              return p.start_time.split('T')[0] >= todayStr;
+            });
+            allPrograms = [...allPrograms, ...upcoming];
+          }
+        });
       }
     }
-    
-    // Trier les programmes par date et heure
-    allPrograms.sort((a, b) => {
-      const dateA = new Date(a.start_time);
-      const dateB = new Date(b.start_time);
-      return dateA - dateB;
-    });
+
+    // Trier par heure de début
+    allPrograms.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+    // Limiter à 20 programmes max
+    allPrograms = allPrograms.slice(0, 20);
     
     if (allPrograms.length > 0) {
       const tickerItems = allPrograms.map(program => {
@@ -78,7 +72,7 @@ export async function loadTicker() {
           }
         }
         const liveIcon = program.is_live ? '<i class="bi bi-record-circle-fill me-1" style="color: #e8222a;"></i>' : '';
-        return `<span>${liveIcon}${escapeHtml(title)} — ${escapeHtml(channel)} ${timeDisplay ? `(${timeDisplay}${dateDisplay})` : ''}</span>`;
+        return `<span>${liveIcon}${escapeHtml(title)} — ${escapeHtml(channel)}${timeDisplay ? ` (${timeDisplay})` : ''}</span>`;
       }).join('');
       if (inner1) inner1.innerHTML = tickerItems + tickerItems; // doublé pour boucle seamless
       if (inner2) inner2.innerHTML = ''; // non utilisé
