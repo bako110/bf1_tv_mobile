@@ -150,13 +150,12 @@ function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false
     
     if (full.style.display === 'none') {
       preview.style.display = 'none';
-      full.style.display = 'block';
+      full.style.display = '';
       btn.innerHTML = '<span>Lire moins</span><i class="bi bi-chevron-up"></i>';
     } else {
-      preview.style.display = 'block';
+      preview.style.display = ''; // laisse le CSS (et le clamp mobile) reprendre
       full.style.display = 'none';
       btn.innerHTML = '<span>Lire la suite</span><i class="bi bi-chevron-down"></i>';
-      document.querySelector('.news-detail-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 }

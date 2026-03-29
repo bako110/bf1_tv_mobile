@@ -47,6 +47,8 @@
   color: white;
   margin-bottom: 1rem;
   line-height: 1.2;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .news-detail-meta {
@@ -455,8 +457,13 @@
 }
 
 #submit-comment {
-  padding: 6px 16px !important;
-  font-size: 0.8rem !important;
+  padding: 0 1.25rem !important;
+  font-size: 0.85rem !important;
+  height: 38px;
+  align-self: flex-end;
+  border-radius: var(--radius-md) !important;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .comment-actions {
@@ -477,4 +484,87 @@
 
 .comment-actions button:hover {
   color: var(--red);
+}
+
+/* ==================== RESPONSIVE MOBILE ==================== */
+@media (max-width: 768px) {
+  /* Hero */
+  .news-detail-hero {
+    min-height: 260px;
+    max-height: 320px;
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+  }
+  .news-detail-hero-content {
+    padding: 1.25rem;
+  }
+  .news-detail-category {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Titre — 5 lignes max avec troncature */
+  .news-detail-title {
+    font-size: 1.25rem;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Méta — wrap en colonne */
+  .news-detail-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: 0.78rem;
+  }
+
+  /* Contenu — description 5 lignes max */
+  .content-preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .news-detail-content {
+    padding: 1rem;
+    font-size: 0.95rem;
+    border-radius: var(--radius-md);
+  }
+
+  .read-more-btn {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+  }
+
+  /* Actions */
+  .news-actions {
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+  .action-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* Articles similaires */
+  .related-news-card { flex: 0 0 240px; min-width: 240px; }
+  .related-news-image { height: 150px; }
+
+  /* Commentaires */
+  .comment-form { flex-direction: column; }
+  .comment-form button { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .news-detail-hero { min-height: 200px; max-height: 260px; }
+  .news-detail-title { font-size: 1.1rem; }
+  .news-detail-content { padding: 0.75rem; }
 }

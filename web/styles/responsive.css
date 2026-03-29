@@ -52,6 +52,11 @@
   .hero-stats { gap: 20px; }
   .hero-stat-divider { display: none; }
 
+  /* Carousel mobile — hauteur réduite */
+  .hero-container > .hero-carousel-wrapper { min-height: 55vw; }
+  .hero-carousel-item { min-height: 55vw; }
+  .hero-carousel-wrapper { border-radius: 10px; width: 100%; }
+
   /* Cards */
   .videos-grid { grid-template-columns: 1fr; gap: 16px; }
   .grid-2x .videos-grid { grid-template-columns: repeat(2, 1fr) !important; }
@@ -78,8 +83,21 @@
   /* Programme layout */
   .programme-layout { grid-template-columns: 1fr; padding-top: 20px; }
 
-  /* News ticker shorter on mobile */
-  .ticker-label { padding: 0 10px; font-size: 0.65rem; }
+  /* News ticker — mobile adaptatif */
+  .news-ticker { height: 32px; }
+  .main-content { padding-top: calc(var(--nav-h) + 32px); }
+  .ticker-label {
+    padding: 0 10px;
+    font-size: 0;
+    gap: 0;
+    min-width: 36px;
+    justify-content: center;
+  }
+  .ticker-label i { font-size: 0.85rem; }
+  .ticker-label .ticker-date { display: none; }
+  .ticker-track { padding-left: 10px; gap: 24px; }
+  .ticker-track span { font-size: 0.75rem; }
+  .ticker-track-inner { gap: 24px; }
 
   /* Notif panel full width on mobile */
   .notif-panel { width: 100%; }
@@ -98,6 +116,8 @@
 
 /* ── Small mobile ── */
 @media (max-width: 420px) {
+  .hero-container > .hero-carousel-wrapper { min-height: 60vw; }
+  .hero-carousel-item { min-height: 60vw; }
   .hero-title { font-size: 2.8rem; }
   .hero-actions { flex-direction: column; align-items: flex-start; }
   .hero-actions .btn-red, .hero-actions .btn-outline { width: 100%; justify-content: center; }
