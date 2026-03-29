@@ -207,6 +207,117 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   color: var(--red);
 }
 
+/* Section téléchargement app dans le footer */
+.footer-app-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 1.25rem 1.75rem;
+  background: var(--bg-3);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.footer-app-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-app-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.footer-app-title i {
+  color: var(--red);
+  margin-right: 6px;
+}
+
+.footer-app-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+
+.footer-app-btns {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.footer-store-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: var(--text-1);
+  color: var(--bg);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: var(--transition);
+  font-weight: 600;
+  font-size: 0.92rem;
+  min-width: 150px;
+  border: 1px solid transparent;
+}
+
+.footer-store-btn i {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.footer-store-btn span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.footer-store-btn small {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.footer-store-btn:hover {
+  background: var(--red);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(226, 62, 62, 0.35);
+  border-color: transparent;
+}
+
+[data-theme="dark"] .footer-store-btn {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-color: rgba(255,255,255,0.15);
+}
+
+[data-theme="dark"] .footer-store-btn:hover {
+  background: var(--red);
+  border-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .footer-app-section {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem 1.25rem;
+  }
+  .footer-app-btns {
+    width: 100%;
+  }
+  .footer-store-btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 130px;
+  }
+}
+
 .footer-bottom {
   display: flex;
   justify-content: space-between;

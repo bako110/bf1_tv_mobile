@@ -1,5 +1,5 @@
 // js/direct.js
-import { getProgramWeek, getProgramGrid, getPrograms } from '../../shared/services/api.js';
+import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes } from '../../shared/services/api.js';
 
 export class DirectService {
   constructor() {
@@ -277,18 +277,50 @@ export class DirectService {
       });
     }
 
-    // Bouton J'aime
+    // Bouton J'aime — état persisté via API + localStorage
     const likeBtnEl = document.querySelector('.player-actions .player-action-btn:first-child');
     if (likeBtnEl) {
-      let liked = false;
-      likeBtnEl.addEventListener('click', () => {
-        liked = !liked;
+      const LIKE_KEY = 'bf1_direct_liked';
+      const LIKE_ID  = 'direct_live';
+
+      // Restaurer l'état immédiatement depuis localStorage (instantané)
+      let liked = localStorage.getItem(LIKE_KEY) === '1';
+      const applyLikeState = (state) => {
+        liked = state;
         if (liked) {
           likeBtnEl.classList.add('liked');
           likeBtnEl.innerHTML = `<i class="bi bi-heart-fill"></i>J'aime`;
         } else {
           likeBtnEl.classList.remove('liked');
           likeBtnEl.innerHTML = `<i class="bi bi-heart"></i>J'aime`;
+        }
+      };
+      applyLikeState(liked);
+
+      // Vérifier l'état réel depuis l'API en arrière-plan
+      getMyLikes('program').then(myLikes => {
+        const ids = new Set(myLikes.map(l => String(l.content_id)));
+        const serverLiked = ids.has(LIKE_ID);
+        if (serverLiked !== liked) {
+          localStorage.setItem(LIKE_KEY, serverLiked ? '1' : '0');
+          applyLikeState(serverLiked);
+        }
+      }).catch(() => {});
+
+      likeBtnEl.addEventListener('click', async () => {
+        const newState = !liked;
+        applyLikeState(newState);
+        localStorage.setItem(LIKE_KEY, newState ? '1' : '0');
+        likeBtnEl.disabled = true;
+        try {
+          await toggleLike('program', LIKE_ID);
+        } catch (e) {
+          // Rollback si erreur API
+          applyLikeState(!newState);
+          localStorage.setItem(LIKE_KEY, !newState ? '1' : '0');
+          console.error('Erreur like direct:', e);
+        } finally {
+          likeBtnEl.disabled = false;
         }
       });
     }
