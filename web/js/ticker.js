@@ -2,20 +2,20 @@
 import { getProgramWeek, getProgramGrid } from '../../shared/services/api.js';
 
 export async function loadTicker() {
-  let tickerTrack = document.querySelector('.ticker-track');
+  // Attendre que le header soit chargé et le ticker présent
+  let tickerEl = document.getElementById('news-ticker');
   let attempts = 0;
   const maxAttempts = 50;
   
-  while (!tickerTrack && attempts < maxAttempts) {
+  while (!tickerEl && attempts < maxAttempts) {
     await new Promise(resolve => setTimeout(resolve, 100));
-    tickerTrack = document.querySelector('.ticker-track');
+    tickerEl = document.getElementById('news-ticker');
     attempts++;
   }
   
-  if (!tickerTrack) {
-    console.error('❌ Élément .ticker-track non trouvé');
-    return;
-  }
+  if (!tickerEl) return;
+
+  const [inner1, inner2] = tickerEl.querySelectorAll('.ticker-track-inner');
 
   try {
     console.log('📡 Chargement des programmes pour le ticker...');
@@ -80,36 +80,18 @@ export async function loadTicker() {
         const liveIcon = program.is_live ? '<i class="bi bi-record-circle-fill me-1" style="color: #e8222a;"></i>' : '';
         return `<span>${liveIcon}${escapeHtml(title)} — ${escapeHtml(channel)} ${timeDisplay ? `(${timeDisplay}${dateDisplay})` : ''}</span>`;
       }).join('');
-      tickerTrack.innerHTML = `
-        <div class="ticker-track-inner">${tickerItems}</div>
-        <div class="ticker-track-inner duplicate">${tickerItems}</div>
-      `;
+      if (inner1) inner1.innerHTML = tickerItems + tickerItems; // doublé pour boucle seamless
+      if (inner2) inner2.innerHTML = ''; // non utilisé
       console.log('✅ Ticker mis à jour avec', allPrograms.length, 'programmes');
     } else {
-      // Données par défaut
-      const defaultItems = `
-        <span><i class="bi bi-record-circle-fill me-1" style="color: #e8222a;"></i>Journal de 20h — BF1 National (20:00)</span>
-        <span>CAN 2024 : Match des Étalons — BF1 Sport (18:00)</span>
-        <span>Festival International de Ouagadougou — BF1 Culture (15:00)</span>
-        <span>Débat politique — BF1 Info (21:00)</span>
-        <span>Top 50 — BF1 Musique (22:30)</span>
-      `;
-      tickerTrack.innerHTML = `
-        <div class="ticker-track-inner">${defaultItems}</div>
-        <div class="ticker-track-inner duplicate">${defaultItems}</div>
-      `;
-      console.log('📺 Utilisation des données par défaut');
+      // Aucun programme : cacher le ticker
+      tickerEl.style.display = 'none';
+      console.log('📺 Aucun programme disponible, ticker masqué');
     }
     
   } catch (error) {
     console.error('❌ Erreur chargement du ticker:', error);
-    tickerTrack.innerHTML = `
-      <span><i class="bi bi-record-circle-fill me-1" style="color: #e8222a;"></i>Journal de 20h — BF1 National (20:00)</span>
-      <span>CAN 2024 : Match des Étalons — BF1 Sport (18:00)</span>
-      <span>Festival International de Ouagadougou — BF1 Culture (15:00)</span>
-      <span>Débat politique — BF1 Info (21:00)</span>
-      <span>Top 50 — BF1 Musique (22:30)</span>
-    `;
+    tickerEl.style.display = 'none';
   }
 }
 

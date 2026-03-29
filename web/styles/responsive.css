@@ -95,9 +95,8 @@
   }
   .ticker-label i { font-size: 0.85rem; }
   .ticker-label .ticker-date { display: none; }
-  .ticker-track { padding-left: 10px; gap: 24px; }
+  .ticker-track-inner { gap: 24px; padding-right: 24px; }
   .ticker-track span { font-size: 0.75rem; }
-  .ticker-track-inner { gap: 24px; }
 
   /* Notif panel full width on mobile */
   .notif-panel { width: 100%; }
