@@ -125,8 +125,8 @@ export async function getProgramGrid(startDate = null, endDate = null, type = nu
 }
 
 // Créer un rappel pour un programme
-export async function createReminder(programId, { minutes_before = 15, reminder_type = 'notification' } = {}) {
-  return http.post(`/programs/${programId}/reminders`, { minutes_before, reminder_type });
+export async function createReminder(programId, { minutes_before = 15, reminder_type = 'push' } = {}) {
+  return http.post(`/programs/${programId}/reminders`, { program_id: programId, minutes_before, reminder_type });
 }
 
 export async function getSports() {
