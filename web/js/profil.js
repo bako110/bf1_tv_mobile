@@ -91,7 +91,10 @@ function updateProfileInfo(user) {
 // Mettre à jour les informations d'abonnement
 function updateSubscriptionInfo(user) {
   const subscription = user.subscription || user.plan;
-  const isPremium = subscription?.type === 'premium' || subscription?.plan === 'premium';
+  const isPremium = user.is_premium === true
+    || subscription?.type === 'premium'
+    || subscription?.plan === 'premium'
+    || subscription?.category === 'premium';
   
   if (planTypeEl) {
     planTypeEl.innerHTML = isPremium 
@@ -241,20 +244,16 @@ async function loadUserData() {
     // Vérifier l'authentification
     if (!checkAuth()) return;
     
-    // Récupérer l'utilisateur depuis le localStorage
-    currentUser = api.getUser();
-    
-    // Si pas d'utilisateur en cache, essayer de récupérer depuis l'API
-    if (!currentUser) {
-      try {
-        currentUser = await api.getCurrentUser();
-        if (currentUser) {
-          api.setUser(currentUser);
-        }
-      } catch (err) {
-        console.warn('Impossible de récupérer l\'utilisateur depuis l\'API:', err);
-      }
+    // Toujours rafraîchir depuis l'API pour avoir les données à jour (is_premium, abonnement)
+    try {
+      const fresh = await api.refreshUser();
+      if (fresh) currentUser = fresh;
+    } catch (err) {
+      console.warn('Rafraîchissement API échoué, utilisation du cache:', err);
     }
+
+    // Fallback sur le cache local
+    if (!currentUser) currentUser = api.getUser();
     
     // Si toujours pas d'utilisateur, rediriger
     if (!currentUser) {
@@ -294,6 +293,12 @@ async function init() {
   
   // Charger les données utilisateur
   await loadUserData();
+  
+  // Hook global — appelé par abonnement.js après un abonnement réussi
+  window._reloadProfile = async function() {
+    console.log('🔄 Rechargement du profil après abonnement...');
+    await loadUserData();
+  };
   
   // Ajouter les écouteurs d'événements
   if (logoutBtn) {

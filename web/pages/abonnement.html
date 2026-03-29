@@ -13,7 +13,10 @@
   <link rel="stylesheet" href="../styles/navbar.css"/>
   <link rel="stylesheet" href="../styles/cards.css"/>
   <link rel="stylesheet" href="../styles/pages.css"/>
+  <link rel="stylesheet" href="../styles/abonnement.css"/>
   <link rel="stylesheet" href="../styles/responsive.css"/>
+  <!-- Scripts -->
+  <script src="../js/navbar-active.js"></script>
 </head>
 <body>
 
@@ -21,8 +24,8 @@
 
 <main class="main-content">
   <div class="page-header">
-    <h1 class="page-header-title"><i class="bi bi-star-fill" style="color:var(--red)"></i> Abonnement</h1>
-    <p class="page-header-sub">Choisissez votre formule BF1 TV Premium</p>
+    <h1 class="page-header-title"><i class="bi bi-star-fill" style="color:var(--red)"></i> Abonnement Premium</h1>
+    <p class="page-header-sub">Accédez à tous les contenus exclusifs BF1 TV</p>
   </div>
   <div id="plans-container" class="container py-4">
     <div class="text-center py-5">
@@ -42,10 +45,13 @@
   ]);
   document.getElementById('header-placeholder').innerHTML = h;
   document.getElementById('footer-placeholder').innerHTML = f;
+
+  const { loadAbonnement } = await import('../js/abonnement.js');
+  await loadAbonnement();
 </script>
-  <script type="module" src="../js/notifications.js"></script>
-  <script type="module" src="../js/ticker.js"></script>
-  <script type="module" src="../js/theme.js"></script>
+<script type="module" src="../js/notifications.js"></script>
+<script type="module" src="../js/ticker.js"></script>
+<script type="module" src="../js/theme.js"></script>
 </body>
 </html>
 

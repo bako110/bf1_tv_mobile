@@ -141,7 +141,7 @@ function showAccessDenied(message, isLoggedIn = true) {
       <div class="access-denied-buttons">
         <button onclick="history.back()" class="btn-outline">Retour</button>
         ${!isLoggedIn ? '<button onclick="window.location.href=\'connexion.html\'" class="btn-red">Se connecter</button>' : 
-                        '<button onclick="window.location.href=\'subscription.html\'" class="btn-red">Voir les offres</button>'}
+                        '<button onclick="window.location.href=\'abonnement.html\'" class="btn-red">Voir les offres</button>'}
       </div>
     </div>
   `;

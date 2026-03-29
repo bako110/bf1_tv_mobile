@@ -238,10 +238,7 @@ export class DirectService {
       heroTitle.innerHTML = `En Direct - ${this.escapeHtml(program.title)}`;
     }
     
-    const likeBtn = document.querySelector('.player-action-btn.liked');
-    if (likeBtn) {
-      likeBtn.innerHTML = `<i class="bi bi-heart-fill"></i>J'aime ${this.formatNumber(program.views)}`;
-    }
+    // (pas de compteur fictif sur le bouton like)
   }
 
   updateHeroBadges(programs) {
@@ -279,7 +276,69 @@ export class DirectService {
         if (seeAllBtn2) seeAllBtn2.style.display = 'inline-flex';
       });
     }
-    
+
+    // Bouton J'aime
+    const likeBtnEl = document.querySelector('.player-actions .player-action-btn:first-child');
+    if (likeBtnEl) {
+      let liked = false;
+      likeBtnEl.addEventListener('click', () => {
+        liked = !liked;
+        if (liked) {
+          likeBtnEl.classList.add('liked');
+          likeBtnEl.innerHTML = `<i class="bi bi-heart-fill"></i>J'aime`;
+        } else {
+          likeBtnEl.classList.remove('liked');
+          likeBtnEl.innerHTML = `<i class="bi bi-heart"></i>J'aime`;
+        }
+      });
+    }
+
+    // Bouton Partager
+    const shareBtn = document.querySelector('.player-actions .player-action-btn:nth-child(2)');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', async () => {
+        const shareData = {
+          title: 'BF1 TV – En Direct',
+          text: this.currentLiveProgram ? `Regardez "${this.currentLiveProgram.title}" en direct sur BF1 TV` : 'Regardez BF1 TV en direct',
+          url: window.location.href
+        };
+        try {
+          if (navigator.share) {
+            await navigator.share(shareData);
+          } else {
+            await navigator.clipboard.writeText(window.location.href);
+            const orig = shareBtn.innerHTML;
+            shareBtn.innerHTML = `<i class="bi bi-check2"></i>Lien copié !`;
+            setTimeout(() => { shareBtn.innerHTML = orig; }, 2000);
+          }
+        } catch (err) {
+          // Partage annulé ou non supporté
+        }
+      });
+    }
+
+    // Bouton Plein écran
+    const fullscreenBtn = document.querySelector('.player-actions .player-action-btn:nth-child(3)');
+    if (fullscreenBtn) {
+      fullscreenBtn.addEventListener('click', () => {
+        const playerWrap = document.querySelector('.player-wrap');
+        const target = this.videoElement || playerWrap;
+        if (!target) return;
+        if (!document.fullscreenElement) {
+          (target.requestFullscreen || target.webkitRequestFullscreen || target.mozRequestFullScreen).call(target);
+          fullscreenBtn.innerHTML = `<i class="bi bi-fullscreen-exit"></i>Quitter`;
+        } else {
+          (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
+          fullscreenBtn.innerHTML = `<i class="bi bi-fullscreen"></i>Plein écran`;
+        }
+      });
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+          fullscreenBtn.innerHTML = `<i class="bi bi-fullscreen"></i>Plein écran`;
+        }
+      });
+    }
+
     document.addEventListener('click', async (e) => {
       const reminderBtn = e.target.closest('.reminder-btn');
       if (reminderBtn && reminderBtn.dataset.id) {
