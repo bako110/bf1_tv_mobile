@@ -687,6 +687,31 @@ body:has(.reels-player-container) #footer-placeholder {
 }
 .reels-comment-send-btn:hover { background: var(--red-dark); }
 
+/* -- Bouton son (coin haut droit de la vidéo) -- */
+.reel-sound-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 25;
+  width: 36px;
+  height: 36px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.reel-sound-btn:hover { background: rgba(0,0,0,0.7); transform: scale(1.08); }
+.reel-sound-btn:active { transform: scale(0.92); }
+
 /* -- Animation like -- */
 @keyframes heartBeat {
   0%   { transform: scale(1); }

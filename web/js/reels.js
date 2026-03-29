@@ -183,9 +183,13 @@ function createReelElement(reel, index) {
 
       <!-- CENTRE : Vidéo -->
       <div class="reel-video-wrapper">
-        <video class="reel-video" loop muted playsinline preload="metadata">
+        <video class="reel-video" loop playsinline preload="metadata">
           <source src="${reel.video_url}" type="video/mp4">
         </video>
+        <!-- Bouton son -->
+        <button class="reel-sound-btn" title="Son" aria-label="Activer/désactiver le son">
+          <i class="bi bi-volume-up-fill"></i>
+        </button>
         <div class="reel-video-overlay">
           <div class="reel-author-bar">
             <div class="reel-avatar">
@@ -347,19 +351,46 @@ function setupScrollListener() {
   }, { passive: true });
 }
 
+// État son global — son activé par défaut, muted seulement si le navigateur bloque l'autoplay
+let globalMuted = false;
+
+function updateSoundButtons() {
+  document.querySelectorAll('.reel-sound-btn i').forEach(icon => {
+    icon.className = globalMuted ? 'bi bi-volume-mute-fill' : 'bi bi-volume-up-fill';
+  });
+  document.querySelectorAll('.reel-video').forEach(v => {
+    v.muted = globalMuted;
+  });
+}
+
 function playVideoInReel(reelElement) {
   const video = reelElement.querySelector('.reel-video');
-  if (video && video.paused) {
-    // Arrêter toutes les autres vidéos
-    document.querySelectorAll('.reel-video').forEach(v => {
-      if (v !== video && !v.paused) {
-        v.pause();
-      }
+  if (!video) return;
+  video.muted = globalMuted;
+  // Arrêter toutes les autres vidéos
+  document.querySelectorAll('.reel-video').forEach(v => {
+    if (v !== video && !v.paused) v.pause();
+  });
+  if (video.paused) {
+    video.play().catch(() => {
+      // Le navigateur bloque l'autoplay avec son → repasser en muet
+      globalMuted = true;
+      video.muted = true;
+      video.play().catch(e => console.log('Lecture bloquée:', e));
+      updateSoundButtons();
     });
-    
-    // Lire la vidéo courante
-    video.play().catch(e => console.log('Lecture automatique bloquée:', e));
-    currentVideo = video;
+  }
+  currentVideo = video;
+
+  // Lier le bouton son de ce reel
+  const soundBtn = reelElement.querySelector('.reel-sound-btn');
+  if (soundBtn && !soundBtn._bound) {
+    soundBtn._bound = true;
+    soundBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      globalMuted = !globalMuted;
+      updateSoundButtons();
+    });
   }
 }
 
