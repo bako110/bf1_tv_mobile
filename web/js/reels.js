@@ -1,5 +1,17 @@
 import * as api from '../../shared/services/api.js';
 
+// Page immersive : bloquer le scroll body et cacher le footer
+document.documentElement.style.overflow = 'hidden';
+document.body.style.overflow = 'hidden';
+const _footerEl = document.getElementById('footer-placeholder');
+if (_footerEl) _footerEl.style.display = 'none';
+// Cacher aussi le footer quand il se charge dynamiquement
+const _footerObserver = new MutationObserver(() => {
+  const fp = document.getElementById('footer-placeholder');
+  if (fp && fp.innerHTML) fp.style.display = 'none';
+});
+_footerObserver.observe(document.body, { childList: true, subtree: false });
+
 let reelsData = [];
 let currentIndex = 0;
 let isLoading = false;
@@ -180,17 +192,24 @@ function createReelElement(reel, index) {
               <img src="${reel.avatar || '/logo.png'}" alt="${escapeHtml(reel.author)}" onerror="this.src='/logo.png'">
             </div>
             <span class="reel-author-name">${escapeHtml(reel.author)}</span>
-            <button class="reel-follow-btn">Suivre</button>
           </div>
           <p class="reel-caption">${escapeHtml(reel.description.substring(0, 120))}${reel.description.length > 120 ? '...' : ''}</p>
           <div class="reel-music">
             <i class="bi bi-music-note-beamed"></i>
             <span>${escapeHtml(reel.title)}</span>
           </div>
+          <div class="reel-download-links">
+            <a href="https://play.google.com/store/apps/details?id=com.bf1tv.app" target="_blank" rel="noopener" class="reel-dl-btn reel-dl-android">
+              <i class="bi bi-google-play"></i><span>Google Play</span>
+            </a>
+            <a href="https://apps.apple.com/app/bf1-tv/id6741638571" target="_blank" rel="noopener" class="reel-dl-btn reel-dl-ios">
+              <i class="bi bi-apple"></i><span>App Store</span>
+            </a>
+          </div>
         </div>
       </div>
 
-      <!-- DROITE : Actions TikTok -->
+      <!-- DROITE : Actions TikTok (desktop) -->
       <div class="reel-side-actions">
         <div class="reel-side-action like-btn" data-id="${reel._id}">
           <div class="reel-side-action-icon"><i class="bi ${likedReelIds.has(String(reel._id)) ? 'bi-heart-fill' : 'bi-heart'}" style="${likedReelIds.has(String(reel._id)) ? 'color:var(--red)' : ''}"></i></div>
@@ -206,18 +225,37 @@ function createReelElement(reel, index) {
         </div>
       </div>
 
+      <!-- ACTIONS MOBILES (overlay droite sur la vidéo) -->
+      <div class="reel-mobile-actions">
+        <div class="reel-mobile-action like-btn" data-id="${reel._id}">
+          <div class="reel-mobile-action-icon"><i class="bi ${likedReelIds.has(String(reel._id)) ? 'bi-heart-fill' : 'bi-heart'}" style="${likedReelIds.has(String(reel._id)) ? 'color:var(--red)' : ''}"></i></div>
+          <span class="like-count">${formatNumber(reel.likes)}</span>
+        </div>
+        <div class="reel-mobile-action comment-btn" data-id="${reel._id}">
+          <div class="reel-mobile-action-icon"><i class="bi bi-chat-fill"></i></div>
+          <span class="comment-count">${formatNumber(reel.comments || 0)}</span>
+        </div>
+        <div class="reel-mobile-action share-btn" data-id="${reel._id}" data-title="${escapeHtml(reel.title)}">
+          <div class="reel-mobile-action-icon"><i class="bi bi-share-fill"></i></div>
+          <span>Partager</span>
+        </div>
+      </div>
+
     </div>
   `;
 
-  // Événements
-  const likeBtn = div.querySelector('.like-btn');
-  if (likeBtn) likeBtn.addEventListener('click', e => { e.stopPropagation(); toggleLike(likeBtn, reel._id); });
+  // Événements desktop + mobile (les deux sélecteurs .like-btn, .comment-btn, .share-btn)
+  div.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); toggleLike(btn, reel._id); });
+  });
 
-  const commentBtn = div.querySelector('.comment-btn');
-  if (commentBtn) commentBtn.addEventListener('click', e => { e.stopPropagation(); openComments(reel._id); });
+  div.querySelectorAll('.comment-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); openComments(reel._id); });
+  });
 
-  const shareBtn = div.querySelector('.share-btn');
-  if (shareBtn) shareBtn.addEventListener('click', e => { e.stopPropagation(); shareReel(reel._id, reel.title); });
+  div.querySelectorAll('.share-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); shareReel(reel._id, reel.title); });
+  });
 
   const commentInput = div.querySelector('.reel-comment-input');
   if (commentInput) commentInput.addEventListener('keydown', e => {
@@ -757,7 +795,7 @@ function showSharePopup(url, title) {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: var(--bg-primary);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
@@ -768,13 +806,13 @@ function showSharePopup(url, title) {
   `;
   
   popup.innerHTML = `
-    <h3 style="margin:0 0 15px;color:var(--text-primary);">Partager ce reel</h3>
-    <p style="margin:0 0 15px;color:var(--text-secondary);font-size:0.9rem;">${escapeHtml(title || 'Reel BF1 TV')}</p>
+    <h3 style="margin:0 0 15px;color:var(--text-1);">Partager ce reel</h3>
+    <p style="margin:0 0 15px;color:var(--text-2);font-size:0.9rem;">${escapeHtml(title || 'Reel BF1 TV')}</p>
     <div style="display:flex;gap:10px;margin-bottom:15px;">
-      <input type="text" value="${url}" readonly style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-secondary);color:var(--text-primary);font-size:0.85rem;">
+      <input type="text" value="${url}" readonly style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-3);color:var(--text-1);font-size:0.85rem;">
       <button onclick="navigator.clipboard.writeText('${url}').then(() => this.textContent='Copié!')" style="padding:8px 15px;background:var(--red);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;">Copier</button>
     </div>
-    <button onclick="this.parentElement.remove()" style="width:100%;padding:8px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;cursor:pointer;">Fermer</button>
+    <button onclick="this.parentElement.remove()" style="width:100%;padding:8px;background:var(--bg-3);color:var(--text-1);border:1px solid var(--border);border-radius:6px;cursor:pointer;">Fermer</button>
   `;
   
   document.body.appendChild(popup);
@@ -879,7 +917,7 @@ async function loadDrawerComments(reelId) {
 
     if (!comments.length) {
       list.innerHTML = `
-        <div style="text-align:center;color:var(--text-secondary);padding:40px 20px;">
+        <div style="text-align:center;color:var(--text-3);padding:40px 20px;">
           <i class="bi bi-chat-dots" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
           <p>Soyez le premier à commenter !</p>
         </div>`;
@@ -895,12 +933,12 @@ async function loadDrawerComments(reelId) {
       return `
       <div id="comment-row-${cid}" style="padding:12px 0;border-bottom:1px solid var(--border);">
         <div style="display:flex;gap:12px;align-items:flex-start;">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-weight:600;flex-shrink:0;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-3);display:flex;align-items:center;justify-content:center;color:var(--text-1);font-weight:600;flex-shrink:0;">
             ${authorInitial}
           </div>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">${escapeHtml(authorName)}</div>
-            <div id="comment-text-${cid}" style="color:var(--text-primary);line-height:1.4;margin-bottom:4px;">${escapeHtml(comment.text)}</div>
+            <div style="font-weight:600;color:var(--text-1);margin-bottom:4px;">${escapeHtml(authorName)}</div>
+            <div id="comment-text-${cid}" style="color:var(--text-2);line-height:1.4;margin-bottom:4px;">${escapeHtml(comment.text)}</div>
             <div style="display:flex;align-items:center;gap:10px;">
               <span style="color:var(--text-secondary);font-size:0.8rem;">${timeAgo(comment.created_at)}</span>
               <button class="rc-action-btn rc-like" id="clbtn-${cid}" onclick="window.likeReelComment('${cid}',this)" title="J'aime" style="display:flex;align-items:center;gap:3px;">
