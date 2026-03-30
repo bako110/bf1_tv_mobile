@@ -2,8 +2,6 @@
    BF1 TV — Main JavaScript
    Navigation, Theme, Animations, Interactions
 ═══════════════════════════════════════════════ */
-// Dans app.js
-import { loadTicker } from '../js/ticker.js';
 'use strict';
 
 /* ── Theme Manager ── */

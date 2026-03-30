@@ -71,18 +71,29 @@ function renderList() {
       <div class="notif-panel-icon ${unread ? 'unread' : 'read'}">
         <i class="bi bi-bell${unread ? '-fill' : ''}"></i>
       </div>
-      <div class="notif-panel-content" onclick="window._notifMarkRead('${nid}')">
+      <div class="notif-panel-content" data-read-id="${nid}" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
           <span class="notif-panel-item-title ${unread ? '' : 'read'}">${esc(n.title)}</span>
           <span class="notif-panel-item-time">${formatRelative(n.created_at)}</span>
         </div>
         ${n.message ? `<span class="notif-panel-item-msg">${esc(n.message)}</span>` : ''}
       </div>
-      <button class="notif-panel-del-btn" title="Supprimer" onclick="window._notifDelete('${nid}')">
+      <button class="notif-panel-del-btn" title="Supprimer" data-del-id="${nid}">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>`;
   }).join('');
+
+  // Câbler les clics via event delegation
+  body.querySelectorAll('[data-read-id]').forEach(el => {
+    el.addEventListener('click', () => window._notifMarkRead(el.dataset.readId));
+  });
+  body.querySelectorAll('[data-del-id]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window._notifDelete(btn.dataset.delId);
+    });
+  });
 }
 
 // ─── Actions (exposées globalement pour les onclick inline) ─────────────────
@@ -90,11 +101,18 @@ function renderList() {
 window._notifMarkRead = async function(notifId) {
   const n = _notifications.find(x => String(x.id || x._id) === notifId);
   if (!n || n.is_read) return;
+  const row = document.querySelector(`[data-id="${notifId}"]`);
+  if (row) row.style.opacity = '0.5';
   try {
     await api.markNotificationRead(notifId);
     n.is_read = true;
     renderList();
-  } catch (e) { console.error('Erreur marquer lu:', e); }
+    showToast('Notification marquée comme lue.', 'success');
+  } catch (e) {
+    if (row) row.style.opacity = '1';
+    showToast(e?.status === 401 ? 'Session expirée.' : 'Erreur. Réessayez.', 'error');
+    console.error('Erreur marquer lu:', e);
+  }
 };
 
 window._notifDelete = async function(notifId) {
@@ -104,9 +122,11 @@ window._notifDelete = async function(notifId) {
     await api.deleteNotification(notifId);
     _notifications = _notifications.filter(n => String(n.id || n._id) !== notifId);
     renderList();
+    showToast('Notification supprimée.', 'success');
   } catch (e) {
-    console.error('Erreur suppression:', e);
     if (row) { row.style.opacity = '1'; row.style.pointerEvents = ''; }
+    showToast(e?.status === 401 ? 'Session expirée.' : 'Erreur lors de la suppression.', 'error');
+    console.error('Erreur suppression:', e);
   }
 };
 
@@ -115,7 +135,11 @@ window._notifMarkAllRead = async function() {
     await api.markAllNotificationsRead();
     _notifications.forEach(n => { n.is_read = true; });
     renderList();
-  } catch (e) { console.error('Erreur tout marquer lu:', e); }
+    showToast('Toutes les notifications ont été marquées comme lues.', 'success');
+  } catch (e) {
+    showToast(e?.status === 401 ? 'Session expirée. Reconnectez-vous.' : 'Erreur. Réessayez.', 'error');
+    console.error('Erreur tout marquer lu:', e);
+  }
 };
 
 window._notifDeleteAll = async function() {
@@ -213,6 +237,18 @@ export function initNotifications() {
   // Câbler le bouton fermer
   const closeBtn = document.querySelector('.notif-panel-close');
   if (closeBtn) closeBtn.addEventListener('click', closePanel);
+
+  // Délégation d'événements sur le panel — fonctionne même si les boutons
+  // ne sont pas encore visibles au moment de l'init
+  const panel = document.querySelector('.notif-panel');
+  if (panel) {
+    panel.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[id]');
+      if (!btn) return;
+      if (btn.id === 'notif-btn-mark-all') { e.stopPropagation(); window._notifMarkAllRead(); }
+      if (btn.id === 'notif-btn-delete-all') { e.stopPropagation(); window._notifDeleteAll(); }
+    });
+  }
 
   // Charger le badge au démarrage (si connecté)
   const token = localStorage.getItem('bf1_token');

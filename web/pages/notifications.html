@@ -65,6 +65,19 @@
       border-radius: 6px; transition: color .15s, background .15s;
     }
     .notif-del-btn:hover { color: var(--red, #E23E3E); background: var(--red-soft); }
+    .notif-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .notif-read-btn {
+      flex-shrink: 0; background: none; border: none;
+      color: var(--text-3, #333); cursor: pointer;
+      padding: 6px; font-size: 16px; align-self: center;
+      border-radius: 6px; transition: color .15s, background .15s;
+    }
+    .notif-read-btn:hover { color: #28a745; background: rgba(40,167,69,0.1); }
     .notif-actions-bar {
       display: flex; gap: 10px;
       padding: 12px 20px;
