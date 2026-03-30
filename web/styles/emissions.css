@@ -58,6 +58,66 @@
 
 /* Pagination émissions */
 #emPagination { margin-top: 2rem; }
+
+/* ── Loading skeleton ─────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+.skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.skeleton-thumb {
+  aspect-ratio: 16/9;
+  background: linear-gradient(90deg, var(--bg-2) 25%, var(--border) 50%, var(--bg-2) 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.skeleton-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--bg-2) 25%, var(--border) 50%, var(--bg-2) 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.skeleton-line.short { width: 55%; }
+.skeleton-line.long  { width: 90%; }
+
+/* Loading overlay for filters */
+.em-filters.is-loading {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* Error banner */
+.em-error-banner {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+.em-error-banner i { font-size: 3rem; color: var(--red); }
+.em-error-banner p { color: var(--text-2); margin: 0; font-size: 0.95rem; }
+.em-error-banner button {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 28px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.em-error-banner button:hover { opacity: 0.85; }
 .em-filters {
   background: var(--bg-card);
   border: 1px solid var(--border);

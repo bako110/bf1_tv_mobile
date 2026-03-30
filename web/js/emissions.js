@@ -102,8 +102,43 @@ function formatDate(dateString) {
   }
 }
 
+// ── Skeleton / loading helpers ──────────────────────────
+function showSkeletons(count = 12) {
+  if (!emissionsGrid) return;
+  const skeletonHTML = Array.from({ length: count }).map(() => `
+    <div class="skeleton-card">
+      <div class="skeleton-thumb"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line long"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </div>
+  `).join('');
+  emissionsGrid.innerHTML = skeletonHTML;
+  document.querySelector('.em-filters')?.classList.add('is-loading');
+  document.getElementById('emPagination').innerHTML = '';
+}
+
+function hideSkeletons() {
+  document.querySelector('.em-filters')?.classList.remove('is-loading');
+}
+
+function showErrorState() {
+  if (!emissionsGrid) return;
+  emissionsGrid.innerHTML = `
+    <div class="em-error-banner">
+      <i class="bi bi-wifi-off"></i>
+      <p>Impossible de charger les émissions.<br>Vérifiez votre connexion internet.</p>
+      <button onclick="window.location.reload()"><i class="bi bi-arrow-clockwise me-2"></i>Réessayer</button>
+    </div>
+  `;
+  hideSkeletons();
+}
+
 // Charger toutes les émissions
 async function loadAllEmissions() {
+  showSkeletons(12);
   try {
     console.log('📡 Chargement des émissions...');
     
@@ -215,10 +250,12 @@ async function loadAllEmissions() {
     
     // Mettre à jour les stats
     updateHeroStats();
+    hideSkeletons();
     
     return allEmissions;
   } catch (error) {
     console.error('❌ Erreur chargement des émissions:', error);
+    showErrorState();
     return [];
   }
 }
