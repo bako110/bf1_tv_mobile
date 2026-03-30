@@ -74,45 +74,38 @@
   </div>
   
   <div class="container-fluid py-3">
-    <div class="search-bar-full">
-      <div class="search-bar-input-wrap">
-        <i class="bi bi-search"></i>
-        <input type="text" class="search-bar-input" placeholder="Rechercher une émission..."/>
+    <div class="em-filters">
+      <div class="em-search-wrap">
+        <i class="bi bi-search em-search-icon"></i>
+        <input type="text" class="em-search-input" id="emSearch" placeholder="Rechercher une émission..."/>
+        <button class="em-search-clear" id="searchClear"><i class="bi bi-x-circle-fill"></i></button>
       </div>
-      <select class="search-bar-select">
-        <option value="all">Toutes les chaînes</option>
-        <option value="BF1 National">BF1 National</option>
-        <option value="BF1 Sport">BF1 Sport</option>
-        <option value="BF1 Culture">BF1 Culture</option>
-        <option value="BF1 Info">BF1 Info</option>
-        <option value="BF1 Divertissement">BF1 Divertissement</option>
-        <option value="BF1 Reportage">BF1 Reportage</option>
-      </select>
-      <button class="btn-red"><i class="bi bi-funnel-fill"></i>Filtrer</button>
+      <div class="em-controls">
+        <div class="em-ctrl-group">
+          <span class="em-ctrl-label"><i class="bi bi-sort-down-alt"></i>Trier</span>
+          <div class="em-sort-tabs">
+            <button class="em-sort-tab active" data-sort="trending"><i class="bi bi-fire"></i>Tendances</button>
+            <button class="em-sort-tab" data-sort="recent"><i class="bi bi-clock"></i>Récents</button>
+            <button class="em-sort-tab" data-sort="popular"><i class="bi bi-star-fill"></i>Populaires</button>
+          </div>
+        </div>
+        <div class="em-ctrl-sep"></div>
+        <div class="em-ctrl-group">
+          <span class="em-ctrl-label"><i class="bi bi-grid-fill"></i>Catégorie</span>
+          <div class="em-cat-tabs">
+            <button class="em-cat-tab active" data-cat="all">Tout</button>
+            <button class="em-cat-tab" data-cat="sport"><i class="bi bi-trophy-fill"></i>Sport</button>
+            <button class="em-cat-tab" data-cat="divertissement"><i class="bi bi-emoji-smile-fill"></i>Divertissement</button>
+            <button class="em-cat-tab" data-cat="reportage"><i class="bi bi-camera-fill"></i>Reportage</button>
+            <button class="em-cat-tab" data-cat="journal"><i class="bi bi-newspaper"></i>Journal</button>
+          </div>
+        </div>
+        <div class="em-results-count" id="emResultsCount"></div>
+      </div>
     </div>
   </div>
   
   <div class="container-fluid">
-    <div class="filter-pills">
-      <button class="filter-pill active" data-filter="trending"><i class="bi bi-fire"></i>Tendances</button>
-      <button class="filter-pill" data-filter="recent"><i class="bi bi-clock"></i>Récents</button>
-      <button class="filter-pill" data-filter="popular"><i class="bi bi-star"></i>Populaires</button>
-    </div>
-
-    <div class="section-head mb-3">
-      <h3 class="section-title"><i class="bi bi-play-circle-fill"></i>Continuer à regarder</h3>
-    </div>
-    <div class="continue-cards mb-5">
-      <!-- Chargé dynamiquement -->
-    </div>
-
-    <div class="section-head mb-3">
-      <h3 class="section-title"><i class="bi bi-grid-3x3-gap-fill"></i>Catégories populaires</h3>
-    </div>
-    <div class="videos-grid mb-5" style="grid-template-columns:repeat(4,1fr)">
-      <!-- Chargé dynamiquement -->
-    </div>
-
     <div class="section-head mb-3">
       <h3 class="section-title"><i class="bi bi-clock-history"></i>Toutes les émissions</h3>
     </div>

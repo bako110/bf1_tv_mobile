@@ -3,7 +3,7 @@ import * as api from '../../shared/services/api.js';
 
 // État actuel
 let currentFilter = 'trending';
-let currentChannel = 'all';
+let currentCategory = 'all';
 let currentSearch = '';
 let allEmissions = [];
 let filteredEmissions = [];
@@ -11,9 +11,6 @@ let filteredEmissions = [];
 // Éléments DOM
 let emissionsGrid;
 let searchInput;
-let channelSelect;
-let filterPills;
-let continueContainer;
 let categoriesContainer;
 
 // Nombre d'éléments par page
@@ -253,11 +250,11 @@ function filterEmissions() {
     );
   }
   
-  // Filtre par chaîne
-  if (currentChannel !== 'all') {
-    filtered = filtered.filter(e => e.channel === currentChannel);
+  // Filtre par catégorie
+  if (currentCategory !== 'all') {
+    filtered = filtered.filter(e => e.category === currentCategory);
   }
-  
+
   // Tri
   switch (currentFilter) {
     case 'trending':
@@ -279,6 +276,7 @@ function filterEmissions() {
   
   filteredEmissions = filtered;
   currentPage = 1;
+  updateResultsCount();
   renderEmissions();
 }
 
@@ -490,41 +488,54 @@ function loadContinueWatching() {
   }
 }
 
+// Mettre à jour le compteur de résultats
+function updateResultsCount() {
+  const el = document.getElementById('emResultsCount');
+  if (el) {
+    el.textContent = filteredEmissions.length > 0
+      ? `${filteredEmissions.length} résultat${filteredEmissions.length > 1 ? 's' : ''}`
+      : '';
+  }
+}
+
 // Initialiser les événements
 function initEventListeners() {
-  // Filtres
-  filterPills = document.querySelectorAll('.filter-pill');
-  filterPills.forEach(pill => {
-    pill.addEventListener('click', () => {
-      filterPills.forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      currentFilter = pill.dataset.filter;
+  // Sort tabs
+  document.querySelectorAll('.em-sort-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.em-sort-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilter = tab.dataset.sort;
       filterEmissions();
     });
   });
-  
-  // Recherche
-  searchInput = document.querySelector('.search-bar-input');
+
+  // Category tabs
+  document.querySelectorAll('.em-cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.em-cat-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentCategory = tab.dataset.cat;
+      filterEmissions();
+    });
+  });
+
+  // Recherche live
+  searchInput = document.querySelector('.em-search-input');
+  const clearBtn = document.getElementById('searchClear');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       currentSearch = e.target.value;
+      if (clearBtn) clearBtn.classList.toggle('visible', currentSearch.length > 0);
       filterEmissions();
     });
   }
-  
-  // Filtre chaîne
-  channelSelect = document.querySelector('.search-bar-select');
-  if (channelSelect) {
-    channelSelect.addEventListener('change', (e) => {
-      currentChannel = e.target.value;
-      filterEmissions();
-    });
-  }
-  
-  // Bouton filtrer
-  const filterBtn = document.querySelector('.btn-red');
-  if (filterBtn) {
-    filterBtn.addEventListener('click', () => {
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      currentSearch = '';
+      clearBtn.classList.remove('visible');
+      searchInput.focus();
       filterEmissions();
     });
   }
@@ -548,13 +559,11 @@ async function init() {
   // Récupérer les conteneurs après chargement du DOM
   emissionsGrid = document.querySelector('.videos-grid:last-of-type');
   categoriesContainer = document.querySelector('.videos-grid.mb-5');
-  continueContainer = document.querySelector('.continue-cards');
   
   await loadAllEmissions();
-  
+
   // Charger les composants
   loadPopularCategories();
-  loadContinueWatching();
   filterEmissions();
   initEventListeners();
   

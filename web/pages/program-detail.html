@@ -14,119 +14,10 @@
   <link rel="stylesheet" href="../styles/direct.css"/>
   <link rel="stylesheet" href="../styles/pages.css"/>
   <link rel="stylesheet" href="../styles/responsive.css"/>
+  <link rel="stylesheet" href="../styles/program-detail.css"/>
   <script src="../js/navbar-active.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.10/dist/hls.min.js"></script>
-  <style>
-    .pd-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
-
-    /* ── Banner image ── */
-    .pd-banner {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16/7;
-      overflow: hidden;
-      background: #111;
-    }
-    .pd-banner img {
-      width: 100%; height: 100%; object-fit: cover;
-      filter: brightness(0.55);
-    }
-    .pd-banner-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);
-    }
-    .pd-banner-info {
-      position: absolute; bottom: 24px; left: 28px; right: 28px;
-    }
-    .pd-banner-title {
-      font-size: clamp(1.4rem, 3vw, 2.2rem);
-      font-weight: 800; color: #fff;
-      text-transform: uppercase; letter-spacing: 0.02em;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.7);
-      margin: 0 0 8px;
-    }
-    .pd-banner-meta { color: rgba(255,255,255,0.75); font-size: 0.88rem; display: flex; gap: 16px; flex-wrap: wrap; }
-    .pd-banner-meta span { display: flex; align-items: center; gap: 5px; }
-
-    /* ── Status cards ── */
-    .pd-status { margin-top: 28px; }
-
-    /* À venir */
-    .pd-upcoming {
-      background: linear-gradient(135deg, #0f0f0f 0%, #1a0a0a 100%);
-      border: 1px solid rgba(226,62,62,0.25);
-      padding: 36px 28px;
-      text-align: center;
-    }
-    .pd-upcoming-icon {
-      font-size: 3.5rem; color: #E23E3E; margin-bottom: 16px;
-      animation: pd-pulse 2s ease-in-out infinite;
-    }
-    @keyframes pd-pulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.65; transform: scale(1.08); }
-    }
-    .pd-upcoming h2 { font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
-    .pd-upcoming p { color: #A0A0A0; font-size: 0.95rem; margin: 0; }
-    .pd-start-time {
-      display: inline-flex; align-items: center; gap: 8px;
-      margin: 20px 0;
-      background: rgba(226,62,62,0.12);
-      border: 1px solid rgba(226,62,62,0.35);
-      padding: 10px 24px;
-      color: #E23E3E; font-size: 1.4rem; font-weight: 700;
-    }
-    .pd-countdown {
-      font-size: 0.85rem; color: #666; margin-top: 4px;
-    }
-    .pd-countdown span { color: #E23E3E; font-weight: 600; }
-
-    /* En direct */
-    .pd-live-badge {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: #E23E3E; color: #fff;
-      padding: 4px 14px; font-size: 0.78rem; font-weight: 700;
-      letter-spacing: 0.08em; margin-bottom: 16px;
-    }
-    .pd-live-dot {
-      width: 8px; height: 8px; background: #fff;
-      border-radius: 50%; animation: pd-blink 1s ease infinite;
-    }
-    @keyframes pd-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-
-    .pd-player {
-      position: relative;
-      background: #000;
-      aspect-ratio: 16/9;
-      overflow: hidden;
-    }
-    .pd-player video {
-      width: 100%; height: 100%; object-fit: cover;
-    }
-    .pd-player-error {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      height: 100%; background: #111;
-      color: #666; gap: 12px; font-size: 0.9rem;
-    }
-
-    /* Description */
-    .pd-desc { margin-top: 24px; color: var(--text-2, #A0A0A0); line-height: 1.7; font-size: 0.95rem; }
-    .pd-desc-title { font-size: 1rem; font-weight: 700; color: var(--text-1, #fff); margin-bottom: 8px; }
-
-    /* Back btn */
-    .pd-back {
-      display: inline-flex; align-items: center; gap: 8px;
-      color: #A0A0A0; text-decoration: none; font-size: 0.88rem;
-      margin-bottom: 20px; transition: color 0.2s;
-    }
-    .pd-back:hover { color: #E23E3E; }
-
-    /* Loading */
-    .pd-loading { text-align: center; padding: 80px 20px; color: #666; }
-    .pd-loader { width: 44px; height: 44px; border: 3px solid rgba(226,62,62,0.2); border-top-color: #E23E3E; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+  <script type="module" src="../js/ticker.js"></script>
 </head>
 <body>
 
@@ -220,12 +111,55 @@
   // ── live player ────────────────────────────────────────────────────────────
   function initPlayer(container) {
     const video = document.createElement('video');
-    video.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-    video.controls = true;
+    video.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+    video.controls = false;
     video.autoplay = true;
     video.playsInline = true;
     video.muted = true;
     container.appendChild(video);
+
+    // Contrôles : volume + plein écran
+    const controls = document.createElement('div');
+    controls.className = 'pd-player-controls';
+
+    const volBtn = document.createElement('button');
+    volBtn.className = 'pd-ctrl-btn';
+    volBtn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
+    volBtn.title = 'Activer le son';
+    volBtn.addEventListener('click', () => {
+      video.muted = !video.muted;
+      volBtn.innerHTML = video.muted
+        ? '<i class="bi bi-volume-mute-fill"></i>'
+        : '<i class="bi bi-volume-up-fill"></i>';
+      volBtn.title = video.muted ? 'Activer le son' : 'Couper le son';
+    });
+
+    const fsBtn = document.createElement('button');
+    fsBtn.className = 'pd-ctrl-btn';
+    fsBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
+    fsBtn.title = 'Plein écran';
+    fsBtn.addEventListener('click', () => {
+      const el = container;
+      if (!document.fullscreenElement) {
+        (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen).call(el);
+        fsBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+        fsBtn.title = 'Quitter le plein écran';
+      } else {
+        (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
+        fsBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
+        fsBtn.title = 'Plein écran';
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        fsBtn.innerHTML = '<i class="bi bi-fullscreen"></i>';
+        fsBtn.title = 'Plein écran';
+      }
+    });
+
+    controls.appendChild(volBtn);
+    controls.appendChild(fsBtn);
+    container.appendChild(controls);
 
     const hlsUrl = 'https://bf1.fly.dev/api/v1/livestream/stream-proxy';
 
@@ -253,96 +187,144 @@
 
   // ── render ─────────────────────────────────────────────────────────────────
   function render(prog) {
-    const now       = Date.now();
-    const startDate = parseUTC(prog.start_time);
-    const endDate   = parseUTC(prog.end_time);
+    const now        = Date.now();
+    const startDate  = parseUTC(prog.start_time);
+    const endDate    = parseUTC(prog.end_time);
     const hasStarted = startDate && now >= startDate.getTime();
     const hasEnded   = endDate   && now > endDate.getTime();
     const isAiring   = hasStarted && !hasEnded;
 
-    const imageHtml = prog.image_url
-      ? `<div class="pd-banner">
-           <img src="${esc(prog.image_url)}" alt="${esc(prog.title)}"/>
-           <div class="pd-banner-overlay"></div>
-           <div class="pd-banner-info">
-             <h1 class="pd-banner-title">${esc(prog.title)}</h1>
-             <div class="pd-banner-meta">
-               <span><i class="bi bi-calendar3"></i>${fmtDate(prog.start_time)}</span>
-               <span><i class="bi bi-clock"></i>${fmtTime(prog.start_time)}${prog.end_time ? ' – ' + fmtTime(prog.end_time) : ''}</span>
-               ${prog.channel_name ? `<span><i class="bi bi-tv-fill"></i>${esc(prog.channel_name)}</span>` : ''}
-             </div>
-           </div>
-         </div>`
-      : `<div style="padding:24px 0 8px">
-           <h1 style="font-size:1.6rem;font-weight:800;text-transform:uppercase;">${esc(prog.title)}</h1>
-           <div style="color:#A0A0A0;font-size:0.88rem;display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;">
-             <span><i class="bi bi-calendar3"></i> ${fmtDate(prog.start_time)}</span>
-             <span><i class="bi bi-clock"></i> ${fmtTime(prog.start_time)}${prog.end_time ? ' – ' + fmtTime(prog.end_time) : ''}</span>
-             ${prog.channel_name ? `<span><i class="bi bi-tv-fill"></i> ${esc(prog.channel_name)}</span>` : ''}
-           </div>
-         </div>`;
-
-    let statusHtml = '';
+    // Thumb commune
+    const thumbSrc = prog.image_url ? esc(prog.image_url) : null;
 
     if (isAiring || prog.is_live) {
-      // ── EN DIRECT ──────────────────────────────────────────────────────────
-      statusHtml = `
-        <div class="pd-status">
-          <div class="pd-live-badge"><div class="pd-live-dot"></div>EN DIRECT</div>
-          <div class="pd-player" id="pd-player"></div>
-          <div style="margin-top:12px;font-size:0.82rem;color:#666;">
-            <i class="bi bi-info-circle"></i>
-            Ce programme est actuellement diffusé en direct sur BF1 TV.
+      // ════════════════════════════════════════
+      // EN DIRECT — layout 2 colonnes
+      // ════════════════════════════════════════
+      root.innerHTML = `
+        <div class="pd-live-layout">
+
+          <!-- Gauche : player -->
+          <div class="pd-player-col">
+            <div class="pd-live-badge"><div class="pd-live-dot"></div>EN DIRECT</div>
+            <div class="pd-player" id="pd-player"></div>
+            <div style="font-size:0.8rem;color:#555;display:flex;align-items:center;gap:6px;">
+              <i class="bi bi-info-circle"></i>
+              Diffusion en cours · BF1 TV
+            </div>
           </div>
+
+          <!-- Droite : infos -->
+          <div class="pd-info-col">
+            ${thumbSrc
+              ? `<div class="pd-info-thumb">
+                   <img src="${thumbSrc}" alt="${esc(prog.title)}"/>
+                   <div class="pd-info-thumb-overlay"></div>
+                 </div>`
+              : `<div class="pd-info-thumb pd-info-thumb-no-img" style="min-height:140px;">
+                   <i class="bi bi-tv-fill"></i>
+                 </div>`
+            }
+            <div class="pd-info-body">
+              <div class="pd-info-title">${esc(prog.title)}</div>
+              <div class="pd-info-meta">
+                ${prog.channel_name ? `<div class="pd-info-meta-row"><i class="bi bi-tv-fill"></i>${esc(prog.channel_name)}</div>` : ''}
+                <div class="pd-info-meta-row"><i class="bi bi-calendar3"></i>${fmtDate(prog.start_time)}</div>
+                <div class="pd-info-meta-row">
+                  <i class="bi bi-clock"></i>
+                  ${fmtTime(prog.start_time)}${prog.end_time ? ' – ' + fmtTime(prog.end_time) : ''}
+                </div>
+                ${prog.category ? `<div class="pd-info-meta-row"><i class="bi bi-tag-fill"></i>${esc(prog.category)}</div>` : ''}
+              </div>
+              ${prog.description ? `<div class="pd-info-desc">${esc(prog.description)}</div>` : ''}
+              <div class="pd-info-hint">
+                <i class="bi bi-broadcast"></i>
+                Ce programme est actuellement diffusé en direct.
+                Cliquez sur <strong>🔇</strong> pour activer le son, sur <strong>⛶</strong> pour le plein écran.
+              </div>
+            </div>
+          </div>
+
         </div>`;
+
+      const playerEl = document.getElementById('pd-player');
+      if (playerEl) initPlayer(playerEl);
+
     } else if (!hasStarted) {
-      // ── À VENIR ────────────────────────────────────────────────────────────
-      statusHtml = `
-        <div class="pd-status">
-          <div class="pd-upcoming">
-            <div class="pd-upcoming-icon"><i class="bi bi-clock-history"></i></div>
+      // ════════════════════════════════════════
+      // À VENIR — centré
+      // ════════════════════════════════════════
+      root.innerHTML = `
+        <div class="pd-center-layout">
+          ${thumbSrc
+            ? `<div class="pd-banner">
+                 <img src="${thumbSrc}" alt="${esc(prog.title)}"/>
+                 <div class="pd-banner-overlay"></div>
+                 <div class="pd-banner-info">
+                   <h1 class="pd-banner-title">${esc(prog.title)}</h1>
+                   <div class="pd-banner-meta">
+                     <span><i class="bi bi-calendar3"></i>${fmtDate(prog.start_time)}</span>
+                     <span><i class="bi bi-clock"></i>${fmtTime(prog.start_time)}${prog.end_time ? ' – ' + fmtTime(prog.end_time) : ''}</span>
+                     ${prog.channel_name ? `<span><i class="bi bi-tv-fill"></i>${esc(prog.channel_name)}</span>` : ''}
+                   </div>
+                 </div>
+               </div>`
+            : `<div style="padding:0 0 24px">
+                 <h1 style="font-size:1.5rem;font-weight:800;text-transform:uppercase;">${esc(prog.title)}</h1>
+                 <div style="color:#A0A0A0;font-size:0.85rem;display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+                   <span><i class="bi bi-calendar3"></i> ${fmtDate(prog.start_time)}</span>
+                   <span><i class="bi bi-clock"></i> ${fmtTime(prog.start_time)}${prog.end_time ? ' – ' + fmtTime(prog.end_time) : ''}</span>
+                   ${prog.channel_name ? `<span><i class="bi bi-tv-fill"></i> ${esc(prog.channel_name)}</span>` : ''}
+                 </div>
+               </div>`
+          }
+          <div class="pd-state-card">
+            <div class="pd-state-icon"><i class="bi bi-clock-history"></i></div>
             <h2>Programme à venir</h2>
             <p>Ce programme n'a pas encore commencé.</p>
             <div class="pd-start-time">
               <i class="bi bi-broadcast"></i>
-              Diffusion le ${fmtDate(prog.start_time)} à ${fmtTime(prog.start_time)}
+              ${fmtDate(prog.start_time)} à ${fmtTime(prog.start_time)}
             </div>
             <div class="pd-countdown" id="pd-countdown"></div>
+            ${prog.description ? `<p style="margin-top:20px;font-size:0.88rem;color:#666;border-top:1px solid #1a1a1a;padding-top:16px;text-align:left;">${esc(prog.description)}</p>` : ''}
           </div>
         </div>`;
+
+      if (startDate) {
+        const cdEl = document.getElementById('pd-countdown');
+        if (cdEl) startCountdown(startDate, cdEl);
+      }
+
     } else {
-      // ── TERMINÉ ────────────────────────────────────────────────────────────
-      statusHtml = `
-        <div class="pd-status">
-          <div class="pd-upcoming" style="border-color:rgba(255,255,255,0.1);">
-            <div class="pd-upcoming-icon" style="color:#555"><i class="bi bi-check-circle-fill"></i></div>
-            <h2 style="color:#888">Programme terminé</h2>
+      // ════════════════════════════════════════
+      // TERMINÉ — centré
+      // ════════════════════════════════════════
+      root.innerHTML = `
+        <div class="pd-center-layout">
+          ${thumbSrc
+            ? `<div class="pd-banner">
+                 <img src="${thumbSrc}" alt="${esc(prog.title)}"/>
+                 <div class="pd-banner-overlay"></div>
+                 <div class="pd-banner-info">
+                   <h1 class="pd-banner-title">${esc(prog.title)}</h1>
+                   <div class="pd-banner-meta">
+                     <span><i class="bi bi-calendar3"></i>${fmtDate(prog.start_time)}</span>
+                     <span><i class="bi bi-clock"></i>${fmtTime(prog.start_time)}${prog.end_time ? ' – ' + fmtTime(prog.end_time) : ''}</span>
+                   </div>
+                 </div>
+               </div>`
+            : ''
+          }
+          <div class="pd-state-card ended">
+            <div class="pd-state-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <h2>Programme terminé</h2>
             <p>Ce programme a été diffusé le ${fmtDate(prog.start_time)} à ${fmtTime(prog.start_time)}.</p>
-            <a href="direct.html" class="btn-red" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;text-decoration:none;font-size:0.9rem;padding:10px 22px;">
-              <i class="bi bi-broadcast"></i> Voir le direct
+            <a href="direct.html" class="btn-red" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;text-decoration:none;font-size:0.9rem;padding:10px 22px;border-radius:8px;">
+              <i class="bi bi-broadcast"></i> Voir le direct maintenant
             </a>
           </div>
         </div>`;
-    }
-
-    const descHtml = prog.description ? `
-      <div class="pd-desc">
-        <div class="pd-desc-title">Description</div>
-        ${esc(prog.description)}
-      </div>` : '';
-
-    root.innerHTML = imageHtml + statusHtml + descHtml;
-
-    // Init player après injection DOM
-    if (isAiring || prog.is_live) {
-      const playerEl = document.getElementById('pd-player');
-      if (playerEl) initPlayer(playerEl);
-    }
-
-    // Init countdown après injection DOM
-    if (!hasStarted && startDate) {
-      const cdEl = document.getElementById('pd-countdown');
-      if (cdEl) startCountdown(startDate, cdEl);
     }
   }
 
