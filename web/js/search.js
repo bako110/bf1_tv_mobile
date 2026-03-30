@@ -109,10 +109,12 @@ let _lastQuery = '';
 async function doSearch(q) {
   const area = document.getElementById('srch-results');
   const suggestions = document.getElementById('srch-suggestions');
+  const spinner = document.querySelector('.navbar-search .search-spinner');
 
   if (!q || q.length < 2) {
     if (area) area.innerHTML = '';
     if (suggestions) suggestions.style.display = '';
+    if (spinner) spinner.classList.add('d-none');
     _lastQuery = '';
     return;
   }
@@ -121,6 +123,7 @@ async function doSearch(q) {
   _lastQuery = q;
 
   if (suggestions) suggestions.style.display = 'none';
+  if (spinner) spinner.classList.remove('d-none');
   if (area) area.innerHTML = '';
 
   try {
@@ -134,6 +137,8 @@ async function doSearch(q) {
         <i class="bi bi-exclamation-circle"></i>
         <p>Erreur lors de la recherche. Réessayez.</p>
       </div>`;
+  } finally {
+    if (spinner) spinner.classList.add('d-none');
   }
 }
 

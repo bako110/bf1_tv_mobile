@@ -198,6 +198,20 @@
 }
 .search-btn:hover { background: var(--red-dark); transform: scale(1.1); }
 
+/* Spinner inside search bar */
+.search-spinner {
+  position: absolute;
+  right: 40px;
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: srchNavSpin .6s linear infinite;
+  pointer-events: none;
+}
+@keyframes srchNavSpin { to { transform: rotate(360deg); } }
+.search-spinner.d-none { display: none; }
+
 /* Theme toggle */
 .theme-toggle {
   width: 38px; height: 38px;
