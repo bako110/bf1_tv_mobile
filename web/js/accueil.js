@@ -722,6 +722,15 @@ function setupCarouselSwipe(container) {
  * Récupère l'URL du flux HLS depuis l'API
  */
 async function fetchLiveStreamUrl() {
+  // Tenter via l'API protégée (JWT) — URL jamais dans le code source
+  try {
+    const url = await api.getLiveStreamUrl();
+    if (url) return url;
+  } catch {
+    // Utilisateur non connecté ou endpoint indisponible
+  }
+
+  // Fallback : endpoints legacy
   const endpoints = [
     'https://backend-bf1tv.onrender.com/api/live',
     'https://backend-bf1tv.onrender.com/api/stream',
@@ -734,7 +743,7 @@ async function fetchLiveStreamUrl() {
       if (response.ok) {
         const data = await response.json();
         const url = data.stream_url || data.hls_url || data.url || data.video_url;
-        if (url) {
+        if (url && url !== '[protégé]') {
           console.log(`✅ URL HLS trouvée via: ${endpoint}`);
           return url;
         }
@@ -743,9 +752,9 @@ async function fetchLiveStreamUrl() {
       console.log(`⚠️ Endpoint non disponible: ${endpoint}`);
     }
   }
-  
-  console.log('⚠️ APIs indisponibles - Utilisation du flux de test');
-  return 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+
+  console.log('⚠️ Flux non disponible pour les utilisateurs non connectés');
+  return null;
 }
 
 /**
@@ -772,6 +781,10 @@ async function setupLiveVideoPlayer() {
     // Récupérer l'URL du flux HLS
     console.log('🌐 Récupération de l\'URL du flux HLS...');
     const hlsUrl = await fetchLiveStreamUrl();
+    if (!hlsUrl) {
+      console.log('ℹ️ Flux non disponible (utilisateur non connecté)');
+      return;
+    }
     console.log('✅ URL HLS reçue:', hlsUrl.substring(0, 50) + '...');
     console.log('📺 Configuration du lecteur vidéo en direct');
     

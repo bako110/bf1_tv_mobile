@@ -1,3 +1,11 @@
+// ─── Paramètres du lecteur vidéo ─────────────────────────────────────────────────
+// L'URL HLS est uniquement dans Backend-BF1/.env (LIVE_HLS_URL).
+// Le frontend reçoit uniquement /api/v1/livestream/stream-proxy (proxy backend).
+// Le vrai lien CDN/m3u8 ne transite JAMAIS vers le navigateur.
+export const STREAM_CONFIG = {
+  MUTED_AUTOPLAY: true,
+};
+
 export const API_CONFIG = {
   IS_PRODUCTION: true,
   PRODUCTION_API_URL: 'https://bf1.fly.dev',

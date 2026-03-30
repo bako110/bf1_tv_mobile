@@ -1,5 +1,5 @@
 // js/direct.js
-import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes } from '../../shared/services/api.js';
+import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes, getLiveStreamUrl, getMyReminders } from '../../shared/services/api.js';
 
 export class DirectService {
   constructor() {
@@ -11,14 +11,27 @@ export class DirectService {
     this.hls = null;
     this.videoElement = null;
     this.currentSelectedDate = null;
+    this.reminderIds = new Set(); // IDs des programmes ayant déjà un rappel
   }
 
   async init() {
     this.currentSelectedDate = this.getTodayDate();
-    await this.loadAllData();
+    await Promise.all([
+      this.loadAllData(),
+      this.loadMyReminders()
+    ]);
     this.setupEventListeners();
     this.startAutoRefresh();
-    this.initVideoPlayer();
+    await this.initVideoPlayer();
+  }
+
+  async loadMyReminders() {
+    try {
+      const reminders = await getMyReminders('scheduled', true);
+      this.reminderIds = new Set((reminders || []).map(r => String(r.program_id)));
+    } catch {
+      // Non connecté ou API indisponible — on ignore
+    }
   }
 
   getTodayDate() {
@@ -26,7 +39,7 @@ export class DirectService {
     return today.toISOString().split('T')[0];
   }
 
-  initVideoPlayer() {
+  async initVideoPlayer() {
     const playerContainer = document.querySelector('.player-placeholder');
     if (!playerContainer) return;
 
@@ -42,20 +55,22 @@ export class DirectService {
     
     playerContainer.appendChild(this.videoElement);
 
-    const hlsUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-    
-    if (this.videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-      this.videoElement.src = hlsUrl;
-      this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
-    } 
-    else if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+    const hlsUrl = await getLiveStreamUrl();
+
+    // HLS.js en priorité : masque l'URL réelle (src = blob:..., pas le vrai m3u8)
+    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       this.hls = new Hls({ enableWorker: true, autoStartLoad: true });
       this.hls.loadSource(hlsUrl);
       this.hls.attachMedia(this.videoElement);
       this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
         this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
       });
-    } 
+    }
+    // Fallback natif uniquement si HLS.js non disponible (ex: vieux Safari sans CDN)
+    else if (this.videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+      this.videoElement.src = hlsUrl;
+      this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
+    }
     else {
       playerContainer.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:#1a1a1a;">
@@ -400,20 +415,21 @@ export class DirectService {
       return;
     }
     
-    scheduleContainer.innerHTML = programsToShow.map(program => `
+    scheduleContainer.innerHTML = programsToShow.map(program => {
+      const hasReminder = this.reminderIds.has(String(program.id));
+      return `
       <div class="schedule-card" data-id="${program.id}">
         <div class="schedule-time"><i class="bi bi-clock"></i>${program.timeDisplay} - ${program.endTimeDisplay}</div>
         <div class="schedule-title">${this.escapeHtml(program.title)}</div>
         <div class="schedule-channel"><i class="bi ${program.channelIcon}"></i>${this.escapeHtml(program.channel)}</div>
-        <button class="btn-outline mt-2 w-100 justify-content-center reminder-btn" data-id="${program.id}" style="font-size:0.8rem;padding:7px">
-          <i class="bi bi-bell"></i>Rappel
+        <button class="btn-outline mt-2 w-100 justify-content-center reminder-btn${hasReminder ? ' reminder-set' : ''}" data-id="${program.id}" style="font-size:0.8rem;padding:7px"${hasReminder ? ' disabled' : ''}>
+          <i class="bi ${hasReminder ? 'bi-bell-fill' : 'bi-bell'}"></i>${hasReminder ? 'Rappel actif' : 'Rappel'}
         </button>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
   async createReminder(programId) {
-    // Vérifier l'authentification
     const { isAuthenticated, createReminder } = await import('../../shared/services/api.js');
     if (!isAuthenticated()) {
       this.showToast('Connectez-vous pour créer un rappel', 'error');
@@ -422,6 +438,14 @@ export class DirectService {
     try {
       const reminder = await createReminder(programId, { minutes_before: 15 });
       if (reminder) {
+        // Mémoriser l'ID et mettre à jour le bouton sans re-rendre toute la liste
+        this.reminderIds.add(String(programId));
+        const btn = document.querySelector(`.reminder-btn[data-id="${programId}"]`);
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add('reminder-set');
+          btn.innerHTML = '<i class="bi bi-bell-fill"></i>Rappel actif';
+        }
         this.showToast('Rappel créé avec succès !', 'success');
       }
     } catch (error) {
