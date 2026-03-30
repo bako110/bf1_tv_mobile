@@ -278,7 +278,7 @@ function buildJournalMagazineCard(item, index) {
              onerror="this.src='/logo.png'"/>
         ${isUrgent ? '<span class="urgent-badge">📰 À LA UNE</span>' : ''}
         <div class="journal-card-overlay">
-          <i class="bi bi-play-circle-fill"></i>
+          <div class="card-play"><i class="bi bi-play-fill"></i></div>
         </div>
       </div>
       <div class="journal-card-content">

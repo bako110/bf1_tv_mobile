@@ -281,7 +281,7 @@ function buildReportageCard(item, index) {
              onerror="this.src='/logo.png'"/>
         ${duration ? '<span class="duration-badge">🎬 ' + duration + '</span>' : ''}
         <div class="reportage-card-overlay">
-          <i class="bi bi-play-circle-fill"></i>
+          <div class="card-play"><i class="bi bi-play-fill"></i></div>
         </div>
       </div>
       <div class="reportage-card-content">

@@ -317,7 +317,7 @@ function buildSportCard(item, index) {
              onerror="this.src='/logo.png'"/>
         ${isUrgent ? '<span class="urgent-badge">⚡ URGENT</span>' : ''}
         <div class="sport-card-overlay">
-          <i class="bi bi-play-circle-fill"></i>
+          <div class="card-play"><i class="bi bi-play-fill"></i></div>
         </div>
       </div>
       <div class="sport-card-content">

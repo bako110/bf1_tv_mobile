@@ -66,7 +66,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -78,12 +78,9 @@
   opacity: 1;
 }
 
-.divertissement-card-overlay i {
-  font-size: 3rem;
-  color: var(--red);
-  background: white;
-  border-radius: 50%;
-  padding: 0.75rem;
+.divertissement-card:hover .card-play {
+  transform: scale(1);
+  animation: pulse-play 2s infinite;
 }
 
 /* Badge urgent */

@@ -278,6 +278,7 @@ function filterEmissions() {
   currentPage = 1;
   updateResultsCount();
   renderEmissions();
+  renderEmissionsPagination();
 }
 
 // Rendre les émissions
@@ -362,7 +363,67 @@ function renderEmissions() {
       redirectToDetail(id, type);
     });
   });
+
+  renderEmissionsPagination();
 }
+
+// Rendu de la pagination
+function renderEmissionsPagination() {
+  const container = document.getElementById('emPagination');
+  if (!container) return;
+
+  const totalItems = filteredEmissions.length;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const prevDisabled = currentPage === 1 ? 'disabled' : '';
+  const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+  const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
+
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, currentPage + 2);
+  if (currentPage <= 3) endPage = Math.min(5, totalPages);
+  if (currentPage >= totalPages - 2) startPage = Math.max(1, totalPages - 4);
+
+  let numbersHTML = '';
+  if (startPage > 1) {
+    numbersHTML += `<button class="pagination-number" onclick="window.changeEmissionsPage(1)">1</button>`;
+    if (startPage > 2) numbersHTML += '<span class="pagination-dots">...</span>';
+  }
+  for (let i = startPage; i <= endPage; i++) {
+    numbersHTML += `<button class="pagination-number ${i === currentPage ? 'active' : ''}" onclick="window.changeEmissionsPage(${i})">${i}</button>`;
+  }
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) numbersHTML += '<span class="pagination-dots">...</span>';
+    numbersHTML += `<button class="pagination-number" onclick="window.changeEmissionsPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  container.innerHTML = `
+    <div class="pagination-container">
+      <button class="pagination-btn ${prevDisabled}" onclick="window.changeEmissionsPage(${currentPage - 1})" ${prevDisabled ? 'disabled' : ''}>
+        <i class="bi bi-chevron-left"></i> Précédent
+      </button>
+      <div class="pagination-numbers">${numbersHTML}</div>
+      <button class="pagination-btn ${nextDisabled}" onclick="window.changeEmissionsPage(${currentPage + 1})" ${nextDisabled ? 'disabled' : ''}>
+        Suivant <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+    <div class="pagination-info">Affichage de ${startItem} à ${endItem} sur ${totalItems} émissions</div>
+  `;
+}
+
+window.changeEmissionsPage = function(page) {
+  const totalPages = Math.ceil(filteredEmissions.length / ITEMS_PER_PAGE);
+  if (page < 1 || page > totalPages) return;
+  currentPage = page;
+  renderEmissions();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
 // Rediriger vers la page de détail
 function redirectToDetail(id, type) {

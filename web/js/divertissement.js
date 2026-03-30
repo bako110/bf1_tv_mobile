@@ -287,7 +287,7 @@ function buildDivertissementCard(item, index) {
              onerror="this.src='/logo.png'"/>
         ${isUrgent ? '<span class="urgent-badge">🔥 NOUVEAU</span>' : ''}
         <div class="divertissement-card-overlay">
-          <i class="bi bi-play-circle-fill"></i>
+          <div class="card-play"><i class="bi bi-play-fill"></i></div>
         </div>
       </div>
       <div class="divertissement-card-content">

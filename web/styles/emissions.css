@@ -56,7 +56,8 @@
   color: var(--text-3);
 }
 
-/* ── Filter Bar ── */
+/* Pagination émissions */
+#emPagination { margin-top: 2rem; }
 .em-filters {
   background: var(--bg-card);
   border: 1px solid var(--border);
