@@ -1,5 +1,6 @@
 // js/films.js
 import * as api from '../../shared/services/api.js';
+import { slugify } from '../../shared/utils/slug-utils.js';
 
 // État actuel
 let currentFilter = 'trending';
@@ -219,7 +220,7 @@ function renderFilms() {
   }
   
   filmsGrid.innerHTML = pageFilms.map((film, index) => `
-    <div class="film-card anim-up d${(index % 6) + 1}" data-id="${film.id}">
+    <div class="film-card anim-up d${(index % 6) + 1}" data-id="${film.id}" data-title="${escapeHtml(film.title)}">
       <div class="card-thumb">
         ${film.image ? `<img src="${film.image}" alt="${escapeHtml(film.title)}" loading="lazy"/>` : 
           `<div class="card-thumb-placeholder"><i class="bi bi-film"></i></div>`}
@@ -259,7 +260,8 @@ function renderFilms() {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.watch-btn')) return;
       const id = card.dataset.id;
-      redirectToFilmDetail(id);
+      const title = card.dataset.title;
+      redirectToFilmDetail(id, title);
     });
   });
   
@@ -268,12 +270,13 @@ function renderFilms() {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const id = btn.dataset.id;
+      const title = btn.closest('.film-card')?.dataset.title;
       const isPremium = btn.dataset.premium === 'true';
       
       if (isPremium) {
         const hasAccess = await checkPremiumAccess(id);
         if (hasAccess) {
-          redirectToFilmDetail(id);
+          redirectToFilmDetail(id, title);
         } else {
           showPremiumModal(id);
         }
@@ -370,8 +373,10 @@ function showLoginModal() {
 }
 
 // Rediriger vers la page détail du film
-function redirectToFilmDetail(filmId) {
-  window.location.href = `detail-contenu.html?id=${filmId}&type=movie`;
+function redirectToFilmDetail(filmId, filmTitle = '') {
+  const slug = filmTitle ? slugify(filmTitle) : '';
+  const url = slug ? `detail-contenu.html?slug=${slug}&type=movie` : `detail-contenu.html?id=${filmId}&type=movie`;
+  window.location.href = url;
 }
 
 // Charger les genres uniques

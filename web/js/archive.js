@@ -1,5 +1,6 @@
 // js/archives.js
 import * as api from '../../shared/services/api.js';
+import { slugify } from '../../shared/utils/slug-utils.js';
 
 let archiveData = [];
 let currentFilter = 'Tous';
@@ -270,7 +271,7 @@ function buildArchiveCard(item, index) {
 
   return `
     <div class="archive-card anim-up d${(index % 9) + 1}" 
-         onclick="window.location.href='detail-contenu.html?id=${itemId}&type=archive'">
+         onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=archive'">
       <div class="archive-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 

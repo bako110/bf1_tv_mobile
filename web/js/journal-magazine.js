@@ -1,4 +1,5 @@
 import * as api from '../../shared/services/api.js';
+import { slugify } from '../../shared/utils/slug-utils.js';
 
 let journalMagazineData = [];
 let currentFilter = 'Tous';
@@ -271,7 +272,7 @@ function buildJournalMagazineCard(item, index) {
 
   return `
     <div class="journal-card anim-up d${(index % 9) + 1} ${isUrgent ? 'urgent-flash' : ''}" 
-         onclick="window.location.href='detail-contenu.html?id=${item._id}&type=jtandmag'">
+         onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=jtandmag'">
       <div class="journal-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 
@@ -383,7 +384,7 @@ function updateTrendsSection(allData) {
       
       return `
         <div class="news-item" style="padding:10px;border-radius:var(--radius-md);background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all var(--transition)"
-             onclick="window.location.href='detail-contenu.html?id=${item._id}&type=jtandmag'">
+             onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=jtandmag'">
           <img class="news-thumb" src="${img || 'https://images.unsplash.com/photo-1507842931343-583f20270319?w=120&q=60'}" 
                alt="${escapeHtml(title)}" 
                style="width:70px;height:50px;border-radius:var(--radius-sm);object-fit:cover"

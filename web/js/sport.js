@@ -1,4 +1,5 @@
 import * as api from '../../shared/services/api.js';
+import { slugify } from '../../shared/utils/slug-utils.js';
 
 let sportData = [];
 let currentFilter = 'Tous';
@@ -310,7 +311,7 @@ function buildSportCard(item, index) {
 
   return `
     <div class="sport-card anim-up d${(index % 9) + 1} ${isUrgent ? 'urgent-flash' : ''}" 
-         onclick="window.location.href='detail-contenu.html?id=${item.id || item._id}&type=sport'">
+         onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=sport'">
       <div class="sport-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 
@@ -358,7 +359,7 @@ function updateTrendsSection(allSportData) {
       
       return `
         <div class="news-item" style="padding:10px;border-radius:var(--radius-md);background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all var(--transition)"
-             onclick="window.location.href='detail-contenu.html?id=${item.id || item._id}&type=sport'">
+             onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=sport'">
           <img class="news-thumb" src="${img || 'https://images.unsplash.com/photo-1505228395891-9a51e7e86e81?w=120&q=60'}" 
                alt="${escapeHtml(title)}" 
                style="width:70px;height:50px;border-radius:var(--radius-sm);object-fit:cover"

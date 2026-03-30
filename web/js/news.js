@@ -1,4 +1,5 @@
 import * as api from '../../shared/services/api.js';
+import { getNewsDetailUrl } from '../../shared/utils/slug-utils.js';
 
 let flashInfoData = [];
 let currentFilter = 'Tous';
@@ -252,7 +253,7 @@ function buildFlashInfoCard(item, index) {
 
   return `
     <div class="news-item anim-up d${(index % 6) + 1} ${isUrgent ? 'urgent-flash' : ''}" 
-         onclick="window.location.href='news-detail.html?id=${item.id || item._id}'">
+         onclick="window.location.href='${getNewsDetailUrl(item.title, item.id || item._id)}'">
       <img class="news-thumb" src="${imageUrl || '/logo.png'}" 
            alt="${escHtml(title)}" 
            onerror="this.src='/logo.png'"/>
@@ -283,7 +284,7 @@ function updateTrendsSection(allFlashInfo) {
       
       return `
         <div class="news-item" style="padding:10px;border-radius:var(--radius-md);background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all var(--transition)"
-             onclick="window.location.href='news-detail.html?id=${item.id || item._id}'">
+             onclick="window.location.href='${getNewsDetailUrl(item.title, item.id || item._id)}'">
           <img class="news-thumb" src="${img || 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=120&q=60'}" 
                alt="${escHtml(title)}" 
                style="width:70px;height:50px;border-radius:var(--radius-sm)"

@@ -1,5 +1,6 @@
 // js/services/programme.js
 import { getProgramWeek, getProgramGrid, getPrograms } from '../../shared/services/api.js';
+import { slugify, cacheProgram, getProgramDetailUrl } from '../../shared/utils/slug-utils.js';
 
 export class ProgrammesService {
   constructor() {
@@ -495,7 +496,7 @@ export class ProgrammesService {
           : `<div style="width:100%;height:100%;background:var(--bg-3);display:flex;align-items:center;justify-content:center;color:var(--text-3)"><i class="bi bi-camera-video-fill"></i></div>`;
         
         html += `
-          <div class="programme-item anim-up" data-id="${program.id}">
+          <div class="programme-item anim-up" data-id="${program.id}" data-title="${this.escapeHtml(program.title)}">
             <div class="programme-time">${program.timeDisplay}</div>
             <div class="programme-thumb">${thumbHtml}</div>
             <div class="programme-info">
@@ -516,7 +517,8 @@ export class ProgrammesService {
     document.querySelectorAll('.programme-item').forEach(item => {
       item.addEventListener('click', () => {
         const id = item.dataset.id;
-        this.showProgrammeDetails(id);
+        const title = item.dataset.title || '';
+        this.showProgrammeDetails(id, title);
       });
     });
   }
@@ -542,16 +544,17 @@ export class ProgrammesService {
         <div class="ala-une-title">${this.escapeHtml(featured.title)}</div>
         <div class="ala-une-meta">${this.escapeHtml(featured.channel)} · ${featured.timeDisplay}</div>
         <div class="ala-une-desc small mt-2">${featured.description ? this.escapeHtml(featured.description.substring(0, 100)) + (featured.description.length > 100 ? '...' : '') : ''}</div>
-        <button class="btn-red mt-3" style="font-size:0.8rem;padding:7px 16px" onclick="window.location.href='program-detail.html?id=${featured.id}'">
+        <button class="btn-red mt-3" style="font-size:0.8rem;padding:7px 16px" onclick="window.location.href='${getProgramDetailUrl(featured.title, featured.id)}'">
           <i class="bi bi-broadcast"></i>${featured.isLive ? 'EN DIRECT' : 'VOIR LE PROGRAMME'}
         </button>
       </div>
     `;
   }
   
-  async showProgrammeDetails(programId) {
+  async showProgrammeDetails(programId, programTitle = '') {
     try {
-      window.location.href = `program-detail.html?id=${programId}`;
+      const url = getProgramDetailUrl(programTitle, programId);
+      window.location.href = url;
     } catch (error) {
       console.error('Erreur affichage détails programme:', error);
     }

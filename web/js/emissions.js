@@ -1,5 +1,6 @@
 // js/emissions.js
 import * as api from '../../shared/services/api.js';
+import { slugify } from '../../shared/utils/slug-utils.js';
 
 // État actuel
 let currentFilter = 'trending';
@@ -342,7 +343,7 @@ function renderEmissions() {
   }
   
   emissionsGrid.innerHTML = pageEmissions.map((item, index) => `
-    <div class="video-card anim-up d${(index % 6) + 1}" data-id="${item.id}" data-type="${item.type}">
+    <div class="video-card anim-up d${(index % 6) + 1}" data-id="${item.id}" data-type="${item.type}" data-title="${escapeHtml(item.title)}">
       <div class="card-thumb">
         ${item.image ? `<img src="${item.image}" alt="${escapeHtml(item.title)}" loading="lazy"/>` : 
           `<div class="card-thumb-placeholder"><i class="bi bi-camera-video-fill"></i></div>`}
@@ -387,7 +388,8 @@ function renderEmissions() {
       if (e.target.closest('.watch-btn')) return;
       const id = card.dataset.id;
       const type = card.dataset.type;
-      redirectToDetail(id, type);
+      const title = card.dataset.title;
+      redirectToDetail(id, type, title);
     });
   });
   
@@ -396,7 +398,8 @@ function renderEmissions() {
       e.stopPropagation();
       const id = btn.dataset.id;
       const type = btn.dataset.type;
-      redirectToDetail(id, type);
+      const title = btn.closest('.video-card')?.dataset.title;
+      redirectToDetail(id, type, title);
     });
   });
 
@@ -462,24 +465,10 @@ window.changeEmissionsPage = function(page) {
 };
 
 // Rediriger vers la page de détail
-function redirectToDetail(id, type) {
-  let page = '';
-  switch (type) {
-    case 'sport':
-      page = `detail-contenu.html?id=${id}&type=sport`;
-      break;
-    case 'jtandmag':
-      page = `detail-contenu.html?id=${id}&type=jtandmag`;
-      break;
-    case 'divertissement':
-      page = `detail-contenu.html?id=${id}&type=divertissement`;
-      break;
-    case 'reportage':
-      page = `detail-contenu.html?id=${id}&type=reportage`;
-      break;
-    default:
-      page = `detail-contenu.html?id=${id}&type=unknown`;
-  }
+function redirectToDetail(id, type, title = '') {
+  const slug = title ? slugify(title) : '';
+  const query = slug ? `slug=${slug}&type=${type}` : `id=${id}&type=${type}`;
+  const page = `detail-contenu.html?${query}`;
   window.location.href = page;
 }
 
@@ -558,7 +547,7 @@ function loadContinueWatching() {
     }
     
     continueContainer.innerHTML = recentHistory.map(item => `
-      <div class="continue-card" data-id="${item.id}" data-type="${item.type}">
+      <div class="continue-card" data-id="${item.id}" data-type="${item.type}" data-title="${escapeHtml(item.title)}">
         <div class="continue-card-thumb">
           ${item.image ? `<img src="${item.image}" alt="${escapeHtml(item.title)}"/>` :
             `<div style="width:100%;height:100%;background:var(--bg-3);display:flex;align-items:center;justify-content:center;"><i class="bi bi-camera-video-fill"></i></div>`}
@@ -577,7 +566,8 @@ function loadContinueWatching() {
       card.addEventListener('click', () => {
         const id = card.dataset.id;
         const type = card.dataset.type;
-        redirectToDetail(id, type);
+        const title = card.dataset.title;
+        redirectToDetail(id, type, title);
       });
     });
   } catch (err) {

@@ -1,4 +1,5 @@
 import * as api from '../../shared/services/api.js';
+import { getNewsBySlug, getNewsById, getNewsDetailUrl } from '../../shared/utils/slug-utils.js';
 
 // Mise à jour dynamique des méta Open Graph / Twitter pour le partage
 function updatePageMeta(title, description, image) {
@@ -24,22 +25,21 @@ function updatePageMeta(title, description, image) {
 let currentUser = null;
 
 export async function loadNewsDetail() {
-  // Récupérer l'ID depuis l'URL
+  // Récupérer le slug ou l'ID depuis l'URL
   const urlParams = new URLSearchParams(window.location.search);
+  const newsSlug = urlParams.get('slug');
   const newsId = urlParams.get('id');
 
-  if (!newsId) {
-    showError('ID de l\'actualité manquant');
+  if (!newsSlug && !newsId) {
+    showError('ID ou slug de l\'actualité manquant');
     return;
   }
 
   try {
-    // Charger les détails de la news et les commentaires en parallèle
-    const [news, comments, likesCount] = await Promise.all([
-      api.getNewsById(newsId),
-      api.getComments('breaking_news', newsId).catch(() => []),
-      api.getLikesCount('breaking_news', newsId).catch(() => 0)
-    ]);
+    // Charger les détails de la news par slug ou ID
+    const news = newsSlug 
+      ? await getNewsBySlug(newsSlug)
+      : await getNewsById(newsId);
     
     if (!news) {
       showError('Actualité introuvable');
@@ -49,13 +49,20 @@ export async function loadNewsDetail() {
     // Récupérer l'utilisateur courant
     currentUser = api.getUser();
 
+    // Charger les commentaires et likes
+    const [comments, likesCount] = await Promise.all([
+      api.getComments('breaking_news', news._id || news.id).catch(() => []),
+      api.getLikesCount('breaking_news', news._id || news.id).catch(() => 0)
+    ]);
+
     // Vérifier les likes et favoris de l'utilisateur
     let userLiked = false;
     let userFavorited = false;
     if (api.isAuthenticated()) {
+      const contentId = news._id || news.id;
       [userLiked, userFavorited] = await Promise.all([
-        api.checkLiked('breaking_news', newsId).catch(() => false),
-        api.checkFavorite('breaking_news', newsId).catch(() => false)
+        api.checkLiked('breaking_news', contentId).catch(() => false),
+        api.checkFavorite('breaking_news', contentId).catch(() => false)
       ]);
     }
 
@@ -63,10 +70,10 @@ export async function loadNewsDetail() {
     renderNewsDetail(news, comments, likesCount, userLiked, userFavorited);
 
     // Initialiser les événements
-    initNewsEvents(newsId, comments, userLiked, userFavorited, likesCount);
+    initNewsEvents(news._id || news.id, comments, userLiked, userFavorited, likesCount);
 
     // Charger les articles similaires
-    loadRelatedNews(news.category || 'Actualités', newsId);
+    loadRelatedNews(news.category || 'Actualités', news._id || news.id);
 
   } catch (error) {
     console.error('❌ Erreur chargement détails:', error);
@@ -223,7 +230,7 @@ async function loadRelatedNews(category, excludeId) {
       const views = item.views || 0;
 
       return `
-        <div class="related-news-card" onclick="window.location.href='news-detail.html?id=${item.id || item._id}'">
+        <div class="related-news-card" onclick="window.location.href='${getNewsDetailUrl(item.title, item.id || item._id)}'">
           <div class="related-news-image">
             <img src="${imageUrl || '/logo.png'}" 
                  alt="${escHtml(title)}"

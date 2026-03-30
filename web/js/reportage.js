@@ -1,4 +1,5 @@
 import * as api from '../../shared/services/api.js';
+import { slugify } from '../../shared/utils/slug-utils.js';
 
 let reportageData = [];
 let currentFilter = 'Tous';
@@ -274,7 +275,7 @@ function buildReportageCard(item, index) {
 
   return `
     <div class="reportage-card anim-up d${(index % 9) + 1}" 
-         onclick="window.location.href='detail-contenu.html?id=${item._id}&type=reportage'">
+         onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=reportage'">
       <div class="reportage-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 
@@ -388,7 +389,7 @@ function updateTrendsSection(allData) {
       
       return `
         <div class="news-item" style="padding:10px;border-radius:var(--radius-md);background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all var(--transition)"
-             onclick="window.location.href='detail-contenu.html?id=${item._id}&type=reportage'">
+             onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=reportage'">
           <img class="news-thumb" src="${img || 'https://images.unsplash.com/photo-1523551335684-37898b6baf30?w=120&q=60'}" 
                alt="${escapeHtml(title)}" 
                style="width:70px;height:50px;border-radius:var(--radius-sm);object-fit:cover"

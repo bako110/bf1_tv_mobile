@@ -1,5 +1,6 @@
 // js/accueil.js
 import * as api from '../../shared/services/api.js';
+import { slugify, getNewsDetailUrl, getContentDetailUrl } from '../../shared/utils/slug-utils.js';
 
 // État actuel
 let currentCategory = 'all';
@@ -82,31 +83,32 @@ function getChannelIcon(channelName) {
 // Rediriger vers la page de détail d'un élément
 function redirectToDetail(item, category) {
   const id = item._id || item.id;
+  const title = item.title || '';
   let page = '';
   switch (category) {
     case 'sport':
-      page = `detail-contenu.html?id=${id}&type=sport`;
+      page = `detail-contenu.html?slug=${slugify(title)}&type=sport` || `detail-contenu.html?id=${id}&type=sport`;
       break;
     case 'culture':
-      page = `detail-contenu.html?id=${id}&type=culture`;
+      page = `detail-contenu.html?slug=${slugify(title)}&type=culture` || `detail-contenu.html?id=${id}&type=culture`;
       break;
     case 'divertissement':
-      page = `detail-contenu.html?id=${id}&type=divertissement`;
+      page = `detail-contenu.html?slug=${slugify(title)}&type=divertissement` || `detail-contenu.html?id=${id}&type=divertissement`;
       break;
     case 'musique':
-      page = `detail-contenu.html?id=${id}&type=musique`;
+      page = `detail-contenu.html?slug=${slugify(title)}&type=musique` || `detail-contenu.html?id=${id}&type=musique`;
       break;
     case 'reportage':
-      page = `detail-contenu.html?id=${id}&type=reportage`;
+      page = `detail-contenu.html?slug=${slugify(title)}&type=reportage` || `detail-contenu.html?id=${id}&type=reportage`;
       break;
     case 'archive':
-      page = `detail-contenu.html?id=${id}&type=archive`;
+      page = `detail-contenu.html?slug=${slugify(title)}&type=archive` || `detail-contenu.html?id=${id}&type=archive`;
       break;
     case 'jtandmag':
-      page = `detail-contenu.html?id=${id}&type=jtandmag`;
+      page = `detail-contenu.html?slug=${slugify(title)}&type=jtandmag` || `detail-contenu.html?id=${id}&type=jtandmag`;
       break;
     default:
-      page = `news-detail.html?id=${id}`;
+      page = getNewsDetailUrl(title, id);
   }
   window.location.href = page;
 }

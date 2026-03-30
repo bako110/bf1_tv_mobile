@@ -1,5 +1,6 @@
 // js/search.js
 import * as api from '../../shared/services/api.js';
+import { getNewsDetailUrl, getContentDetailUrl, slugify } from '../../shared/utils/slug-utils.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -12,8 +13,9 @@ function esc(s) {
 // breaking_news → news-detail.html, tout le reste → detail-contenu.html
 function getDetailUrl(type, item) {
   const id = item._id || item.id || '';
-  if (type === 'news' || type === 'breaking_news') return `news-detail.html?id=${id}`;
-  return `detail-contenu.html?id=${id}&type=${type}`;
+  const title = item.title || '';
+  if (type === 'news' || type === 'breaking_news') return getNewsDetailUrl(title, id);
+  return `detail-contenu.html?slug=${slugify(title)}&type=${type}` || `detail-contenu.html?id=${id}&type=${type}`;
 }
 
 const TYPE_CFG = {

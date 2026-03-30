@@ -1,4 +1,5 @@
 import * as api from '../../shared/services/api.js';
+import { slugify } from '../../shared/utils/slug-utils.js';
 
 let divertissementData = [];
 let currentFilter = 'Tous';
@@ -280,7 +281,7 @@ function buildDivertissementCard(item, index) {
 
   return `
     <div class="divertissement-card anim-up d${(index % 9) + 1} ${isUrgent ? 'urgent-flash' : ''}" 
-         onclick="window.location.href='detail-contenu.html?id=${item._id}&type=divertissement'">
+         onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=divertissement'">
       <div class="divertissement-card-image">
         <img src="${imageUrl || '/logo.png'}" 
              alt="${escapeHtml(title)}" 
@@ -392,7 +393,7 @@ function updateTrendsSection(allData) {
       
       return `
         <div class="news-item" style="padding:10px;border-radius:var(--radius-md);background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all var(--transition)"
-             onclick="window.location.href='detail-contenu.html?id=${item._id}&type=divertissement'">
+             onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=divertissement'">
           <img class="news-thumb" src="${img || 'https://images.unsplash.com/photo-1516979187457-635ffe35ff85?w=120&q=60'}" 
                alt="${escapeHtml(title)}" 
                style="width:70px;height:50px;border-radius:var(--radius-sm);object-fit:cover"

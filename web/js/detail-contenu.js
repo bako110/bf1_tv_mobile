@@ -1,5 +1,6 @@
 // js/contenu-detail.js
 import * as api from '../../shared/services/api.js';
+import { slugify, getContentBySlug } from '../../shared/utils/slug-utils.js';
 
 // Mise à jour dynamique des méta Open Graph / Twitter pour le partage
 function updatePageMeta(title, description, image) {
@@ -26,6 +27,7 @@ function updatePageMeta(title, description, image) {
 function getUrlParams() {
   const params = new URLSearchParams(window.location.search);
   return {
+    slug: params.get('slug'),
     id: params.get('id'),
     type: params.get('type')
   };
@@ -114,31 +116,13 @@ let currentId = null;
 let currentUser = null;
 
 // ==================== FONCTION DE REDIRECTION ====================
-function redirectToDetail(id, type) {
+function redirectToDetail(id, type, title = '') {
+  const slug = slugify(title);
   let page = '';
   
-  switch (type) {
-    case 'sport':
-      page = `detail-contenu.html?id=${id}&type=sport`;
-      break;
-    case 'jtandmag':
-      page = `detail-contenu.html?id=${id}&type=jtandmag`;
-      break;
-    case 'divertissement':
-      page = `detail-contenu.html?id=${id}&type=divertissement`;
-      break;
-    case 'reportage':
-      page = `detail-contenu.html?id=${id}&type=reportage`;
-      break;
-    case 'archive':
-      page = `detail-contenu.html?id=${id}&type=archive`;
-      break;
-    case 'movie':
-      page = `detail-contenu.html?id=${id}&type=movie`;
-      break;
-    default:
-      page = `detail-contenu.html?id=${id}&type=${type}`;
-  }
+  // Utiliser le slug si disponible, sinon fallback sur l'ID
+  const query = slug ? `slug=${slug}&type=${type}` : `id=${id}&type=${type}`;
+  page = `detail-contenu.html?${query}`;
   
   window.location.href = page;
 }
@@ -170,27 +154,31 @@ function showAccessDenied(message, isLoggedIn = true) {
 
 // Charger et afficher le contenu
 async function loadContentDetail() {
-  const { id, type } = getUrlParams();
+  const { slug, id, type } = getUrlParams();
   
-  if (!id || !type) {
+  if ((!slug && !id) || !type) {
     showError('Paramètres manquants');
     return;
   }
   
-  currentId = id;
   currentType = type;
   
   const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.default;
   
   try {
-    console.log(`📡 Chargement du contenu: ${type}/${id}`);
+    console.log(`📡 Chargement du contenu: ${type}/${slug || id}`);
     
-    // Récupérer le contenu
+    // Récupérer le contenu (par slug d'abord, puis par ID)
     let content = null;
     let accessError = null;
     
     try {
-      content = await api.getShowById(id, type);
+      if (slug) {
+        content = await getContentBySlug(slug, type);
+      } else {
+        content = await api.getShowById(id, type);
+      }
+      currentId = content?._id || content?.id;
     } catch (err) {
       accessError = err;
       console.error('Erreur API:', err);
@@ -455,7 +443,7 @@ function renderRelatedItem(item, currentType) {
   const type = item._contentType || currentType;
   
   return `
-    <div class="related-item" onclick="redirectToDetail('${id}', '${type}')">
+    <div class="related-item" onclick="redirectToDetail('${id}', '${type}', '${escapeHtml(title)}')">
       <div class="related-thumb">
         ${image ? `<img src="${image}" alt="${escapeHtml(title)}">` : `<div class="related-placeholder"><i class="bi bi-camera-video-fill"></i></div>`}
         ${duration ? `<span class="related-duration">${formatDuration(duration)}</span>` : ''}

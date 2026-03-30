@@ -1,6 +1,7 @@
 // favoris.js — Page Mes Favoris (web)
 // Inspiré de mobile/js/pages/favorites.js
 import * as api from '../../shared/services/api.js';
+import { getNewsDetailUrl, getContentDetailUrl, slugify } from '../../shared/utils/slug-utils.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -9,9 +10,9 @@ function esc(s) {
 }
 
 // breaking_news → news-detail.html, tout le reste → detail-contenu.html
-function getDetailUrl(contentType, contentId) {
-  if (contentType === 'breaking_news') return `news-detail.html?id=${contentId}`;
-  return `detail-contenu.html?id=${contentId}&type=${contentType}`;
+function getDetailUrl(contentType, contentId, title = '') {
+  if (contentType === 'breaking_news') return getNewsDetailUrl(title, contentId);
+  return `detail-contenu.html?slug=${slugify(title)}&type=${contentType}` || `detail-contenu.html?id=${contentId}&type=${contentType}`;
 }
 
 // Config type → label + couleur + icône (sans route, gérée par getDetailUrl)
@@ -55,10 +56,10 @@ let _activeFilter = 'all';
 
 function renderCard(fav) {
   const cfg = TYPE_CFG[fav.content_type] || { label: fav.content_type, color: '#888', icon: 'bi-play-circle-fill' };
-  const href = getDetailUrl(fav.content_type, fav.content_id);
+  const title = fav.content_title || 'Sans titre';
+  const href = getDetailUrl(fav.content_type, fav.content_id, title);
   if (!href) return ''; // type non supporté sur le web, on ne rend pas la carte
   const img = fav.image_url || '';
-  const title = fav.content_title || 'Sans titre';
   const favId = esc(String(fav.id || fav._id || ''));
 
   return `

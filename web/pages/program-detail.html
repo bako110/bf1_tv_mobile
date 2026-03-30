@@ -53,20 +53,12 @@
 </script>
 
 <script type="module">
-  // Appel direct — évite tout problème de cache de module ES
-  async function getProgramById(id) {
-    const base = 'https://bf1.fly.dev/api/v1';
-    const token = localStorage.getItem('bf1_token');
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const r = await fetch(`${base}/programs/${id}`, { headers });
-    if (!r.ok) { const e = new Error('Erreur API'); e.status = r.status; throw e; }
-    return r.json();
-  }
+  import { getProgramById, getProgramBySlug } from '../../shared/utils/slug-utils.js';
 
-  const params   = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);
+  const programSlug = params.get('slug');
   const programId = params.get('id');
-  const root     = document.getElementById('pd-root');
+  const root = document.getElementById('pd-root');
 
   // ── helpers ────────────────────────────────────────────────────────────────
   function esc(str) {
@@ -338,7 +330,7 @@
   }
 
   // ── bootstrap ──────────────────────────────────────────────────────────────
-  if (!programId) {
+  if (!programSlug && !programId) {
     root.innerHTML = `
       <div class="pd-upcoming" style="text-align:center;padding:60px 20px;">
         <div class="pd-upcoming-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
@@ -349,7 +341,12 @@
         </a>
       </div>`;
   } else {
-    getProgramById(programId)
+    // Charger par slug en priorité, sinon par ID (fallback ancien format)
+    const loadPromise = programSlug 
+      ? getProgramBySlug(programSlug)
+      : getProgramById(programId);
+    
+    loadPromise
       .then(prog => {
         if (!prog) throw new Error('Programme non trouvé');
         render(prog);
