@@ -56,11 +56,19 @@
   </li>
 </ul>
     <div class="navbar-right">
+      <button class="search-mobile-btn" id="search-mobile-btn" title="Rechercher" aria-label="Ouvrir la recherche">
+        <i class="bi bi-search"></i>
+      </button>
       <div class="navbar-search">
-        <input type="text" class="search-input" placeholder="Rechercher..." autocomplete="off"
-          oninput="clearTimeout(window._bf1ST);window._bf1ST=setTimeout(function(){var q=document.querySelector('.navbar-search .search-input').value.trim();if(q.length>=2)window.location.href='search.html?q='+encodeURIComponent(q);},400)"/>
-        <span class="search-spinner d-none" aria-hidden="true"></span>
-        <button type="button" class="search-btn" onclick="var q=document.querySelector('.navbar-search .search-input').value.trim();if(q)window.location.href='search.html?q='+encodeURIComponent(q)"><i class="bi bi-search"></i></button>
+        <div class="search-input-wrap">
+          <input type="text" class="search-input" placeholder="Rechercher..." autocomplete="off"
+            oninput="clearTimeout(window._bf1ST);window._bf1ST=setTimeout(function(){var q=document.querySelector('.navbar-search .search-input').value.trim();if(q.length>=2)window.location.href='search.html?q='+encodeURIComponent(q);},400)"/>
+          <span class="search-spinner d-none" aria-hidden="true"></span>
+          <button type="button" class="search-btn" onclick="var q=document.querySelector('.navbar-search .search-input').value.trim();if(q)window.location.href='search.html?q='+encodeURIComponent(q)"><i class="bi bi-search"></i></button>
+        </div>
+        <button class="search-close-btn" id="search-close-btn" title="Fermer" aria-label="Fermer la recherche">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
       <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
         <i class="bi bi-sun-fill"></i>

@@ -58,6 +58,42 @@ function initMobileMenu() {
   });
 }
 
+function initMobileSearch() {
+  const mobileBtn = document.querySelector('.search-mobile-btn');
+  const searchBar = document.querySelector('.navbar-search');
+  const closeBtn  = document.querySelector('.search-close-btn');
+  const input     = document.querySelector('.navbar-search .search-input');
+
+  if (!mobileBtn || !searchBar) return;
+
+  function openSearch() {
+    searchBar.classList.add('open');
+    if (input) setTimeout(() => input.focus(), 50);
+  }
+  function closeSearch() {
+    searchBar.classList.remove('open');
+  }
+
+  mobileBtn.addEventListener('click', openSearch);
+  if (closeBtn) closeBtn.addEventListener('click', closeSearch);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSearch();
+  });
+  document.addEventListener('click', (e) => {
+    if (searchBar.classList.contains('open') &&
+        !searchBar.contains(e.target) &&
+        !mobileBtn.contains(e.target)) {
+      closeSearch();
+    }
+  });
+
+  // Sur search.html sur mobile : ouvrir directement
+  if (window.innerWidth <= 768 && window.location.pathname.includes('search.html')) {
+    openSearch();
+  }
+}
+
 // Observer le changement du header et marquer l'onglet actif + init menu
 function initHeaderObserver() {
   const headerPlaceholder = document.getElementById('header-placeholder');
@@ -73,6 +109,7 @@ function initHeaderObserver() {
       observer.disconnect(); // Arrêter l'observation AVANT de modifier le DOM
       menuReady = true;
       initMobileMenu();
+      initMobileSearch();
     }
   });
   
