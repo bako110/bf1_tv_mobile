@@ -1,4 +1,5 @@
 import * as api from '../../shared/services/api.js';
+import { showConfirmModal } from './ui-helpers.js';
 
 // Page immersive : bloquer le scroll body et cacher le footer
 document.documentElement.style.overflow = 'hidden';
@@ -707,7 +708,13 @@ window.confirmEditComment = async function(commentId, reelId) {
 
 window.deleteReelComment = async function(commentId, reelId) {
   const row = document.getElementById(`comment-row-${commentId}`);
-  if (!confirm('Supprimer ce commentaire ?')) return;
+  const ok = await showConfirmModal({
+    message: 'Supprimer ce commentaire ? Cette action est irréversible.',
+    title: 'Supprimer le commentaire',
+    confirmText: 'Supprimer',
+    variant: 'danger',
+  });
+  if (!ok) return;
   if (row) { row.style.opacity = '0.4'; row.style.pointerEvents = 'none'; }
   try {
     await api.deleteComment(commentId);

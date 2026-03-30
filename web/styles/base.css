@@ -413,3 +413,179 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .d4 { animation-delay: 0.20s; }
 .d5 { animation-delay: 0.25s; }
 .d6 { animation-delay: 0.30s; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BF1 Toast Notifications
+   ═══════════════════════════════════════════════════════════════════════════ */
+#bf1-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 360px;
+  width: calc(100vw - 32px);
+}
+
+.bf1-toast {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px 13px 16px;
+  border-radius: 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  opacity: 0;
+  transform: translateX(20px);
+  border-left-width: 4px;
+  transition: none;
+}
+
+.bf1-toast-in {
+  animation: bf1ToastIn 0.3s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+.bf1-toast-out {
+  animation: bf1ToastOut 0.25s ease forwards;
+}
+
+@keyframes bf1ToastIn  { to { opacity: 1; transform: translateX(0); } }
+@keyframes bf1ToastOut { to { opacity: 0; transform: translateX(20px); } }
+
+.bf1-toast-icon { font-size: 1.05rem; flex-shrink: 0; }
+.bf1-toast-text { flex: 1; color: var(--text-1); line-height: 1.4; }
+
+.bf1-toast-close {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  color: var(--text-3);
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+.bf1-toast-close:hover { color: var(--text-1); background: var(--bg-hover); }
+
+/* Type-specific colors via left border + icon */
+.bf1-toast-success { border-left-color: #28a745; }
+.bf1-toast-success .bf1-toast-icon { color: #28a745; }
+
+.bf1-toast-error   { border-left-color: #dc3545; }
+.bf1-toast-error   .bf1-toast-icon { color: #dc3545; }
+
+.bf1-toast-warning { border-left-color: #f59e0b; }
+.bf1-toast-warning .bf1-toast-icon { color: #f59e0b; }
+
+.bf1-toast-info    { border-left-color: #3b82f6; }
+.bf1-toast-info    .bf1-toast-icon { color: #3b82f6; }
+
+@media (max-width: 480px) {
+  #bf1-toast-container { bottom: 16px; right: 16px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BF1 Confirm Modal
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bf1-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+}
+
+.bf1-modal-overlay.bf1-modal-in  { animation: bf1ModalFadeIn  0.25s ease forwards; }
+.bf1-modal-overlay.bf1-modal-out { animation: bf1ModalFadeOut 0.2s  ease forwards; }
+
+@keyframes bf1ModalFadeIn  { to { opacity: 1; } }
+@keyframes bf1ModalFadeOut { to { opacity: 0; } }
+
+.bf1-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.75rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  transform: scale(0.9) translateY(12px);
+  animation: bf1ModalScaleIn 0.25s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes bf1ModalScaleIn {
+  to { transform: scale(1) translateY(0); }
+}
+
+.bf1-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0.75rem;
+}
+
+.bf1-modal-icon { font-size: 1.35rem; }
+.bf1-modal-icon-danger  { color: #dc3545; }
+.bf1-modal-icon-warning { color: #f59e0b; }
+.bf1-modal-icon-primary { color: #3b82f6; }
+
+.bf1-modal-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-1);
+}
+
+.bf1-modal-message {
+  color: var(--text-2);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0 0 1.5rem;
+}
+
+.bf1-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.bf1-modal-btn {
+  padding: 9px 22px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.bf1-modal-cancel {
+  background: var(--bg-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.bf1-modal-cancel:hover    { background: var(--bg-3); color: var(--text-1); }
+
+.bf1-modal-confirm-danger  { background: #dc3545; color: #fff; }
+.bf1-modal-confirm-danger:hover  { background: #b02a37; }
+
+.bf1-modal-confirm-warning { background: #f59e0b; color: #000; }
+.bf1-modal-confirm-warning:hover { background: #d97706; }
+
+.bf1-modal-confirm-primary { background: #3b82f6; color: #fff; }
+.bf1-modal-confirm-primary:hover { background: #2563eb; }

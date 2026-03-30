@@ -1,5 +1,6 @@
 // js/notifications.js — Panel notifications header (web)
 import * as api from '../../shared/services/api.js';
+import { showConfirmModal, showToast } from './ui-helpers.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -118,12 +119,22 @@ window._notifMarkAllRead = async function() {
 };
 
 window._notifDeleteAll = async function() {
-  if (!confirm('Supprimer toutes les notifications ?')) return;
+  const ok = await showConfirmModal({
+    message: 'Supprimer toutes vos notifications ? Cette action est irréversible.',
+    title: 'Tout supprimer',
+    confirmText: 'Supprimer tout',
+    variant: 'danger',
+  });
+  if (!ok) return;
   try {
     await api.deleteAllNotifications();
     _notifications = [];
     renderList();
-  } catch (e) { console.error('Erreur suppression globale:', e); }
+    showToast('Toutes les notifications ont été supprimées.', 'success');
+  } catch (e) {
+    console.error('Erreur suppression globale:', e);
+    showToast('Erreur lors de la suppression.', 'error');
+  }
 };
 
 // ─── Chargement ──────────────────────────────────────────────────────────────

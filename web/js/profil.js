@@ -1,5 +1,6 @@
 // profil.js
 import * as api from '../../shared/services/api.js';
+import { showConfirmModal, showToast } from './ui-helpers.js';
 
 // État de l'utilisateur
 let currentUser = null;
@@ -176,8 +177,15 @@ async function loadUserStats() {
 }
 
 // Gérer la déconnexion
-function handleLogout() {
-  if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+async function handleLogout() {
+  const ok = await showConfirmModal({
+    message: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+    title: 'Déconnexion',
+    confirmText: 'Se déconnecter',
+    cancelText: 'Annuler',
+    variant: 'danger',
+  });
+  if (ok) {
     api.logout();
     window.location.href = 'accueil.html';
   }

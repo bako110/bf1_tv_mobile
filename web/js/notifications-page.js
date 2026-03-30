@@ -1,5 +1,6 @@
 // js/notifications-page.js — Page notifications complète (web)
 import * as api from '../../shared/services/api.js';
+import { showConfirmModal, showToast } from './ui-helpers.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -148,13 +149,23 @@ export async function loadNotificationsPage() {
 
     if (btnDeleteAll) {
       btnDeleteAll.addEventListener('click', async () => {
-        if (!confirm('Supprimer toutes les notifications ?')) return;
+        const ok = await showConfirmModal({
+          message: 'Supprimer toutes vos notifications ? Cette action est irréversible.',
+          title: 'Tout supprimer',
+          confirmText: 'Supprimer tout',
+          variant: 'danger',
+        });
+        if (!ok) return;
         btnDeleteAll.disabled = true;
         try {
           await api.deleteAllNotifications();
           _notifs = [];
           render();
-        } catch (e) { console.error(e); }
+          showToast('Toutes les notifications ont été supprimées.', 'success');
+        } catch (e) {
+          console.error(e);
+          showToast('Erreur lors de la suppression.', 'error');
+        }
         btnDeleteAll.disabled = false;
       });
     }

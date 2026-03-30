@@ -38,6 +38,10 @@ export function logout() {
   }
 }
 
+export async function forgotPassword(email) {
+  return await http.post('/users/forgot-password', { email });
+}
+
 export function getUser() {
   try {
     return JSON.parse(localStorage.getItem('bf1_user') || 'null');
