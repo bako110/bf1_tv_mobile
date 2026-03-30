@@ -8,7 +8,7 @@ let itemsPerPage = 9;
 let totalPages = 1;
 
 export async function loadReportageContent() {
-  const container = document.querySelector('.flash-layout > div:first-child');
+  const container = document.getElementById('reportageArticles');
   const filterContainer = document.querySelector('.filter-pills');
   
   if (!container) {
@@ -192,7 +192,7 @@ function renderFiltersFromData(container) {
           b.classList.remove('active');
         }
       });
-      const mainContainer = document.querySelector('.flash-layout > div:first-child');
+      const mainContainer = document.getElementById('reportageArticles');
       if (mainContainer) renderReportageList(mainContainer);
     });
 
@@ -416,7 +416,7 @@ function updateTrendsSection(allData) {
 window.changeReportagePage = function(page) {
   if (page < 1 || page > totalPages) return;
   currentPage = page;
-  const mainContainer = document.querySelector('.flash-layout > div:first-child');
+  const mainContainer = document.getElementById('reportageArticles');
   if (mainContainer) renderReportageList(mainContainer);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };

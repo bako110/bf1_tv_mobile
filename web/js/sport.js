@@ -10,7 +10,7 @@ let itemsPerPage = 9; // 9 articles par page (3x3)
 let totalPages = 1;
 
 export async function loadSportContent() {
-  const container = document.querySelector('.flash-layout > div:first-child');
+  const container = document.getElementById('sportArticles');
   const filterContainer = document.querySelector('.filter-pills');
   
   console.log('🔍 Container trouvé:', container);
@@ -152,7 +152,7 @@ function renderFilters(container) {
             b.classList.remove('active');
           }
         });
-        const mainContainer = document.querySelector('.flash-layout > div:first-child');
+      const mainContainer = document.getElementById('sportArticles');
         if (mainContainer) renderSportList(mainContainer);
       });
 
@@ -386,7 +386,7 @@ function updateTrendsSection(allSportData) {
 window.changeSportPage = function(page) {
   if (page < 1 || page > totalPages) return;
   currentPage = page;
-  const mainContainer = document.querySelector('.flash-layout > div:first-child');
+  const mainContainer = document.getElementById('sportArticles');
   if (mainContainer) renderSportList(mainContainer);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };

@@ -11,7 +11,6 @@ let filteredEmissions = [];
 // Éléments DOM
 let emissionsGrid;
 let searchInput;
-let categoriesContainer;
 
 // Nombre d'éléments par page
 const ITEMS_PER_PAGE = 12;
@@ -284,7 +283,7 @@ function filterEmissions() {
 // Rendre les émissions
 function renderEmissions() {
   if (!emissionsGrid) {
-    emissionsGrid = document.querySelector('.videos-grid:last-of-type');
+    emissionsGrid = document.querySelector('.videos-grid');
     if (!emissionsGrid) {
       console.warn('Conteneur emissionsGrid non trouvé');
       return;
@@ -618,13 +617,11 @@ async function init() {
   loadSavedTheme();
   
   // Récupérer les conteneurs après chargement du DOM
-  emissionsGrid = document.querySelector('.videos-grid:last-of-type');
-  categoriesContainer = document.querySelector('.videos-grid.mb-5');
+  emissionsGrid = document.querySelector('.videos-grid');
   
   await loadAllEmissions();
 
   // Charger les composants
-  loadPopularCategories();
   filterEmissions();
   initEventListeners();
   

@@ -8,7 +8,7 @@ let itemsPerPage = 9;
 let totalPages = 1;
 
 export async function loadDivertissementContent() {
-  const container = document.querySelector('.flash-layout > div:first-child');
+  const container = document.getElementById('divertissementArticles');
   const filterContainer = document.querySelector('.filter-pills');
   
   if (!container) {
@@ -200,7 +200,7 @@ function renderFilters(container) {
           b.classList.remove('active');
         }
       });
-      const mainContainer = document.querySelector('.flash-layout > div:first-child');
+      const mainContainer = document.getElementById('divertissementArticles');
       if (mainContainer) renderDivertissementList(mainContainer);
     });
 
@@ -419,7 +419,7 @@ function updateTrendsSection(allData) {
 window.changeDivertissementPage = function(page) {
   if (page < 1 || page > totalPages) return;
   currentPage = page;
-  const mainContainer = document.querySelector('.flash-layout > div:first-child');
+  const mainContainer = document.getElementById('divertissementArticles');
   if (mainContainer) renderDivertissementList(mainContainer);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
