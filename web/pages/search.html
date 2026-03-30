@@ -44,54 +44,6 @@
   <script src="../js/navbar-active.js"></script>
   
   <style>
-    .search-page-bar {
-      position: relative;
-      display: flex;
-      align-items: center;
-      background: var(--bg-2, #111);
-      border: 1.5px solid var(--border, #222);
-      border-radius: 14px;
-      overflow: hidden;
-      max-width: 700px;
-      margin: 0 auto 8px;
-    }
-    .search-page-bar i {
-      position: absolute;
-      left: 16px;
-      color: var(--text-3, #555);
-      font-size: 18px;
-      pointer-events: none;
-    }
-    .search-page-bar input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      padding: 16px 52px 16px 48px;
-      color: var(--text-1, #fff);
-      font-size: 16px;
-      width: 100%;
-    }
-    .search-page-bar input:focus { outline: none; }
-    .search-page-bar input::placeholder { color: var(--text-3, #555); }
-    .search-page-bar .srch-spinner {
-      position: absolute;
-      right: 16px;
-    }
-    @keyframes srchSpin { to { transform: rotate(360deg); } }
-    .srch-spinner-ring {
-      width: 18px; height: 18px;
-      border: 2px solid #333;
-      border-top-color: var(--red, #E23E3E);
-      border-radius: 50%;
-      animation: srchSpin .6s linear infinite;
-    }
-    .srch-count {
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-3, #555);
-      margin-bottom: 24px;
-      min-height: 20px;
-    }
     .srch-section-label {
       display: flex;
       align-items: center;
@@ -203,16 +155,6 @@
   </div>
 
   <div class="container-fluid" style="max-width:900px; margin: 0 auto; padding: 0 16px 60px;">
-
-    <!-- Barre de recherche -->
-    <div class="search-page-bar">
-      <i class="bi bi-search"></i>
-      <input id="srch-input" type="search" placeholder="Rechercher un titre, sujet..." autocomplete="off"/>
-      <div class="srch-spinner d-none">
-        <div class="srch-spinner-ring"></div>
-      </div>
-    </div>
-    <p class="srch-count" id="srch-count"></p>
 
     <!-- Suggestions catÃ©gories (affichÃ© quand pas de recherche) -->
     <div id="srch-suggestions">

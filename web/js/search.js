@@ -108,14 +108,10 @@ let _lastQuery = '';
 
 async function doSearch(q) {
   const area = document.getElementById('srch-results');
-  const countEl = document.getElementById('srch-count');
-  const spinner = document.querySelector('.srch-spinner');
   const suggestions = document.getElementById('srch-suggestions');
 
   if (!q || q.length < 2) {
     if (area) area.innerHTML = '';
-    if (countEl) countEl.textContent = '';
-    if (spinner) spinner.classList.add('d-none');
     if (suggestions) suggestions.style.display = '';
     _lastQuery = '';
     return;
@@ -125,13 +121,12 @@ async function doSearch(q) {
   _lastQuery = q;
 
   if (suggestions) suggestions.style.display = 'none';
-  if (spinner) spinner.classList.remove('d-none');
   if (area) area.innerHTML = '';
 
   try {
     const res = await api.searchContent(q);
-    const input = document.getElementById('srch-input');
-    if (input && q !== input.value.trim()) return; // résultat obsolète
+    const headerInput = document.querySelector('.navbar-search .search-input');
+    if (headerInput && q !== headerInput.value.trim()) return; // résultat obsolète
     renderResults(res?.items || []);
   } catch (e) {
     if (area) area.innerHTML = `
@@ -140,58 +135,44 @@ async function doSearch(q) {
         <p>Erreur lors de la recherche. Réessayez.</p>
       </div>`;
   }
-
-  if (spinner) spinner.classList.add('d-none');
 }
 
 // ─── Initialisation ───────────────────────────────────────────────────────────
 
 export function initSearch() {
-  const input = document.getElementById('srch-input');
-  if (!input) return;
-
-  // Lire le paramètre ?q= dans l'URL
   const params = new URLSearchParams(window.location.search);
   const initialQuery = params.get('q') || '';
+
   if (initialQuery) {
-    input.value = initialQuery;
     doSearch(initialQuery);
   }
 
-  // Désactiver le oninput du header quand on est sur search.html
-  // pour éviter les redirections en boucle
-  window.addEventListener('load', () => {
+  // Attendre que le header soit injecté puis brancher l'input
+  function bindHeaderInput() {
     const headerInput = document.querySelector('.navbar-search .search-input');
-    if (headerInput) {
-      headerInput.oninput = null;
-      headerInput.value = initialQuery;
-      headerInput.addEventListener('input', () => {
-        clearTimeout(_timer);
-        const q = headerInput.value.trim();
-        const url = new URL(window.location.href);
-        if (q) { url.searchParams.set('q', q); } else { url.searchParams.delete('q'); }
-        history.replaceState(null, '', url.toString());
-        if (input) input.value = q;
-        _timer = setTimeout(() => doSearch(q), 350);
-      });
-    }
-  });
+    if (!headerInput) { setTimeout(bindHeaderInput, 100); return; }
 
-  input.addEventListener('input', () => {
-    clearTimeout(_timer);
-    const q = input.value.trim();
-    const url = new URL(window.location.href);
-    if (q) { url.searchParams.set('q', q); } else { url.searchParams.delete('q'); }
-    history.replaceState(null, '', url.toString());
-    _timer = setTimeout(() => doSearch(q), 350);
-  });
+    // Désactiver la redirection du header (on est déjà sur search.html)
+    headerInput.oninput = null;
+    headerInput.value = initialQuery;
+    setTimeout(() => headerInput.focus(), 150);
 
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
+    headerInput.addEventListener('input', () => {
       clearTimeout(_timer);
-      doSearch(input.value.trim());
-    }
-  });
+      const q = headerInput.value.trim();
+      const url = new URL(window.location.href);
+      if (q) { url.searchParams.set('q', q); } else { url.searchParams.delete('q'); }
+      history.replaceState(null, '', url.toString());
+      _timer = setTimeout(() => doSearch(q), 350);
+    });
 
-  setTimeout(() => input.focus(), 150);
+    headerInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        clearTimeout(_timer);
+        doSearch(headerInput.value.trim());
+      }
+    });
+  }
+
+  bindHeaderInput();
 }
