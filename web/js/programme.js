@@ -542,7 +542,7 @@ export class ProgrammesService {
         <div class="ala-une-title">${this.escapeHtml(featured.title)}</div>
         <div class="ala-une-meta">${this.escapeHtml(featured.channel)} · ${featured.timeDisplay}</div>
         <div class="ala-une-desc small mt-2">${featured.description ? this.escapeHtml(featured.description.substring(0, 100)) + (featured.description.length > 100 ? '...' : '') : ''}</div>
-        <button class="btn-red mt-3" style="font-size:0.8rem;padding:7px 16px" onclick="window.location.href='direct.html?program=${featured.id}'">
+        <button class="btn-red mt-3" style="font-size:0.8rem;padding:7px 16px" onclick="window.location.href='program-detail.html?id=${featured.id}'">
           <i class="bi bi-broadcast"></i>${featured.isLive ? 'EN DIRECT' : 'VOIR LE PROGRAMME'}
         </button>
       </div>
