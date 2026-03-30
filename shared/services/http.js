@@ -36,7 +36,15 @@ export const http = {
   get: (path) => request(path),
   post: (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
   put: (path, body) => request(path, { method: 'PUT', body: JSON.stringify(body) }),
+  patch: (path, body) => request(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (path) => request(path, { method: 'DELETE' }),
   setToken: (t) => { token = t; },
   getToken: () => token,
+  getBaseUrl: () => {
+    try {
+      return API_CONFIG?.API_BASE_URL || 'https://bf1.fly.dev/api/v1';
+    } catch {
+      return 'https://bf1.fly.dev/api/v1';
+    }
+  },
 };

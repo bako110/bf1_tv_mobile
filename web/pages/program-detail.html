@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <script>!function(){var t=localStorage.getItem("bf1_theme")||"dark";document.documentElement.setAttribute("data-theme",t)}();</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Détail du Programme – BF1 TV</title>
+  <link rel="icon" type="image/png" href="../logo.png"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../styles/variables.css"/>
+  <link rel="stylesheet" href="../styles/base.css"/>
+  <link rel="stylesheet" href="../styles/navbar.css"/>
+  <link rel="stylesheet" href="../styles/direct.css"/>
+  <link rel="stylesheet" href="../styles/pages.css"/>
+  <link rel="stylesheet" href="../styles/responsive.css"/>
+  <script src="../js/navbar-active.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.10/dist/hls.min.js"></script>
+  <style>
+    .pd-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* ── Banner image ── */
+    .pd-banner {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/7;
+      overflow: hidden;
+      background: #111;
+    }
+    .pd-banner img {
+      width: 100%; height: 100%; object-fit: cover;
+      filter: brightness(0.55);
+    }
+    .pd-banner-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);
+    }
+    .pd-banner-info {
+      position: absolute; bottom: 24px; left: 28px; right: 28px;
+    }
+    .pd-banner-title {
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 800; color: #fff;
+      text-transform: uppercase; letter-spacing: 0.02em;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+      margin: 0 0 8px;
+    }
+    .pd-banner-meta { color: rgba(255,255,255,0.75); font-size: 0.88rem; display: flex; gap: 16px; flex-wrap: wrap; }
+    .pd-banner-meta span { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Status cards ── */
+    .pd-status { margin-top: 28px; }
+
+    /* À venir */
+    .pd-upcoming {
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a0a0a 100%);
+      border: 1px solid rgba(226,62,62,0.25);
+      padding: 36px 28px;
+      text-align: center;
+    }
+    .pd-upcoming-icon {
+      font-size: 3.5rem; color: #E23E3E; margin-bottom: 16px;
+      animation: pd-pulse 2s ease-in-out infinite;
+    }
+    @keyframes pd-pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.65; transform: scale(1.08); }
+    }
+    .pd-upcoming h2 { font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .pd-upcoming p { color: #A0A0A0; font-size: 0.95rem; margin: 0; }
+    .pd-start-time {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin: 20px 0;
+      background: rgba(226,62,62,0.12);
+      border: 1px solid rgba(226,62,62,0.35);
+      padding: 10px 24px;
+      color: #E23E3E; font-size: 1.4rem; font-weight: 700;
+    }
+    .pd-countdown {
+      font-size: 0.85rem; color: #666; margin-top: 4px;
+    }
+    .pd-countdown span { color: #E23E3E; font-weight: 600; }
+
+    /* En direct */
+    .pd-live-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: #E23E3E; color: #fff;
+      padding: 4px 14px; font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.08em; margin-bottom: 16px;
+    }
+    .pd-live-dot {
+      width: 8px; height: 8px; background: #fff;
+      border-radius: 50%; animation: pd-blink 1s ease infinite;
+    }
+    @keyframes pd-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .pd-player {
+      position: relative;
+      background: #000;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+    }
+    .pd-player video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .pd-player-error {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100%; background: #111;
+      color: #666; gap: 12px; font-size: 0.9rem;
+    }
+
+    /* Description */
+    .pd-desc { margin-top: 24px; color: var(--text-2, #A0A0A0); line-height: 1.7; font-size: 0.95rem; }
+    .pd-desc-title { font-size: 1rem; font-weight: 700; color: var(--text-1, #fff); margin-bottom: 8px; }
+
+    /* Back btn */
+    .pd-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: #A0A0A0; text-decoration: none; font-size: 0.88rem;
+      margin-bottom: 20px; transition: color 0.2s;
+    }
+    .pd-back:hover { color: #E23E3E; }
+
+    /* Loading */
+    .pd-loading { text-align: center; padding: 80px 20px; color: #666; }
+    .pd-loader { width: 44px; height: 44px; border: 3px solid rgba(226,62,62,0.2); border-top-color: #E23E3E; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+<script>
+  fetch('../partials/header.html').then(r => r.text()).then(html => {
+    document.getElementById('header-placeholder').innerHTML = html;
+  });
+</script>
+
+<main class="main-content">
+  <div class="pd-wrap">
+
+    <a href="programmes.html" class="pd-back">
+      <i class="bi bi-arrow-left"></i> Retour aux programmes
+    </a>
+
+    <div id="pd-root">
+      <div class="pd-loading">
+        <div class="pd-loader"></div>
+        <p>Chargement du programme…</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div id="footer-placeholder"></div>
+<script>
+  fetch('../partials/footer.html').then(r=>r.text()).then(html=>{
+    document.getElementById('footer-placeholder').innerHTML = html;
+  }).catch(()=>{});
+</script>
+
+<script type="module">
+  import { getProgramById } from '../../shared/services/api.js';
+
+  const params   = new URLSearchParams(window.location.search);
+  const programId = params.get('id');
+  const root     = document.getElementById('pd-root');
+
+  // ── helpers ────────────────────────────────────────────────────────────────
+  function esc(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function parseUTC(isoStr) {
+    // Gère "2026-03-30T08:30:00.000+00:00" ou "08:30:00" ou "08:30"
+    if (!isoStr) return null;
+    if (isoStr.includes('T')) return new Date(isoStr);
+    // Format HH:MM ou HH:MM:SS  → on suppose aujourd'hui UTC
+    const [h, m] = isoStr.split(':').map(Number);
+    const d = new Date();
+    d.setUTCHours(h, m || 0, 0, 0);
+    return d;
+  }
+
+  function fmtTime(isoStr) {
+    const d = parseUTC(isoStr);
+    if (!d) return '--:--';
+    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+  }
+
+  function fmtDate(isoStr) {
+    const d = parseUTC(isoStr);
+    if (!d) return '';
+    return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  }
+
+  // ── countdown live ticker ──────────────────────────────────────────────────
+  function startCountdown(targetDate, el) {
+    function tick() {
+      const diff = targetDate - Date.now();
+      if (diff <= 0) { el.innerHTML = 'dans quelques instants…'; return; }
+      const h  = Math.floor(diff / 3600000);
+      const m  = Math.floor((diff % 3600000) / 60000);
+      const s  = Math.floor((diff % 60000) / 1000);
+      const parts = [];
+      if (h) parts.push(`<span>${h}h</span>`);
+      parts.push(`<span>${String(m).padStart(2,'0')}min</span>`);
+      parts.push(`<span>${String(s).padStart(2,'0')}s</span>`);
+      el.innerHTML = 'Dans ' + parts.join(' ');
+      setTimeout(tick, 1000);
+    }
+    tick();
+  }
+
+  // ── live player ────────────────────────────────────────────────────────────
+  function initPlayer(container) {
+    const video = document.createElement('video');
+    video.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+    video.controls = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = true;
+    container.appendChild(video);
+
+    const hlsUrl = 'https://bf1.fly.dev/api/v1/livestream/stream-proxy';
+
+    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: true, autoStartLoad: true });
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {});
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = hlsUrl;
+      video.play().catch(() => {});
+    } else {
+      container.innerHTML = `
+        <div class="pd-player-error">
+          <i class="bi bi-exclamation-triangle-fill" style="font-size:2.5rem;color:#E23E3E"></i>
+          <p>Lecture HLS non supportée par votre navigateur.</p>
+          <a href="direct.html" class="btn-red" style="font-size:0.85rem;padding:8px 20px;text-decoration:none">
+            <i class="bi bi-broadcast"></i> Ouvrir le direct
+          </a>
+        </div>`;
+    }
+  }
+
+  // ── render ─────────────────────────────────────────────────────────────────
+  function render(prog) {
+    const now       = Date.now();
+    const startDate = parseUTC(prog.start_time);
+    const endDate   = parseUTC(prog.end_time);
+    const hasStarted = startDate && now >= startDate.getTime();
+    const hasEnded   = endDate   && now > endDate.getTime();
+    const isAiring   = hasStarted && !hasEnded;
+
+    const imageHtml = prog.image_url
+      ? `<div class="pd-banner">
+           <img src="${esc(prog.image_url)}" alt="${esc(prog.title)}"/>
+           <div class="pd-banner-overlay"></div>
+           <div class="pd-banner-info">
+             <h1 class="pd-banner-title">${esc(prog.title)}</h1>
+             <div class="pd-banner-meta">
+               <span><i class="bi bi-calendar3"></i>${fmtDate(prog.start_time)}</span>
+               <span><i class="bi bi-clock"></i>${fmtTime(prog.start_time)}${prog.end_time ? ' – ' + fmtTime(prog.end_time) : ''}</span>
+               ${prog.channel_name ? `<span><i class="bi bi-tv-fill"></i>${esc(prog.channel_name)}</span>` : ''}
+             </div>
+           </div>
+         </div>`
+      : `<div style="padding:24px 0 8px">
+           <h1 style="font-size:1.6rem;font-weight:800;text-transform:uppercase;">${esc(prog.title)}</h1>
+           <div style="color:#A0A0A0;font-size:0.88rem;display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;">
+             <span><i class="bi bi-calendar3"></i> ${fmtDate(prog.start_time)}</span>
+             <span><i class="bi bi-clock"></i> ${fmtTime(prog.start_time)}${prog.end_time ? ' – ' + fmtTime(prog.end_time) : ''}</span>
+             ${prog.channel_name ? `<span><i class="bi bi-tv-fill"></i> ${esc(prog.channel_name)}</span>` : ''}
+           </div>
+         </div>`;
+
+    let statusHtml = '';
+
+    if (isAiring || prog.is_live) {
+      // ── EN DIRECT ──────────────────────────────────────────────────────────
+      statusHtml = `
+        <div class="pd-status">
+          <div class="pd-live-badge"><div class="pd-live-dot"></div>EN DIRECT</div>
+          <div class="pd-player" id="pd-player"></div>
+          <div style="margin-top:12px;font-size:0.82rem;color:#666;">
+            <i class="bi bi-info-circle"></i>
+            Ce programme est actuellement diffusé en direct sur BF1 TV.
+          </div>
+        </div>`;
+    } else if (!hasStarted) {
+      // ── À VENIR ────────────────────────────────────────────────────────────
+      statusHtml = `
+        <div class="pd-status">
+          <div class="pd-upcoming">
+            <div class="pd-upcoming-icon"><i class="bi bi-clock-history"></i></div>
+            <h2>Programme à venir</h2>
+            <p>Ce programme n'a pas encore commencé.</p>
+            <div class="pd-start-time">
+              <i class="bi bi-broadcast"></i>
+              Diffusion le ${fmtDate(prog.start_time)} à ${fmtTime(prog.start_time)}
+            </div>
+            <div class="pd-countdown" id="pd-countdown"></div>
+          </div>
+        </div>`;
+    } else {
+      // ── TERMINÉ ────────────────────────────────────────────────────────────
+      statusHtml = `
+        <div class="pd-status">
+          <div class="pd-upcoming" style="border-color:rgba(255,255,255,0.1);">
+            <div class="pd-upcoming-icon" style="color:#555"><i class="bi bi-check-circle-fill"></i></div>
+            <h2 style="color:#888">Programme terminé</h2>
+            <p>Ce programme a été diffusé le ${fmtDate(prog.start_time)} à ${fmtTime(prog.start_time)}.</p>
+            <a href="direct.html" class="btn-red" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;text-decoration:none;font-size:0.9rem;padding:10px 22px;">
+              <i class="bi bi-broadcast"></i> Voir le direct
+            </a>
+          </div>
+        </div>`;
+    }
+
+    const descHtml = prog.description ? `
+      <div class="pd-desc">
+        <div class="pd-desc-title">Description</div>
+        ${esc(prog.description)}
+      </div>` : '';
+
+    root.innerHTML = imageHtml + statusHtml + descHtml;
+
+    // Init player après injection DOM
+    if (isAiring || prog.is_live) {
+      const playerEl = document.getElementById('pd-player');
+      if (playerEl) initPlayer(playerEl);
+    }
+
+    // Init countdown après injection DOM
+    if (!hasStarted && startDate) {
+      const cdEl = document.getElementById('pd-countdown');
+      if (cdEl) startCountdown(startDate, cdEl);
+    }
+  }
+
+  // ── bootstrap ──────────────────────────────────────────────────────────────
+  if (!programId) {
+    root.innerHTML = `
+      <div class="pd-upcoming" style="text-align:center;padding:60px 20px;">
+        <div class="pd-upcoming-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <h2>Programme introuvable</h2>
+        <p>Aucun identifiant de programme fourni dans l'URL.</p>
+        <a href="programmes.html" class="btn-red" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;text-decoration:none;font-size:0.9rem;padding:10px 22px;">
+          <i class="bi bi-grid"></i> Voir tous les programmes
+        </a>
+      </div>`;
+  } else {
+    getProgramById(programId)
+      .then(prog => {
+        if (!prog) throw new Error('Programme non trouvé');
+        render(prog);
+      })
+      .catch(err => {
+        console.error(err);
+        root.innerHTML = `
+          <div class="pd-upcoming" style="text-align:center;padding:60px 20px;">
+            <div class="pd-upcoming-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <h2>Erreur de chargement</h2>
+            <p style="color:#A0A0A0">Impossible de charger ce programme. Vérifiez votre connexion.</p>
+            <a href="programmes.html" class="btn-red" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;text-decoration:none;font-size:0.9rem;padding:10px 22px;">
+              <i class="bi bi-grid"></i> Voir tous les programmes
+            </a>
+          </div>`;
+      });
+  }
+</script>
+
+</body>
+</html>

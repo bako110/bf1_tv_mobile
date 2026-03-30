@@ -20,36 +20,36 @@ export const API_CONFIG = {
   }
 };
 
-export const ROUTES = {
-  HOME: '#/home',
-  LIVE: '#/live',
-  EMISSIONS: '#/emissions',
-  REELS: '#/reels',
-  PROFILE: '#/profile',
-  LOGIN: '#/login',
-  REGISTER: '#/register',
-  NEWS: '#/news',
-  MOVIES: '#/movies',
-  SERIES: '#/series',
-  PROGRAMS: '#/programs',
-  SPORTS: '#/sports',
-  DIVERTISSEMENT: '#/divertissement',
-  REPORTAGES: '#/reportages',
-  ARCHIVE: '#/archive',
-  JTANDMAG: '#/jtandmag',
-  FAVORITES: '#/favorites',
-  NOTIFICATIONS: '#/notifications',
-  SETTINGS: '#/settings',
-  SEARCH: '#/search',
-  SUPPORT: '#/support',
-  UGC: '#/ugc',
-  ABOUT: '#/about',
-};
+// export const ROUTES = {
+//   HOME: '#/home',
+//   LIVE: '#/live',
+//   EMISSIONS: '#/emissions',
+//   REELS: '#/reels',
+//   PROFILE: '#/profile',
+//   LOGIN: '#/login',
+//   REGISTER: '#/register',
+//   NEWS: '#/news',
+//   MOVIES: '#/movies',
+//   SERIES: '#/series',
+//   PROGRAMS: '#/programs',
+//   SPORTS: '#/sports',
+//   DIVERTISSEMENT: '#/divertissement',
+//   REPORTAGES: '#/reportages',
+//   ARCHIVE: '#/archive',
+//   JTANDMAG: '#/jtandmag',
+//   FAVORITES: '#/favorites',
+//   NOTIFICATIONS: '#/notifications',
+//   SETTINGS: '#/settings',
+//   SEARCH: '#/search',
+//   SUPPORT: '#/support',
+//   UGC: '#/ugc',
+//   ABOUT: '#/about',
+// };
 
-export const TAB_ROUTES = [
-  ROUTES.HOME,
-  ROUTES.EMISSIONS,
-  ROUTES.LIVE,
-  ROUTES.REELS,
-  ROUTES.PROFILE,
-];
+// export const TAB_ROUTES = [
+//   ROUTES.HOME,
+//   ROUTES.EMISSIONS,
+//   ROUTES.LIVE,
+//   ROUTES.REELS,
+//   ROUTES.PROFILE,
+// ];

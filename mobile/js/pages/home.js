@@ -203,50 +203,95 @@ export async function loadHome() {
 
 async function loadLiveSection(liveData) {
   const container = document.getElementById('live-content');
-  if (!container) return;
+  if (!container) {
+    console.warn('⚠️ Container live-content non trouvé');
+    return;
+  }
 
   const isOnAir = liveData?.is_live !== false;
   const viewers = liveData?.viewers || 0;
   const name    = liveData?.name || 'BF1 TV - En direct';
-  const thumb   = liveData?.thumbnail || '';
 
-  container.innerHTML = `
-    <a href="#/live" style="display:block;margin:0 16px;border-radius:12px;overflow:hidden;
-                            position:relative;aspect-ratio:16/9;background:#000;text-decoration:none;">
-      ${thumb
-        ? `<img src="${thumb}" alt="${name}"
-                style="width:100%;height:100%;object-fit:cover;display:block;"
-                onerror="this.style.display='none'" />`
-        : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#0a0a0a 0%,#1a0a0a 100%);"></div>`
+  try {
+    const streamUrl = await api.getLiveStreamUrl();
+    console.log('📺 URL du flux live:', streamUrl);
+    
+    container.innerHTML = `
+      <div style="margin:0 16px;border-radius:12px;overflow:hidden;position:relative;background:#000;">
+        <div style="position:relative;width:100%;aspect-ratio:16/9;">
+          <video id="home-live-video" autoplay muted playsinline
+                 style="width:100%;height:100%;object-fit:contain;background:#000;display:block;">
+          </video>
+          <div id="home-live-error" style="display:none;position:absolute;inset:0;background:#0a0a0a;
+                                           flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <i class="bi bi-wifi-off" style="font-size:2rem;color:#555;"></i>
+            <p style="color:#555;font-size:13px;margin:0;">Flux indisponible</p>
+          </div>
+        </div>
+        <div style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;z-index:10;">
+          ${isOnAir
+            ? `<span style="width:8px;height:8px;background:#E23E3E;border-radius:50%;display:inline-block;
+                            animation:livePulse 1.4s ease-in-out infinite;"></span>
+               <span style="color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:.5px;text-shadow:0 1px 3px rgba(0,0,0,0.8);">EN DIRECT</span>`
+            : `<span style="color:#aaa;font-size:0.75rem;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,0.8);">Hors antenne</span>`
+          }
+        </div>
+        ${viewers > 0 ? `
+        <div style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.7);z-index:10;
+                    padding:4px 8px;border-radius:20px;display:flex;align-items:center;gap:4px;">
+          <i class="bi bi-eye-fill" style="font-size:0.65rem;color:#E23E3E;"></i>
+          <span style="color:#fff;font-size:0.65rem;">${viewers >= 1000 ? (viewers/1000).toFixed(1)+'k' : viewers}</span>
+        </div>` : ''}
+      </div>
+    `;
+
+    requestAnimationFrame(() => {
+      const video = document.getElementById('home-live-video');
+      const errorDiv = document.getElementById('home-live-error');
+      if (!video) {
+        console.error('❌ Élément vidéo non trouvé');
+        return;
       }
-      <div style="position:absolute;inset:0;
-                  background:linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,rgba(0,0,0,0.85) 100%);"></div>
-      <div style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;">
-        ${isOnAir
-          ? `<span style="width:8px;height:8px;background:#E23E3E;border-radius:50%;display:inline-block;
-                          animation:livePulse 1.4s ease-in-out infinite;"></span>
-             <span style="color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:.5px;">EN DIRECT</span>`
-          : `<span style="color:#aaa;font-size:0.75rem;font-weight:600;">Hors antenne</span>`
-        }
+
+      video.muted = true;
+      video.volume = 1;
+
+      console.log('🔧 HLS.js disponible:', typeof Hls !== 'undefined');
+      console.log('🔧 HLS.js supporté:', typeof Hls !== 'undefined' && Hls.isSupported());
+
+      if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+        console.log('✅ Utilisation de HLS.js');
+        const hls = new Hls({ autoStartLoad: true, lowLatencyMode: false });
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('✅ Manifest HLS parsé, démarrage lecture');
+          video.play().catch(e => console.warn('⚠️ Autoplay bloqué:', e));
+        });
+        hls.on(Hls.Events.ERROR, (_e, data) => {
+          console.error('❌ Erreur HLS:', data);
+          if (data.fatal && errorDiv) errorDiv.style.display = 'flex';
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        console.log('✅ Utilisation du lecteur natif HLS');
+        video.src = streamUrl;
+        video.play().catch(e => console.warn('⚠️ Autoplay bloqué:', e));
+      } else {
+        console.error('❌ Aucun support HLS disponible');
+        if (errorDiv) errorDiv.style.display = 'flex';
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur chargement live home:', error);
+    container.innerHTML = `
+      <div style="margin:0 16px;border-radius:12px;overflow:hidden;aspect-ratio:16/9;
+                  background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+        <i class="bi bi-exclamation-circle" style="font-size:2rem;color:#E23E3E;"></i>
+        <p style="color:#888;margin:0;font-size:13px;">Erreur: ${error.message}</p>
       </div>
-      ${viewers > 0 ? `
-      <div style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.6);
-                  padding:3px 8px;border-radius:20px;display:flex;align-items:center;gap:4px;">
-        <i class="bi bi-eye-fill" style="font-size:0.65rem;color:#E23E3E;"></i>
-        <span style="color:#fff;font-size:0.65rem;">${viewers >= 1000 ? (viewers/1000).toFixed(1)+'k' : viewers}</span>
-      </div>` : ''}
-      <div style="position:absolute;bottom:12px;left:12px;right:56px;">
-        <p style="margin:0;color:#fff;font-size:0.85rem;font-weight:700;
-                  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${name}</p>
-      </div>
-      <div style="position:absolute;bottom:10px;right:12px;
-                  background:#E23E3E;border-radius:8px;padding:5px 10px;
-                  display:flex;align-items:center;gap:4px;">
-        <i class="bi bi-play-fill" style="color:#fff;font-size:0.8rem;"></i>
-        <span style="color:#fff;font-size:0.72rem;font-weight:700;">Regarder</span>
-      </div>
-    </a>
-  `;
+    `;
+  }
 }
 
 async function loadHorizontalSection(sectionName, items, formatItem) {
@@ -294,7 +339,7 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
 
     // Generic badge (news category etc.)
     const genericBadge = (!f.subBadge && f.badge)
-      ? `<div style="position:absolute; top:8px; left:8px; display:flex; align-items:center; gap:3px; background:rgba(0,0,0,0.55); padding:2px 6px; border-radius:8px;">
+      ? `<div style="position:absolute; top:8px; left:8px; z-index:5; display:flex; align-items:center; gap:3px; background:var(--badge-bg,rgba(0,0,0,0.7)); padding:2px 6px; border-radius:8px; backdrop-filter:blur(4px);">
            <i class="bi ${f.badge.icon}" style="color:var(--text-1,#fff); font-size:0.6rem;"></i>
            <span style="color:var(--text-1,#fff); font-size:0.6rem; font-weight:600;">${f.badge.text}</span>
          </div>`
@@ -302,20 +347,22 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
 
     return `
       <${tag} ${interactionAttr} style="${baseStyle} width:${cardW}px;">
-        <div style="width:${cardW}px; height:${cardH}px; border-radius:12px; overflow:hidden; position:relative; background:#1a1a1a;">
+        <div style="width:${cardW}px; height:${cardH}px; border-radius:12px; overflow:hidden; position:relative; 
+                    background:var(--bg-card,#1a1a1a); border:1px solid var(--border,rgba(255,255,255,0.1)); 
+                    box-shadow:0 2px 8px rgba(0,0,0,0.1);">
           <img src="${f.image}" alt="${f.title}"
                style="width:100%; height:100%; object-fit:cover;${f.locked ? ' filter:brightness(0.45);' : ''}"
-               onerror="this.src='https://via.placeholder.com/${cardW}x${cardH}/1a1a1a/E23E3E?text=BF1'">
+               onerror="this.src='https://via.placeholder.com/${cardW}x${cardH}/333/E23E3E?text=BF1'">
           <div class="bf1-card-overlay" style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.85) 100%);"></div>
           ${subBadgeHtml}
           ${genericBadge}
           ${lockOverlay}
           <div style="position:absolute; bottom:8px; left:8px; right:8px;">
-            <p class="bf1-card-title" style="color:var(--text-1,#fff); font-size:0.7rem; font-weight:600; line-height:1.3; margin:0 0 3px;
-                      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${f.title}</p>
+            <p class="bf1-card-title" style="color:#fff; font-size:0.7rem; font-weight:600; line-height:1.3; margin:0 0 3px;
+                      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-shadow:0 1px 3px rgba(0,0,0,0.7);">${f.title}</p>
             <div style="display:flex; align-items:center; gap:3px;">
-              <i class="bi bi-clock bf1-card-time" style="color:var(--text-3,#A0A0A0); font-size:0.55rem;"></i>
-              <span class="bf1-card-time" style="color:var(--text-3,#A0A0A0); font-size:0.6rem;">${f.duration ? f.duration + 'min · ' : ''}${f.time}</span>
+              <i class="bi bi-clock bf1-card-time" style="color:rgba(255,255,255,0.7); font-size:0.55rem;"></i>
+              <span class="bf1-card-time" style="color:rgba(255,255,255,0.7); font-size:0.6rem;">${f.duration ? f.duration + 'min · ' : ''}${f.time}</span>
             </div>
           </div>
         </div>

@@ -47,9 +47,9 @@ export async function forgotPassword(email) {
  * Le vrai lien du flux n'est jamais transmis au frontend — le backend fait le relais.
  * Aucun JWT requis : l'URL réelle reste côté serveur uniquement.
  */
-export async function getLiveStreamUrl() {
-  const { API_CONFIG } = await import('../config/config.js');
-  return `${API_CONFIG.API_BASE_URL}/livestream/stream-proxy`;
+export function getLiveStreamUrl() {
+  // Retourner directement l'URL de production pour éviter les problèmes de chargement de config
+  return 'https://bf1.fly.dev/api/v1/livestream/stream-proxy';
 }
 
 export function getUser() {
@@ -117,6 +117,10 @@ export async function getSeries() {
 
 export async function getPrograms() {
   return http.get('/programs') || [];
+}
+
+export async function getProgramById(programId) {
+  return http.get(`/programs/${programId}`);
 }
 
 // Récupérer la grille des programmes de la semaine (groupés par jour)

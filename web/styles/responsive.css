@@ -55,7 +55,7 @@
   /* Carousel mobile — hauteur réduite */
   .hero-container > .hero-carousel-wrapper { min-height: 55vw; }
   .hero-carousel-item { min-height: 55vw; }
-  .hero-carousel-wrapper { border-radius: 10px; width: 100%; }
+  .hero-carousel-wrapper { width: 100%; }
 
   /* Cards */
   .videos-grid { grid-template-columns: 1fr; gap: 16px; }

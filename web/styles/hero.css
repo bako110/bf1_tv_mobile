@@ -272,7 +272,6 @@
   flex: 1;
   z-index: 1;
   overflow: hidden;
-  border-radius: 16px;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
@@ -283,7 +282,6 @@
 .hero-container > .hero-carousel-wrapper {
   flex: 1;
   min-height: 80vh;
-  border-radius: 16px;
 }
 
 .hero-carousel-container {
@@ -298,7 +296,7 @@
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  border-radius: 16px;
+  /* border-radius: 16px; */
 }
 .hero-carousel-container::-webkit-scrollbar {
   display: none;
@@ -310,7 +308,6 @@
   min-width: 100%;
   height: 100%;
   min-height: 80vh;
-  border-radius: 16px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -342,7 +339,6 @@
     rgba(0,0,0,0.15) 70%,
     rgba(0,0,0,0.05) 100%
   );
-  border-radius: 16px;
   pointer-events: none;
 }
 
@@ -374,7 +370,6 @@
   height: 52px;
   object-fit: contain;
   background: rgba(255,255,255,0.08);
-  border-radius: 8px;
   padding: 4px;
 }
 
@@ -412,7 +407,6 @@
   height: 48px;
   background: rgba(232,34,42,0.85);
   border: none;
-  border-radius: 50%;
   color: #fff;
   font-size: 1.2rem;
   cursor: pointer;
@@ -457,7 +451,6 @@
 .hero-carousel-dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
   background: rgba(255,255,255,0.4);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -472,7 +465,6 @@
 .hero-carousel-dot.active {
   background: var(--red);
   width: 28px;
-  border-radius: 5px;
 }
 
 /* Responsive adjustments */
