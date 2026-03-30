@@ -407,6 +407,21 @@
   padding: 16px;
   transition: all var(--transition);
 }
+
+/* Reminder button — active/disabled state */
+.reminder-btn.reminder-set,
+.reminder-btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #10b981;
+  color: #10b981;
+}
+.reminder-btn.reminder-set i,
+.reminder-btn:disabled i {
+  color: #10b981;
+}
 .schedule-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: rgba(232,34,42,0.2); }
 .schedule-time {
   font-size: 0.75rem;
