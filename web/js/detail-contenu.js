@@ -1,6 +1,27 @@
 // js/contenu-detail.js
 import * as api from '../../shared/services/api.js';
 
+// Mise à jour dynamique des méta Open Graph / Twitter pour le partage
+function updatePageMeta(title, description, image) {
+  const BASE = 'https://bf1-tv-mobile.onrender.com';
+  const fullTitle = title ? `${title} — BF1 TV` : 'BF1 TV';
+  const desc = description ? description.substring(0, 200).replace(/<[^>]+>/g, '') : 'Découvrez ce contenu sur BF1 TV.';
+  const url = window.location.href;
+
+  document.title = fullTitle;
+  const setMeta = (sel, val) => { const el = document.querySelector(sel); if (el) el.setAttribute('content', val); };
+  setMeta('meta[name="description"]', desc);
+  setMeta('meta[property="og:title"]', fullTitle);
+  setMeta('meta[property="og:description"]', desc);
+  setMeta('meta[property="og:image"]', image || `${BASE}/logo.png`);
+  setMeta('meta[property="og:url"]', url);
+  setMeta('meta[name="twitter:title"]', fullTitle);
+  setMeta('meta[name="twitter:description"]', desc);
+  setMeta('meta[name="twitter:image"]', image || `${BASE}/logo.png`);
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) canonical.setAttribute('href', url);
+}
+
 // Récupérer les paramètres de l'URL
 function getUrlParams() {
   const params = new URLSearchParams(window.location.search);
@@ -227,7 +248,7 @@ async function loadContentDetail() {
 function renderContent(content, cfg, related, comments, likesCount, userLiked, userFavorited) {
   const container = document.getElementById('detail-container');
   if (!container) return;
-  
+
   const title = content.title || 'Sans titre';
   const description = content.description || content.content || '';
   const image = getImageUrl(content.image_url || content.image || content.thumbnail || content.poster);
@@ -236,7 +257,10 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
   const duration = content.duration_minutes || content.duration;
   const channel = content.channel_name || content.channel;
   const category = content.category || content.genre;
-  
+
+  // Mettre à jour les méta Open Graph / Twitter dynamiquement
+  updatePageMeta(title, description, image || 'https://bf1-tv-mobile.onrender.com/logo.png');
+
   // Déterminer si c'est une vidéo YouTube
   const isYoutube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'));
   

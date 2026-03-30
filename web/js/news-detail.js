@@ -1,5 +1,26 @@
 import * as api from '../../shared/services/api.js';
 
+// Mise à jour dynamique des méta Open Graph / Twitter pour le partage
+function updatePageMeta(title, description, image) {
+  const BASE = 'https://bf1-tv-mobile.onrender.com';
+  const fullTitle = title ? `${title} — BF1 TV` : 'BF1 TV';
+  const desc = description ? description.substring(0, 200).replace(/<[^>]+>/g, '') : 'Découvrez ce contenu sur BF1 TV.';
+  const url = window.location.href;
+
+  document.title = fullTitle;
+  const setMeta = (sel, val) => { const el = document.querySelector(sel); if (el) el.setAttribute('content', val); };
+  setMeta('meta[name="description"]', desc);
+  setMeta('meta[property="og:title"]', fullTitle);
+  setMeta('meta[property="og:description"]', desc);
+  setMeta('meta[property="og:image"]', image || `${BASE}/logo.png`);
+  setMeta('meta[property="og:url"]', url);
+  setMeta('meta[name="twitter:title"]', fullTitle);
+  setMeta('meta[name="twitter:description"]', desc);
+  setMeta('meta[name="twitter:image"]', image || `${BASE}/logo.png`);
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) canonical.setAttribute('href', url);
+}
+
 let currentUser = null;
 
 export async function loadNewsDetail() {
@@ -68,6 +89,9 @@ function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false
   const author = news.author || 'Rédaction BF1';
   const publishedDate = formatDate(news.created_at || news.published_at);
   const views = news.views || 0;
+
+  // Mettre à jour les méta Open Graph / Twitter dynamiquement
+  updatePageMeta(title, content, imageUrl || 'https://bf1-tv-mobile.onrender.com/logo.png');
 
   // Créer l'aperçu du contenu (5 lignes max)
   const contentPreview = createContentPreview(content);

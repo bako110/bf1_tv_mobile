@@ -428,25 +428,27 @@ export class ProgrammesService {
   }
   
   getWeekDates() {
-    const today = new Date();
-    const currentDay = today.getDay();
-    const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-    
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + diffToMonday + (this.currentWeek * 7));
-    
+    // Utiliser UTC partout pour éviter les décalages dus au fuseau horaire local
+    const now = new Date();
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const currentDayUTC = todayUTC.getUTCDay(); // 0=Dim, 1=Lun...
+    const diffToMonday = currentDayUTC === 0 ? -6 : 1 - currentDayUTC;
+
+    const monday = new Date(todayUTC);
+    monday.setUTCDate(todayUTC.getUTCDate() + diffToMonday + (this.currentWeek * 7));
+
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(monday);
-      date.setDate(monday.getDate() + i);
-      
+      date.setUTCDate(monday.getUTCDate() + i);
+
       weekDates.push({
         date: date.toISOString().split('T')[0],
-        dayName: this.getDayName(i + 1),
-        dayDate: `${date.getDate()} ${this.getMonthName(date.getMonth())}`
+        dayName: this.getDayName(i + 1 > 6 ? 0 : i + 1),
+        dayDate: `${date.getUTCDate()} ${this.getMonthName(date.getUTCMonth())}`
       });
     }
-    
+
     return weekDates;
   }
   
