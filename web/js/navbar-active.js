@@ -21,10 +21,10 @@ function markActiveNavLink() {
 function initMobileMenu() {
   const hamburger = document.querySelector('.navbar-hamburger');
   const navLinks   = document.querySelector('.navbar-links');
+  const backdrop   = document.querySelector('.navbar-menu-backdrop');
 
-  if (!hamburger || !navLinks) return; // Éléments absents, rien à faire
+  if (!hamburger || !navLinks) return;
 
-  // Éviter les doublons d'écouteurs : cloner le bouton
   const freshBtn   = hamburger.cloneNode(true);
   hamburger.parentNode.replaceChild(freshBtn, hamburger);
   const freshLinks = navLinks.cloneNode(true);
@@ -32,29 +32,33 @@ function initMobileMenu() {
 
   const btn   = document.querySelector('.navbar-hamburger');
   const links = document.querySelector('.navbar-links');
+  const bd    = document.querySelector('.navbar-menu-backdrop');
+
+  function closeMenu() {
+    btn.classList.remove('open');
+    links.classList.remove('open');
+    if (bd) bd.classList.remove('open');
+    document.body.style.overflow = '';
+  }
 
   btn.addEventListener('click', function (e) {
     e.preventDefault();
     e.stopPropagation();
+    const opening = !links.classList.contains('open');
     this.classList.toggle('open');
     links.classList.toggle('open');
-    document.body.style.overflow = links.classList.contains('open') ? 'hidden' : '';
+    if (bd) bd.classList.toggle('open');
+    document.body.style.overflow = opening ? 'hidden' : '';
   });
+
+  if (bd) bd.addEventListener('click', closeMenu);
 
   links.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      btn.classList.remove('open');
-      links.classList.remove('open');
-      document.body.style.overflow = '';
-    });
+    a.addEventListener('click', closeMenu);
   });
 
-  document.addEventListener('click', (e) => {
-    if (!btn.contains(e.target) && !links.contains(e.target)) {
-      btn.classList.remove('open');
-      links.classList.remove('open');
-      document.body.style.overflow = '';
-    }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
   });
 }
 
