@@ -20,6 +20,7 @@ export const ROUTES = {
   PROFILE: '#/profile',
   LOGIN: '#/login',
   REGISTER: '#/register',
+  FORGOT_PASSWORD: '#/forgot-password',
   NEWS: '#/news',
   MOVIES: '#/movies',
   SERIES: '#/series',
