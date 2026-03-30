@@ -1,5 +1,6 @@
 // connexion.js - Gestion de l'authentification
 import * as api from '../../shared/services/api.js';
+import { showToast } from './ui-helpers.js';
 
 // Éléments DOM
 const tabs = document.querySelectorAll('.auth-tab');
@@ -252,3 +253,16 @@ registerFormElement.addEventListener('submit', async (e) => {
 if (switchToRegister) {
   switchToRegister.addEventListener('click', switchToRegisterHandler);
 }
+
+// ─── Connexion sociale ────────────────────────────────────────────────────────
+const SOCIAL_NAMES = {
+  google:   'Google',
+  facebook: 'Facebook',
+  apple:    'Apple',
+  twitter:  'Twitter / X',
+};
+
+window.handleSocialLogin = function(provider) {
+  const name = SOCIAL_NAMES[provider] || provider;
+  showToast(`Connexion via ${name} bientôt disponible.`, 'info');
+};
