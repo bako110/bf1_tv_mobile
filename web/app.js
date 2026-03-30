@@ -365,12 +365,6 @@ const MobileMenu = {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Initialisation de l\'application');
   
-  // Charger le ticker
-  loadTicker();
-  setInterval(() => {
-    loadTicker();
-  }, 300000);
-  
   // Initialiser les modules qui ne dépendent pas du header
   Theme.init();
   Router.init();

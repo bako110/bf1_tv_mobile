@@ -83,17 +83,6 @@ function renderList() {
       </button>
     </div>`;
   }).join('');
-
-  // Câbler les clics via event delegation
-  body.querySelectorAll('[data-read-id]').forEach(el => {
-    el.addEventListener('click', () => window._notifMarkRead(el.dataset.readId));
-  });
-  body.querySelectorAll('[data-del-id]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window._notifDelete(btn.dataset.delId);
-    });
-  });
 }
 
 // ─── Actions (exposées globalement pour les onclick inline) ─────────────────
@@ -238,17 +227,16 @@ export function initNotifications() {
   const closeBtn = document.querySelector('.notif-panel-close');
   if (closeBtn) closeBtn.addEventListener('click', closePanel);
 
-  // Délégation d'événements sur le panel — fonctionne même si les boutons
-  // ne sont pas encore visibles au moment de l'init
-  const panel = document.querySelector('.notif-panel');
-  if (panel) {
-    panel.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[id]');
-      if (!btn) return;
-      if (btn.id === 'notif-btn-mark-all') { e.stopPropagation(); window._notifMarkAllRead(); }
-      if (btn.id === 'notif-btn-delete-all') { e.stopPropagation(); window._notifDeleteAll(); }
-    });
-  }
+  // Délégation globale sur document.body — garantit que les boutons
+  // sont toujours interceptés même si le panel est injecté après l'init
+  document.body.addEventListener('click', (e) => {
+    const btn = e.target.closest('#notif-btn-mark-all, #notif-btn-delete-all, [data-del-id], [data-read-id]');
+    if (!btn) return;
+    if (btn.id === 'notif-btn-mark-all')   { e.stopPropagation(); window._notifMarkAllRead(); return; }
+    if (btn.id === 'notif-btn-delete-all') { e.stopPropagation(); window._notifDeleteAll();   return; }
+    if (btn.dataset.delId)  { e.stopPropagation(); window._notifDelete(btn.dataset.delId);  return; }
+    if (btn.dataset.readId) { window._notifMarkRead(btn.dataset.readId); return; }
+  }, true); // capture phase — s'exécute avant tout stopPropagation intermédiaire
 
   // Charger le badge au démarrage (si connecté)
   const token = localStorage.getItem('bf1_token');

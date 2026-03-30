@@ -53,7 +53,16 @@
 </script>
 
 <script type="module">
-  import { getProgramById } from '../../shared/services/api.js';
+  // Appel direct — évite tout problème de cache de module ES
+  async function getProgramById(id) {
+    const base = 'https://bf1.fly.dev/api/v1';
+    const token = localStorage.getItem('bf1_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const r = await fetch(`${base}/programs/${id}`, { headers });
+    if (!r.ok) { const e = new Error('Erreur API'); e.status = r.status; throw e; }
+    return r.json();
+  }
 
   const params   = new URLSearchParams(window.location.search);
   const programId = params.get('id');
