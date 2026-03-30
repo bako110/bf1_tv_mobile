@@ -228,6 +228,15 @@ export async function getLive() {
   return http.get('/livestream/status');
 }
 
+/**
+ * Retourne l'URL du proxy HLS.
+ * Le vrai lien du flux n'est jamais transmis au frontend — le backend fait le relais.
+ */
+export async function getLiveStreamUrl() {
+  const { API_CONFIG } = await import('../config/routes.js');
+  return `${API_CONFIG.API_BASE_URL}/livestream/stream-proxy`;
+}
+
 export async function getReels() {
   return http.get('/reels') || [];
 }

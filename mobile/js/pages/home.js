@@ -205,41 +205,47 @@ async function loadLiveSection(liveData) {
   const container = document.getElementById('live-content');
   if (!container) return;
 
-  if (!liveData) {
-    container.innerHTML = `
-      <div class="card bg-secondary border-0 w-100" style="aspect-ratio: 16/9; border-radius: 8px; overflow: hidden;">
-        <div class="card-body d-flex align-items-center justify-content-center">
-          <div class="text-center">
-            <i class="bi bi-broadcast" style="font-size: 3rem; color: rgba(226,62,62,0.5);"></i>
-            <p class="text-muted mt-3 mb-0">Chargement BF1 TV...</p>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  const videoUrl = liveData.url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-  const viewers = liveData.viewers || 0;
+  const isOnAir = liveData?.is_live !== false;
+  const viewers = liveData?.viewers || 0;
+  const name    = liveData?.name || 'BF1 TV - En direct';
+  const thumb   = liveData?.thumbnail || '';
 
   container.innerHTML = `
-    <div style="position: relative; margin: 0 16px; border-radius: 12px; overflow: hidden; background: #000;">
-      <video
-        src="${videoUrl}"
-        autoplay
-        muted
-        loop
-        playsinline
-        style="width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block;"
-      ></video>
-      <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.9) 100%); pointer-events: none;"></div>
-      <div style="position: absolute; bottom: 12px; left: 12px; right: 12px; pointer-events: none;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          ${liveData.isLive !== false ? `<span style="width: 8px; height: 8px; background: #E23E3E; border-radius: 50%; display: inline-block; animation: pulse 1.4s ease-in-out infinite;"></span>` : ''}
-          <span style="color:var(--text-1,#fff); font-size:0.85rem; font-weight:600;">En direct</span>
-        </div>
+    <a href="#/live" style="display:block;margin:0 16px;border-radius:12px;overflow:hidden;
+                            position:relative;aspect-ratio:16/9;background:#000;text-decoration:none;">
+      ${thumb
+        ? `<img src="${thumb}" alt="${name}"
+                style="width:100%;height:100%;object-fit:cover;display:block;"
+                onerror="this.style.display='none'" />`
+        : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#0a0a0a 0%,#1a0a0a 100%);"></div>`
+      }
+      <div style="position:absolute;inset:0;
+                  background:linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,rgba(0,0,0,0.85) 100%);"></div>
+      <div style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;">
+        ${isOnAir
+          ? `<span style="width:8px;height:8px;background:#E23E3E;border-radius:50%;display:inline-block;
+                          animation:livePulse 1.4s ease-in-out infinite;"></span>
+             <span style="color:#fff;font-size:0.75rem;font-weight:700;letter-spacing:.5px;">EN DIRECT</span>`
+          : `<span style="color:#aaa;font-size:0.75rem;font-weight:600;">Hors antenne</span>`
+        }
       </div>
-    </div>
+      ${viewers > 0 ? `
+      <div style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.6);
+                  padding:3px 8px;border-radius:20px;display:flex;align-items:center;gap:4px;">
+        <i class="bi bi-eye-fill" style="font-size:0.65rem;color:#E23E3E;"></i>
+        <span style="color:#fff;font-size:0.65rem;">${viewers >= 1000 ? (viewers/1000).toFixed(1)+'k' : viewers}</span>
+      </div>` : ''}
+      <div style="position:absolute;bottom:12px;left:12px;right:56px;">
+        <p style="margin:0;color:#fff;font-size:0.85rem;font-weight:700;
+                  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${name}</p>
+      </div>
+      <div style="position:absolute;bottom:10px;right:12px;
+                  background:#E23E3E;border-radius:8px;padding:5px 10px;
+                  display:flex;align-items:center;gap:4px;">
+        <i class="bi bi-play-fill" style="color:#fff;font-size:0.8rem;"></i>
+        <span style="color:#fff;font-size:0.72rem;font-weight:700;">Regarder</span>
+      </div>
+    </a>
   `;
 }
 

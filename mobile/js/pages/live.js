@@ -95,17 +95,16 @@ export async function loadLive() {
 
   try {
     // Charger live + toutes les sections en parallèle
-    const [liveData, sports, jtandmag, divertissement, reportages] = await Promise.all([
+    const [liveData, streamUrl, sports, jtandmag, divertissement, reportages] = await Promise.all([
       api.getLive().catch(() => null),
+      api.getLiveStreamUrl(),
       api.getSports().catch(() => []),
       api.getJTandMag().catch(() => []),
       api.getDivertissement().catch(() => []),
       api.getReportages().catch(() => []),
     ]);
-
-    const streamUrl = liveData?.stream_url || liveData?.url;
     const viewers = liveData?.viewers || 0;
-    const isLive = liveData?.is_live !== false && !!streamUrl;
+    const isLive = liveData?.is_live !== false;
 
     // --- Lecteur vidéo ---
     if (videoContainer) {
@@ -124,14 +123,14 @@ export async function loadLive() {
               <i class="bi bi-wifi-off" style="font-size:32px;color:#555;"></i>
               <p style="color:#555;font-size:13px;margin:0;">Impossible de charger le flux</p>
             </div>
-            <!-- Bouton son (activé par défaut) -->
+            <!-- Bouton son (muet au démarrage pour respecter l'autoplay Android) -->
             <button id="live-mute-btn" onclick="window.toggleLiveMute()"
                     style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.65);
                            border:1px solid rgba(255,255,255,0.12);border-radius:8px;
                            padding:7px 9px;color:#fff;z-index:20;cursor:pointer;
                            display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;">
-              <i class="bi bi-volume-up-fill" id="live-mute-icon"></i>
-              <span id="live-mute-label">Son activé</span>
+              <i class="bi bi-volume-mute-fill" id="live-mute-icon"></i>
+              <span id="live-mute-label">Son coupé</span>
             </button>
             <!-- Bouton plein écran -->
             <button id="live-fs-btn" onclick="window.toggleLiveFullscreen()"
@@ -225,31 +224,19 @@ export async function loadLive() {
         requestAnimationFrame(() => {
           const video = document.getElementById('live-video');
           if (!video) return;
-          // Initialiser le volume à 100% et s'assurer que le son n'est pas muet
-          video.muted = false;
+          // Démarrer en muet pour respecter la politique d'autoplay Android
+          // L'utilisateur peut activer le son avec le bouton dédié
+          video.muted = true;
           video.volume = 1;
           
-          if (streamUrl.includes('.m3u8')) {
-            if (typeof Hls !== 'undefined') {
-              _initHls(video, streamUrl);
-            } else {
-              const s = document.createElement('script');
-              s.src = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
-              s.onload = () => _initHls(video, streamUrl);
-              s.onerror = () => {
-                document.getElementById('live-error')?.style.setProperty('display', 'flex');
-              };
-              document.head.appendChild(s);
-            }
-          } else {
-            video.src = streamUrl;
-            video.play().catch(() => {});
-          }
+          // Toujours utiliser HLS.js : le proxy retourne du contenu M3U8
+          // même si l'URL ne se termine pas par .m3u8
+          _initHls(video, streamUrl);
         });
 
         function _initHls(video, url) {
           if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-            const hls = new Hls({ autoStartLoad: true, lowLatencyMode: true });
+            const hls = new Hls({ autoStartLoad: true, lowLatencyMode: false });
             hls.loadSource(url);
             hls.attachMedia(video);
             hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
