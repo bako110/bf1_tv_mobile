@@ -14,10 +14,26 @@ let _reminderIds = new Set(); // IDs des programmes avec rappel actif
 
 // Charger rappels existants
 async function loadMyReminders_() {
+  // Toujours synchroniser le token avant appel API
+  if (typeof api?.http?.setToken === 'function') {
+    api.http.setToken(localStorage.getItem('bf1_token'));
+  }
   try {
     const reminders = await api.getMyReminders('scheduled', true);
-    _reminderIds = new Set((reminders || []).map(r => String(r.program_id)));
-  } catch {
+    console.log('🔔 Rappels chargés:', reminders);
+    console.log('🔔 Nombre de rappels:', reminders?.length);
+    if (reminders && reminders.length > 0) {
+      console.log('🔔 Premier rappel:', reminders[0]);
+      console.log('🔔 program_id du premier:', reminders[0]?.program_id);
+    }
+    const ids = (reminders || []).map(r => {
+      console.log('🔔 Mapping rappel:', r, '-> program_id:', r?.program_id);
+      return String(r.program_id);
+    });
+    _reminderIds = new Set(ids);
+    console.log('🔔 IDs de rappels finaux:', Array.from(_reminderIds));
+  } catch (err) {
+    console.error('❌ Erreur chargement rappels:', err);
     _reminderIds = new Set();
   }
 }
@@ -479,7 +495,7 @@ window._openCalendarModal = function() {
   
   const html = `
     <div id="calendar-modal-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:1000;" onclick="if(event.target === this) _closeCalendarModal()">
-      <div style="position:absolute;bottom:0;left:0;right:0;background:#1a1a1a;border-radius:12px 12px 0 0;max-height:70vh;overflow-y:auto;padding:16px;">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:#1a1a1a;border-radius:12px 12px 0 0;max-height:70vh;overflow-y:auto;padding:16px;padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px));">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
           <h3 style="margin:0;color:#fff;font-size:16px;">Sélectionner une date</h3>
           <button onclick="_closeCalendarModal()" style="background:none;border:none;cursor:pointer;color:#E23E3E;font-size:20px;"><i class="bi bi-x"></i></button>
@@ -495,7 +511,7 @@ window._openCalendarModal = function() {
           <div id="calendar-days" style="margin-top:12px;"></div>
         </div>
         
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
           <button onclick="window._closeCalendarModal()" style="background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;padding:10px;border-radius:4px;cursor:pointer;">Annuler</button>
           <button onclick="window._applyCalendarDate()" style="background:#E23E3E;border:none;color:#fff;padding:10px;border-radius:4px;cursor:pointer;font-weight:600;">Appliquer</button>
         </div>
@@ -557,6 +573,8 @@ window._selectDate = async function(dateStr) {
   if (!dateStr) {
     _selectedDay = null;
     _selectedPeriod = 'Tous';
+  } else {
+    _selectedDay = dateStr; // Définir aussi _selectedDay pour le filtrage
   }
   await _loadAndRender();
 };
@@ -575,6 +593,7 @@ window._loadAndRender = async function() {
   container.appendChild(createSnakeLoader(40));
   
   await loadPrograms_();
+  await loadMyReminders_(); // Recharger les rappels à chaque rendu
   renderWeekCalendar();
   renderDaySelector();
   renderPrograms();
@@ -584,7 +603,7 @@ window._loadAndRender = async function() {
 window._openFilterModal = function() {
   const html = `
     <div id="filter-modal-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:1000;" onclick="if(event.target === this) window._closeFilterModal()">
-      <div style="position:absolute;bottom:0;left:0;right:0;background:#1a1a1a;border-radius:12px 12px 0 0;max-height:70vh;overflow-y:auto;padding:16px;">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:#1a1a1a;border-radius:12px 12px 0 0;max-height:70vh;overflow-y:auto;padding:16px;padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px));">
         <h3 style="margin:0 0 16px;color:#fff;font-size:16px;">Filtrer</h3>
         
         <label style="display:block;margin-bottom:12px;font-size:12px;color:#A0A0A0;">Type</label>
