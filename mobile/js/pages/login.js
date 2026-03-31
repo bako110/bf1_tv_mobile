@@ -64,6 +64,7 @@ export async function loadLogin() {
     btnGoogle.addEventListener('click', () => {
       btnGoogle.disabled = true;
       btnGoogle.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;"></span><span>Connexion...</span>';
+      localStorage.setItem('oauth_source', 'mobile');
       window.location.href = `${API_BASE}/users/auth/google`;
     });
   }

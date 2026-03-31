@@ -76,8 +76,13 @@
         document.getElementById('cbSub').textContent = 'Redirection vers l\'accueil…';
         document.getElementById('spinner').style.borderTopColor = '#34A853';
 
-        // Redirect to home
-        setTimeout(() => { window.location.href = 'accueil.html'; }, 1200);
+        // Redirect selon la source (mobile ou web)
+        const source = localStorage.getItem('oauth_source') || 'web';
+        localStorage.removeItem('oauth_source');
+        const dest = source === 'mobile'
+          ? '../../mobile/pages/home.html'
+          : 'accueil.html';
+        setTimeout(() => { window.location.href = dest; }, 1200);
 
       } catch (e) {
         document.getElementById('spinner').style.display = 'none';
