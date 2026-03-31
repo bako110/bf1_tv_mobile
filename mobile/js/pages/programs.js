@@ -10,6 +10,53 @@ let _selectedStatus = 'Tous'; // Filtre statut: Tous, En direct, À venir
 let _selectedPeriod = 'Tous'; // Filtre période: Tous, Aujourd'hui, Demain, Cette semaine, Week-end, Passés
 let _weekDates = [];          // Dates de la semaine courante
 let _loading = false;
+let _reminderIds = new Set(); // IDs des programmes avec rappel actif
+
+// Charger rappels existants
+async function loadMyReminders_() {
+  try {
+    const reminders = await api.getMyReminders('scheduled', true);
+    _reminderIds = new Set((reminders || []).map(r => String(r.program_id)));
+  } catch {
+    _reminderIds = new Set();
+  }
+}
+
+// Créer un rappel
+window._createReminder = async function(programId) {
+  const token = localStorage.getItem('bf1_token');
+  if (!token) {
+    _showToast('Connectez-vous pour créer un rappel', 'error');
+    return;
+  }
+  try {
+    await api.createReminder(programId, { program_id: programId, minutes_before: 15, reminder_type: 'push' });
+    _reminderIds.add(String(programId));
+    const btn = document.querySelector(`.reminder-btn-m[data-id="${programId}"]`);
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.add('reminder-set');
+      btn.innerHTML = '<i class="bi bi-bell-fill me-1"></i>Rappel actif';
+      btn.style.background = '#2a2a2a';
+      btn.style.color = '#888';
+    }
+    _showToast('Rappel créé !', 'success');
+  } catch (err) {
+    console.error('Erreur rappel:', err);
+    _showToast('Impossible de créer le rappel', 'error');
+  }
+};
+
+function _showToast(msg, type) {
+  const existing = document.getElementById('programs-toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.id = 'programs-toast';
+  t.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${type==='success'?'#16a34a':'#dc2626'};color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;font-weight:600;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
 
 // Formater heure: "14:30"
 function formatTime(dateStr) {
@@ -137,6 +184,9 @@ function buildProgramCard(prog) {
   const statusColor = statusColors[status] || '#333';
   const opacity = status === 'Passé' ? 0.6 : 1;
 
+  const hasReminder = _reminderIds.has(String(prog.id));
+  const canRemind = status === 'À venir';
+
   return `
     <div style="border:1px solid #1a1a1a;border-radius:6px;padding:12px;margin-bottom:12px;background:#0a0a0a;opacity:${opacity};">
       <div style="display:flex;gap:12px;align-items:flex-start;">
@@ -148,6 +198,15 @@ function buildProgramCard(prog) {
           </div>
           <p style="margin:4px 0;font-size:11px;color:var(--text-3,#A0A0A0);"><i class="bi bi-tag me-1"></i>${type}</p>
           ${start ? `<p style="margin:2px 0;font-size:11px;color:var(--text-3,#A0A0A0);"><i class="bi bi-clock me-1"></i>${start}</p>` : ''}
+          ${canRemind ? `
+          <button
+            class="reminder-btn-m${hasReminder ? ' reminder-set' : ''}"
+            data-id="${prog.id}"
+            onclick="window._createReminder('${prog.id}')"
+            ${hasReminder ? 'disabled' : ''}
+            style="margin-top:8px;width:100%;padding:6px;border-radius:4px;border:1px solid ${hasReminder ? '#333' : '#E23E3E'};background:${hasReminder ? '#2a2a2a' : 'transparent'};color:${hasReminder ? '#888' : '#E23E3E'};font-size:11px;cursor:${hasReminder ? 'default' : 'pointer'};font-weight:600;">
+            <i class="bi ${hasReminder ? 'bi-bell-fill' : 'bi-bell'} me-1"></i>${hasReminder ? 'Rappel actif' : 'Me rappeler'}
+          </button>` : ''}
         </div>
       </div>
     </div>`;
@@ -616,8 +675,8 @@ export async function loadPrograms() {
       }
     });
     
-    // Charger et afficher
-    await _loadAndRender();
+    // Charger rappels + données en parallèle
+    await Promise.all([loadMyReminders_(), _loadAndRender()]);
     
   } catch (err) {
     console.error('Erreur loadPrograms:', err);
