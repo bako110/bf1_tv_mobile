@@ -1,18 +1,54 @@
 // js/direct.js
-import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes } from '../../shared/services/api.js';
-
 const API_BASE = 'https://bf1.fly.dev/api/v1';
-async function getMyReminders(status = null, upcomingOnly = false) {
-  const params = new URLSearchParams();
-  if (status) params.set('status', status);
-  if (upcomingOnly) params.set('upcoming_only', 'true');
-  const qs = params.toString();
+
+function _headers() {
   const token = localStorage.getItem('bf1_token');
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const r = await fetch(`${API_BASE}/programs/reminders/my${qs ? `?${qs}` : ''}`, { headers });
-  if (!r.ok) return [];
+  const h = { 'Content-Type': 'application/json' };
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  return h;
+}
+
+async function _get(path) {
+  const r = await fetch(`${API_BASE}${path}`, { headers: _headers() });
+  if (!r.ok) { const e = new Error('API error'); e.status = r.status; throw e; }
   return r.json();
+}
+
+async function _post(path, body) {
+  const r = await fetch(`${API_BASE}${path}`, { method: 'POST', headers: _headers(), body: JSON.stringify(body) });
+  if (!r.ok) { const e = new Error('API error'); e.status = r.status; throw e; }
+  return r.json();
+}
+
+async function getProgramGrid(startDate = null, endDate = null, type = null) {
+  const p = new URLSearchParams();
+  if (startDate) p.append('start_date', startDate);
+  if (endDate) p.append('end_date', endDate);
+  if (type) p.append('type', type);
+  return _get(`/programs/grid/daily?${p.toString()}`).catch(() => ({ days: [] }));
+}
+
+async function getPrograms() {
+  return _get('/programs').catch(() => []);
+}
+
+async function toggleLike(contentType, contentId) {
+  return _post('/likes/toggle', { content_type: contentType, content_id: contentId });
+}
+
+async function getMyLikes(contentType) {
+  try {
+    const res = await _get(`/likes/my-likes?content_type=${encodeURIComponent(contentType)}`);
+    return Array.isArray(res) ? res : (res?.items || []);
+  } catch { return []; }
+}
+
+async function getMyReminders(status = null, upcomingOnly = false) {
+  const p = new URLSearchParams();
+  if (status) p.set('status', status);
+  if (upcomingOnly) p.set('upcoming_only', 'true');
+  const qs = p.toString();
+  return _get(`/programs/reminders/my${qs ? `?${qs}` : ''}`).catch(() => []);
 }
 
 export class DirectService {
