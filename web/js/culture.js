@@ -1,5 +1,5 @@
 import * as api from '../../shared/services/api.js';
-import { getNewsDetailUrl } from '/shared/utils/slugUtils.js';
+import { getNewsDetailUrl } from '/js/slugUtils.js';
 
 let cultureData = [];
 let currentFilter = 'Tous';
