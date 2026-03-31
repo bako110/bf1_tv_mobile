@@ -724,7 +724,7 @@ function setupCarouselSwipe(container) {
  * Récupère l'URL du flux HLS depuis l'API
  */
 async function fetchLiveStreamUrl() {
-  return api.getLiveStreamUrl();
+  return 'https://bf1.fly.dev/api/v1/livestream/stream-proxy';
 }
 
 /**
