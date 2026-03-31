@@ -80,7 +80,7 @@
         const source = localStorage.getItem('oauth_source') || 'web';
         localStorage.removeItem('oauth_source');
         const dest = source === 'mobile'
-          ? '../../mobile/pages/home.html'
+          ? '/mobile/index.html#/profile'
           : 'accueil.html';
         setTimeout(() => { window.location.href = dest; }, 1200);
 
