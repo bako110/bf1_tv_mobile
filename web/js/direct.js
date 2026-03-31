@@ -1,5 +1,5 @@
 // js/direct.js
-import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes, getLiveStreamUrl, getMyReminders } from '../../shared/services/api.js';
+import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes, getMyReminders } from '../../shared/services/api.js';
 
 export class DirectService {
   constructor() {
@@ -55,7 +55,7 @@ export class DirectService {
     
     playerContainer.appendChild(this.videoElement);
 
-    const hlsUrl = await getLiveStreamUrl();
+    const hlsUrl = 'https://bf1.fly.dev/api/v1/livestream/stream-proxy';
 
     // HLS.js en priorité : masque l'URL réelle (src = blob:..., pas le vrai m3u8)
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
