@@ -494,31 +494,30 @@ export class DirectService {
   }
 
   async createReminder(programId) {
-    const { isAuthenticated, createReminder } = await import('../../shared/services/api.js');
-    if (!isAuthenticated()) {
+    const token = localStorage.getItem('bf1_token');
+    if (!token) {
       this.showToast('Connectez-vous pour créer un rappel', 'error');
       return;
     }
     try {
-      const reminder = await createReminder(programId, { minutes_before: 15 });
-      if (reminder) {
-        // Mémoriser l'ID et mettre à jour le bouton sans re-rendre toute la liste
-        this.reminderIds.add(String(programId));
-        const btn = document.querySelector(`.reminder-btn[data-id="${programId}"]`);
-        if (btn) {
-          btn.disabled = true;
-          btn.classList.add('reminder-set');
-          btn.innerHTML = '<i class="bi bi-bell-fill"></i>Rappel actif';
-        }
-        this.showToast('Rappel créé avec succès !', 'success');
+      const r = await fetch(`${API_BASE}/programs/${programId}/reminders`, {
+        method: 'POST',
+        headers: _headers(),
+        body: JSON.stringify({ program_id: programId, minutes_before: 15, reminder_type: 'push' })
+      });
+      if (r.status === 401) { this.showToast('Connectez-vous pour créer un rappel', 'error'); return; }
+      if (!r.ok) throw new Error('API error');
+      this.reminderIds.add(String(programId));
+      const btn = document.querySelector(`.reminder-btn[data-id="${programId}"]`);
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('reminder-set');
+        btn.innerHTML = '<i class="bi bi-bell-fill"></i>Rappel actif';
       }
+      this.showToast('Rappel créé avec succès !', 'success');
     } catch (error) {
       console.error('Erreur création rappel:', error);
-      if (error?.status === 401 || error?.message?.includes('401')) {
-        this.showToast('Connectez-vous pour créer un rappel', 'error');
-      } else {
-        this.showToast('Impossible de créer le rappel', 'error');
-      }
+      this.showToast('Impossible de créer le rappel', 'error');
     }
   }
 
