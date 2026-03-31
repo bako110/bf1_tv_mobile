@@ -1,5 +1,19 @@
 // js/direct.js
-import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes, getMyReminders } from '../../shared/services/api.js';
+import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes } from '../../shared/services/api.js';
+
+const API_BASE = 'https://bf1.fly.dev/api/v1';
+async function getMyReminders(status = null, upcomingOnly = false) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (upcomingOnly) params.set('upcoming_only', 'true');
+  const qs = params.toString();
+  const token = localStorage.getItem('bf1_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const r = await fetch(`${API_BASE}/programs/reminders/my${qs ? `?${qs}` : ''}`, { headers });
+  if (!r.ok) return [];
+  return r.json();
+}
 
 export class DirectService {
   constructor() {
