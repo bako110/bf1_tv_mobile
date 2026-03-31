@@ -1,4 +1,7 @@
 import * as api from '../services/api.js';
+import { API_CONFIG } from '../config/routes.js';
+
+const API_BASE = API_CONFIG.API_BASE_URL;
 
 export async function loadLogin() {
   const container = document.getElementById('app-content');
@@ -55,32 +58,13 @@ export async function loadLogin() {
     }
   });
 
-  // Boutons sociaux — toast "bientot disponible"
-  const toast = document.getElementById('login-toast');
-
-  function showToast(msg) {
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    toast.style.opacity = '1';
-    clearTimeout(toast._t);
-    toast._t = setTimeout(() => {
-      toast.style.opacity = '0';
-      setTimeout(() => { toast.style.display = 'none'; }, 300);
-    }, 2800);
+  // Bouton Google → OAuth backend
+  const btnGoogle = document.getElementById('btn-google');
+  if (btnGoogle) {
+    btnGoogle.addEventListener('click', () => {
+      btnGoogle.disabled = true;
+      btnGoogle.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;"></span><span>Connexion...</span>';
+      window.location.href = `${API_BASE}/users/auth/google`;
+    });
   }
-
-  const socialMap = {
-    'btn-google':   'Google',
-    'btn-facebook': 'Facebook',
-    'btn-apple':    'Apple',
-  };
-  Object.entries(socialMap).forEach(([id, label]) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('click', () => {
-        showToast(`Connexion ${label} — bientot disponible`);
-      });
-    }
-  });
 }
