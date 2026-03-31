@@ -190,6 +190,16 @@ if (googleBtn) {
   });
 }
 
+// ─── Bouton Facebook OAuth ─────────────────────────────────────────────────────
+const facebookBtn = document.getElementById('facebookLoginBtn');
+if (facebookBtn) {
+  facebookBtn.addEventListener('click', () => {
+    facebookBtn.disabled = true;
+    facebookBtn.innerHTML = '<div class="spinner-small" style="width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;margin-right:8px;"></div><span>Connexion...</span>';
+    window.location.href = `${API_BASE}/users/auth/facebook`;
+  });
+}
+
 // ─── Erreur de retour OAuth ────────────────────────────────────────────────────
 const params = new URLSearchParams(window.location.search);
 if (params.get('auth_error')) {
