@@ -724,39 +724,7 @@ function setupCarouselSwipe(container) {
  * Récupère l'URL du flux HLS depuis l'API
  */
 async function fetchLiveStreamUrl() {
-  // Tenter via l'API protégée (JWT) — URL jamais dans le code source
-  try {
-    const url = await api.getLiveStreamUrl();
-    if (url) return url;
-  } catch {
-    // Utilisateur non connecté ou endpoint indisponible
-  }
-
-  // Fallback : endpoints legacy
-  const endpoints = [
-    'https://backend-bf1tv.onrender.com/api/live',
-    'https://backend-bf1tv.onrender.com/api/stream',
-    'https://backend-bf1tv.onrender.com/api/programs/live'
-  ];
-  
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, { timeout: 5000 });
-      if (response.ok) {
-        const data = await response.json();
-        const url = data.stream_url || data.hls_url || data.url || data.video_url;
-        if (url && url !== '[protégé]') {
-          console.log(`✅ URL HLS trouvée via: ${endpoint}`);
-          return url;
-        }
-      }
-    } catch (err) {
-      console.log(`⚠️ Endpoint non disponible: ${endpoint}`);
-    }
-  }
-
-  console.log('⚠️ Flux non disponible pour les utilisateurs non connectés');
-  return null;
+  return api.getLiveStreamUrl();
 }
 
 /**
