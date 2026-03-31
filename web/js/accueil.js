@@ -1,6 +1,6 @@
 // js/accueil.js
 import * as api from '../../shared/services/api.js';
-import { slugify, getNewsDetailUrl, getContentDetailUrl } from '../../shared/utils/slug-utils.js';
+import { slugify, getNewsDetailUrl, getContentDetailUrl } from '../shared/utils/slug-utils.js';
 
 // État actuel
 let currentCategory = 'all';
