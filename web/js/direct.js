@@ -57,27 +57,40 @@ export class DirectService {
 
     const hlsUrl = 'https://bf1.fly.dev/api/v1/livestream/stream-proxy';
 
-    // HLS.js en priorité : masque l'URL réelle (src = blob:..., pas le vrai m3u8)
-    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+    const showUnavailable = () => {
+      playerContainer.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:#1a1a1a;gap:12px;">
+          <i class="bi bi-wifi-off" style="font-size:3rem;color:#666;"></i>
+          <p style="color:#aaa;margin:0;font-size:1rem;">Direct temporairement indisponible</p>
+          <p style="color:#666;margin:0;font-size:0.8rem;">Veuillez réessayer dans quelques instants</p>
+        </div>
+      `;
+    };
+
+    // Support natif HLS (Safari)
+    if (this.videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+      this.videoElement.src = hlsUrl;
+      this.videoElement.onerror = showUnavailable;
+      this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
+    }
+    // HLS.js pour Chromium
+    else if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       this.hls = new Hls({ enableWorker: true, autoStartLoad: true });
+      this.hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          console.warn('⚠️ Flux HLS indisponible:', data);
+          this.hls.destroy();
+          showUnavailable();
+        }
+      });
       this.hls.loadSource(hlsUrl);
       this.hls.attachMedia(this.videoElement);
       this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
         this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
       });
     }
-    // Fallback natif uniquement si HLS.js non disponible (ex: vieux Safari sans CDN)
-    else if (this.videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-      this.videoElement.src = hlsUrl;
-      this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
-    }
     else {
-      playerContainer.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:#1a1a1a;">
-          <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: #666;"></i>
-          <p style="color: #666;">Lecture HLS non supportée</p>
-        </div>
-      `;
+      showUnavailable();
     }
   }
 
