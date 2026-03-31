@@ -674,9 +674,9 @@ export async function loadPrograms() {
         if (header) header.insertAdjacentElement('afterend', div);
       }
     });
-    
-    // Charger rappels + données en parallèle
-    await Promise.all([loadMyReminders_(), _loadAndRender()]);
+    // Charger rappels AVANT le rendu (séquentiel)
+    await loadMyReminders_();
+    await _loadAndRender();
     
   } catch (err) {
     console.error('Erreur loadPrograms:', err);
