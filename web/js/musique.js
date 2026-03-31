@@ -1,5 +1,5 @@
 import * as api from '../../shared/services/api.js';
-import { getNewsDetailUrl } from '/shared/utils/slug-utils.js';
+import { getNewsDetailUrl } from '/shared/utils/slugUtils.js';
 
 let musiqueData = [];
 let currentFilter = 'Tous';

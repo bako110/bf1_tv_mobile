@@ -1,6 +1,6 @@
 // js/archives.js
 import * as api from '../../shared/services/api.js';
-import { slugify } from '/shared/utils/slug-utils.js';
+import { slugify } from '/shared/utils/slugUtils.js';
 
 let archiveData = [];
 let currentFilter = 'Tous';

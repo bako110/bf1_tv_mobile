@@ -1,6 +1,6 @@
 // js/contenu-detail.js
 import * as api from '../../shared/services/api.js';
-import { slugify, getContentBySlug } from '/shared/utils/slug-utils.js';
+import { slugify, getContentBySlug } from '/shared/utils/slugUtils.js';
 
 // Mise à jour dynamique des méta Open Graph / Twitter pour le partage
 function updatePageMeta(title, description, image) {
