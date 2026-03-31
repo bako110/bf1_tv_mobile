@@ -1,5 +1,5 @@
 import * as api from '../../shared/services/api.js';
-import { slugify } from '../../shared/utils/slug-utils.js';
+import { slugify } from '/shared/utils/slug-utils.js';
 
 let divertissementData = [];
 let currentFilter = 'Tous';

@@ -1,7 +1,7 @@
 // favoris.js — Page Mes Favoris (web)
 // Inspiré de mobile/js/pages/favorites.js
 import * as api from '../../shared/services/api.js';
-import { getNewsDetailUrl, getContentDetailUrl, slugify } from '../../shared/utils/slug-utils.js';
+import { getNewsDetailUrl, getContentDetailUrl, slugify } from '/shared/utils/slug-utils.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

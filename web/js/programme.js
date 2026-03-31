@@ -1,6 +1,6 @@
 // js/services/programme.js
 import { getProgramWeek, getProgramGrid, getPrograms } from '../../shared/services/api.js';
-import { slugify, cacheProgram, getProgramDetailUrl } from '../../shared/utils/slug-utils.js';
+import { slugify, cacheProgram, getProgramDetailUrl } from '/shared/utils/slug-utils.js';
 
 export class ProgrammesService {
   constructor() {
