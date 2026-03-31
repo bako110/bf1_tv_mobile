@@ -1,5 +1,5 @@
 import { http } from './http.js';
-
+// v2
 export async function login(identifier, password) {
   const res = await http.post('/users/login', { identifier, password });
   if (res.access_token) {
