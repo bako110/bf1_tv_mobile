@@ -108,7 +108,11 @@ const server = http.createServer(async (req, res) => {
       res.end(`<h1>404 - Fichier non trouvé</h1><p>Chemin: ${req.url}</p>`);
       return;
     }
-    res.writeHead(200, { 'Content-Type': contentType });
+    const headers = { 'Content-Type': contentType };
+    if (extname === '.js' || extname === '.css') {
+      headers['Cache-Control'] = 'no-cache, must-revalidate';
+    }
+    res.writeHead(200, headers);
     res.end(content);
   });
 });
