@@ -1,5 +1,5 @@
 // js/direct.js
-import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes, getMyReminders } from '/js/programUtils.js';
+import { getProgramWeek, getProgramGrid, getPrograms, toggleLike, getMyLikes, getMyReminders } from '../../shared/services/api.js';
 
 export class DirectService {
   constructor() {
