@@ -1,5 +1,6 @@
 // js/direct.js
-const API_BASE = 'https://bf1.fly.dev/api/v1';
+import { API_CONFIG } from '../../shared/config/config.js';
+const API_BASE = API_CONFIG.API_BASE_URL;
 
 function _headers() {
   const token = localStorage.getItem('bf1_token');
