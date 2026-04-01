@@ -148,7 +148,7 @@ function buildShowCard(show) {
       <!-- Info -->
       <div style="padding:10px 10px 10px 0;flex:1;overflow:hidden;
                   display:flex;flex-direction:column;justify-content:space-between;">
-        <p style="font-size:13px;font-weight:700;color:#f0f0f0;margin:0 0 4px;
+        <p style="font-size:13px;font-weight:700;colory:var(--search-text-title);margin:0 0 4px;
                   overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;
                   -webkit-box-orient:vertical;line-height:1.35;">${esc(title)}</p>
         ${desc ? `<p style="font-size:11px;color:#606060;margin:0 0 6px;
@@ -224,7 +224,7 @@ export async function loadEmissionCategory(categoryName) {
                 style="background:#E23E3E;color:#fff;border:none;border-radius:8px;
                        padding:8px 18px;margin-top:8px;cursor:pointer;font-size:13px;">
           Retour
-        </button>
+        </button>,
       </div>`;
   }
 }

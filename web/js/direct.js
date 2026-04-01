@@ -121,8 +121,11 @@ export class DirectService {
     // Support natif HLS (Safari)
     if (this.videoElement.canPlayType('application/vnd.apple.mpegurl')) {
       this.videoElement.src = hlsUrl;
+      this.videoElement.muted = true; // Toujours muté pour autoplay
       this.videoElement.onerror = showUnavailable;
-      this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
+      setTimeout(() => {
+        this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
+      }, 100);
     }
     // HLS.js pour Chromium
     else if (typeof Hls !== 'undefined' && Hls.isSupported()) {
@@ -136,8 +139,11 @@ export class DirectService {
       });
       this.hls.loadSource(hlsUrl);
       this.hls.attachMedia(this.videoElement);
+      this.videoElement.muted = true; // Toujours muté pour autoplay
       this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
+        setTimeout(() => {
+          this.videoElement.play().catch(e => console.log('Auto-play bloqué:', e));
+        }, 100);
       });
     }
     else {

@@ -117,7 +117,7 @@ export async function loadNewsDetail(id) {
           ${news.created_at ? `<span style="font-size:12px;color:#666;">${formatDate(news.created_at)}</span>` : ''}
         </div>
 
-        <h1 id="nd-title-h1" style="font-size:20px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:12px;
+        <h1 id="nd-title-h1" style="font-size:20px;font-weight:700;color:var(--search-text-title, #000000);line-height:1.35;margin-bottom:12px;
              overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</h1>
 
         ${news.author ? `
@@ -188,7 +188,7 @@ export async function loadNewsDetail(id) {
                  onclick="window.location.hash='#/news/${rId}'">
               ${rImg ? `<img src="${esc(rImg)}" alt="" style="width:110px;height:80px;object-fit:cover;flex-shrink:0;">` : `<div style="width:110px;height:80px;background:#2a2a2a;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="bi bi-image text-secondary"></i></div>`}
               <div class="p-2" style="flex:1;overflow:hidden;">
-                <p style="font-size:13px;font-weight:600;color:#fff;margin:0 0 5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(item.title || '')}</p>
+                <p style="font-size:13px;font-weight:600;color:var(--search-text-title, #000000);margin:0 0 5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(item.title || '')}</p>
                 <span style="font-size:11px;color:#555;"><i class="bi bi-clock"></i> ${formatRelative(item.created_at)}${item.category ? ` · <span style="color:#E23E3E;">${esc(item.category)}</span>` : ''}</span>
               </div>
             </div>`;

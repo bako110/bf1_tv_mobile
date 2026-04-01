@@ -38,8 +38,8 @@ function buildThemeCard() {
          style="display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:10px;
                  cursor:pointer;transition:background .2s;background:${currentTheme === opt.value ? 'rgba(226,62,62,0.1)' : 'transparent'};">
       <div style="flex:1;">
-        <div style="font-weight:600;color:#fff;font-size:14px;">${opt.label}</div>
-        <div style="color:#A0A0A0;font-size:12px;">${opt.desc}</div>
+        <div style="font-weight:600;color:var(--btn-secondary-text, #fff);font-size:14px;">${opt.label}</div>
+        <div style="color:var(--btn-secondary-text, #A0A0A0);font-size:12px;">${opt.desc}</div>
       </div>
       ${currentTheme === opt.value ? '<i class="bi bi-check2" style="color:#E23E3E;font-size:18px;"></i>' : ''}
     </div>
@@ -49,9 +49,9 @@ function buildThemeCard() {
     <div class="mx-3 mb-3 rounded p-3" style="background:#1a1a1a;border:1px solid #2a2a2a;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <i class="bi bi-palette-fill" style="font-size:18px;color:#E23E3E;"></i>
-        <span style="font-weight:600;color:#fff;font-size:14px;">Thème</span>
+        <span style="font-weight:600;color:var(--btn-secondary-text, #fff);font-size:14px;">Thème</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;flex-direction:column;gap:6px;color:var(--btn-secondary-text, #fff);">
         ${optionsHtml}
       </div>
     </div>`;

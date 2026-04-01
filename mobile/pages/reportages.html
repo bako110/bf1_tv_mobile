@@ -6,12 +6,26 @@
   <title>Reportages - BF1</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    /* Les icônes suivent les variables CSS du ThemeManager */
+    .bi,
+    [class^="bi-"],
+    [class*=" bi-"] {
+      color: var(--icon-color, var(--text, #FFFFFF));
+    }
+    
+    /* Style spécifique pour les icônes dans les boutons */
+    button i,
+    .btn i {
+      color: var(--icon-color, var(--text, #FFFFFF));
+    }
+  </style>
 </head>
-<body class="text-light d-none" id="reportages-page" style="background:#000;min-height:100vh;">
-  <div class="sticky-top" style="background:#000;z-index:10;border-bottom:1px solid #1e1e1e;">
+<body class="d-none" id="reportages-page" style="min-height:100vh;">
+  <div class="sticky-top" style="z-index:10;">
     <div class="d-flex align-items-center justify-content-between px-3 pt-3 pb-2">
-      <span style="font-size:16px;font-weight:700;color:#fff;">Reportages</span>
-      <button id="reportages-toggle-btn" type="button" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:6px 10px;color:#B0B0B0;line-height:1;">
+      <span style="font-size:16px;font-weight:700;">Reportages</span>
+      <button id="reportages-toggle-btn" type="button" style="border-radius:8px;padding:6px 10px;line-height:1;">
         <i class="bi bi-list" id="reportages-toggle-icon"></i>
       </button>
     </div>

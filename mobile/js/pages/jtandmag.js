@@ -62,8 +62,8 @@ function buildGridCard(item) {
           : placeholder('140px')}
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(0,0,0,0.9) 100%);"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
-          <p class="mb-1 fw-semibold" style="font-size:12px;color:var(--text-1,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-          <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--text-3,#888);"
+          <p class="mb-1 fw-semibold" style="font-size:12px;color: var(--description-grid-color, #fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+          <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--text-4, #fff);"
             <i class="bi bi-eye"></i><span>${views}</span>
             ${host ? `<span>•</span><i class="bi bi-person"></i><span>${esc(host)}</span>` : ''}
           </div>
@@ -88,10 +88,10 @@ function buildListCard(item) {
       </div>
       <div class="d-flex flex-column justify-content-between p-2" style="flex:1;overflow:hidden;">
         <div>
-          <p class="mb-1 fw-semibold" style="font-size:13px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+          <p class="mb-1 fw-semibold" style="font-size:13px;color: var(--description-list-color, #fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
           
         </div>
-        <div class="d-flex align-items-center gap-1 mt-1" style="font-size:11px;color:#888;">
+        <div class="d-flex align-items-center gap-1 mt-1" style="font-size:11px;color:var(--text-3,#888);">
           <i class="bi bi-eye"></i><span>${views}</span>
           ${host ? `<span>•</span><i class="bi bi-person"></i><span>${esc(host)}</span>` : ''}
           <span>•</span><i class="bi bi-clock"></i><span>${time}</span>

@@ -69,8 +69,8 @@ function renderResults(items) {
               ${imgUrl ? `<img src="${esc(imgUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : `<i class="bi ${cfg.icon}" style="color:#333;font-size:20px;"></i>`}
             </div>
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;">
-              <p style="margin:0;font-size:14px;font-weight:600;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35;">${esc(item.title)}</p>
-              ${item.description ? `<p style="margin:0;font-size:12px;color:#666;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;">${esc(item.description)}</p>` : ''}
+              <p style="margin:0;font-size:14px;font-weight:600;color:var(--search-text-title, #000000);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35;">${esc(item.title)}</p>
+              ${item.description ? `<p style="margin:0;font-size:12px;color:var(--search-text-title, #666);overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;">${esc(item.description)}</p>` : ''}
             </div>
             <i class="bi bi-chevron-right" style="color:#444;font-size:16px;align-self:center;flex-shrink:0;"></i>
           </div>`;
@@ -107,7 +107,7 @@ async function doSearch(q) {
     renderResults(res?.items || []);
   } catch(e) {
     const area = document.getElementById('srch-results');
-    if (area) area.innerHTML = `<p style="color:#666;text-align:center;padding:40px;">Erreur lors de la recherche</p>`;
+    if (area) area.innerHTML = `<p style="color:var(--search-text-title, #666);text-align:center;padding:40px;">Erreur lors de la recherche</p>`;
   }
   document.getElementById('srch-spinner')?.classList.add('d-none');
 }
@@ -163,7 +163,7 @@ export async function loadSearch() {
 
     <!-- Suggestions catégories -->
     <div id="srch-suggestions" style="padding:4px 16px 16px;">
-      <p style="font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;">Parcourir par catégorie</p>
+      <p style="font-size:12px;font-weight:700;color:var(--search-text-title, #666);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;">Parcourir par catégorie</p>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
         ${suggestions.map(s => `
         <div onclick="window.location.hash='${s.href}'"
@@ -171,7 +171,7 @@ export async function loadSearch() {
                     transition:background .15s;"
              onmouseover="this.style.background='#1a1a1a'" onmouseout="this.style.background='#111'">
           <i class="bi ${s.icon}" style="font-size:24px;color:${s.color};display:block;margin-bottom:8px;"></i>
-          <span style="font-size:12px;color:#ccc;font-weight:600;">${esc(s.label)}</span>
+          <span style="font-size:12px;color:var(--search-text-title, #666);font-weight:600;">${esc(s.label)}</span>
         </div>`).join('')}
       </div>
     </div>

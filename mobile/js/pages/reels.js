@@ -89,8 +89,8 @@ function buildReel(reel, index, isLiked = false) {
           position:absolute;bottom:55px;left:0;right:0;
           background:linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
           padding:20px 14px 20px;pointer-events:none;">
-        ${title       ? `<p style="margin:0 0 4px;font-weight:700;color:var(--text-1,#fff);font-size:14px;line-height:1.3;">${title}</p>` : ''}
-        ${description ? `<p style="margin:0;color:var(--text-2,rgba(255,255,255,0.8));font-size:12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${description}</p>` : ''}
+        ${title       ? `<p style="margin:0 0 4px;font-weight:700;color:var(--title-reels-color,#fff);font-size:14px;line-height:1.3;">${title}</p>` : ''}
+        ${description ? `<p style="margin:0;color:var(--description-reels-color,#fff);font-size:12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${description}</p>` : ''}
       </div>
 
       <!-- Boutons droite -->
@@ -104,7 +104,7 @@ function buildReel(reel, index, isLiked = false) {
                 style="background:none;border:none;padding:0;cursor:pointer;
                        display:flex;flex-direction:column;align-items:center;gap:4px;">
           <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}" style="font-size:30px;color:${isLiked ? '#E23E3E' : '#fff'};transition:color .15s,transform .15s;"></i>
-          <span class="reel-like-count" style="color:#fff;font-size:12px;font-weight:600;">${formatCount(likes)}</span>
+          <span class="reel-like-count" style="color:var(--text-1,#fff);font-size:12px;font-weight:600;">${formatCount(likes)}</span>
         </button>
 
         <!-- Commentaires -->
@@ -114,8 +114,8 @@ function buildReel(reel, index, isLiked = false) {
                 onclick="window.__reelOpenComments('${id}')"
                 style="background:none;border:none;padding:0;cursor:pointer;
                        display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <i class="bi bi-chat-dots" style="font-size:28px;color:#fff;"></i>
-          <span class="reel-comment-count" data-id="${id}" style="color:#fff;font-size:12px;font-weight:600;">${formatCount(comments)}</span>
+          <i class="bi bi-chat-dots" style="font-size:28px;color:var(--text-1,#fff);"></i>
+          <span class="reel-comment-count" data-id="${id}" style="color:var(--text-1,#fff);font-size:12px;font-weight:600;">${formatCount(comments)}</span>
         </button>` : ''}
 
         <!-- Partager -->
@@ -124,8 +124,8 @@ function buildReel(reel, index, isLiked = false) {
                 onclick="window.__reelShare(this)"
                 style="background:none;border:none;padding:0;cursor:pointer;
                        display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <i class="bi bi-share" style="font-size:27px;color:#fff;"></i>
-          <span class="reel-share-count" data-id="${id}" style="color:#fff;font-size:12px;font-weight:600;">${formatCount(shares)}</span>
+          <i class="bi bi-share" style="font-size:27px;color:var(--text-1,#fff);"></i>
+          <span class="reel-share-count" data-id="${id}" style="color:var(--text-1,#fff);font-size:12px;font-weight:600;">${formatCount(shares)}</span>
         </button>
 
       </div>

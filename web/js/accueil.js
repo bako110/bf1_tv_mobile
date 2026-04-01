@@ -243,6 +243,18 @@ async function loadAllData() {
       return dateB - dateA;
     });
 
+    // Mettre à jour les likes réels depuis l'API pour chaque contenu
+    await Promise.all(
+      allData.map(async (item) => {
+        try {
+          const realLikes = await api.getLikesCount(item._contentType, item._id || item.id);
+          item.likes = formatNumber(realLikes);
+        } catch (e) {
+          // ignore
+        }
+      })
+    );
+
     allVideosData = allData;
     console.log(`✅ ${allData.length} contenus chargés`);
     console.log(`📅 Les ${ITEMS_PER_PAGE} derniers contenus:`, allData.slice(0, ITEMS_PER_PAGE).map(item => ({ title: item.title, date: item.date })));

@@ -56,24 +56,20 @@ function buildGridCard(item) {
   const date = formatTime(item.aired_at || item.created_at);
 
   return `
-    <div class="mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;" onclick="window.location.hash='#/show/reportage/${item.id||item._id}'">
+    <div class="mb-3" style="background: var(--card-bg, #1a1a1a); border-radius: 10px; overflow: hidden; cursor: pointer; position: relative;" onclick="window.location.hash='#/show/reportage/${item.id||item._id}'">
       <div style="position:relative;">
         ${img
           ? `<img src="${esc(img)}" alt="" style="width:100%;height:200px;object-fit:cover;display:block;">`
           : placeholder('200px')}
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,transparent 30%,transparent 60%,rgba(0,0,0,0.85) 100%);"></div>
-        <!-- durée badge top-right -->
-        <!-- <div style="position:absolute;top:10px;right:10px;">
-          <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,0.75);color:#fff;border-radius:4px;padding:3px 7px;font-size:11px;">
-            <i class="bi bi-clock" style="font-size:10px;"></i>${esc(dur)}
-          </span>
-        </div> -->
-        <!-- info bas -->
         <div style="position:absolute;bottom:0;left:0;right:0;padding:12px;">
-          <p class="mb-1 fw-semibold" style="font-size:14px;color:var(--text-1,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-          <div class="d-flex align-items-center gap-1" style="font-size:11px;color:var(--text-3,#B0B0B0);"
-            <i class="bi bi-eye"></i><span>${views}</span>
-            <span>•</span><i class="bi bi-calendar3"></i><span>${date}</span>
+          <p class="mb-1 fw-semibold" style="font-size:14px;color: var(--description-grid-color, #fff); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${esc(title)}</p>
+          <div class="d-flex align-items-center gap-1" style="font-size:11px;">
+            <i class="bi bi-eye" style="color:var(--text-4,#B0B0B0);"></i>
+            <span style="color:var(--text-4,#B0B0B0);">${views}</span>
+            <span style="color:var(--text-4,#B0B0B0);">•</span>
+            <i class="bi bi-calendar3" style="color:var(--text-4,#B0B0B0);"></i>
+            <span style="color:var(--text-4,#B0B0B0);">${date}</span>
           </div>
         </div>
       </div>
@@ -88,7 +84,7 @@ function buildListCard(item) {
   const date = formatTime(item.aired_at || item.created_at);
 
   return `
-    <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;" onclick="window.location.hash='#/show/reportage/${item.id||item._id}'">
+    <div class="d-flex mb-3" style="background: var(--card-bg, #1a1a1a); border-radius: 10px; overflow: hidden; cursor: pointer; position: relative;" onclick="window.location.hash='#/show/reportage/${item.id||item._id}'">
       <div style="flex-shrink:0;position:relative;">
         ${img
           ? `<img src="${esc(img)}" alt="" style="width:120px;height:90px;object-fit:cover;">`
@@ -98,10 +94,13 @@ function buildListCard(item) {
         </span>
       </div>
       <div class="d-flex flex-column justify-content-between p-2" style="flex:1;overflow:hidden;">
-        <p class="mb-1 fw-semibold" style="font-size:13px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${esc(title)}</p>
-        <div class="d-flex align-items-center gap-1" style="font-size:11px;color:#888;">
-          <i class="bi bi-eye"></i><span>${views}</span>
-          <span>•</span><i class="bi bi-calendar3"></i><span>${date}</span>
+        <p class="mb-1 fw-semibold" style="font-size:13px;color: var(--description-list-color, #fff); overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;">${esc(title)}</p>
+        <div class="d-flex align-items-center gap-1" style="font-size:11px;">
+          <i class="bi bi-eye" style="color:var(--text-3,#888);"></i>
+          <span style="color:var(--text-3,#888);">${views}</span>
+          <span style="color:var(--text-3,#888);">•</span>
+          <i class="bi bi-calendar3" style="color:var(--text-3,#888);"></i>
+          <span style="color:var(--text-3,#888);">${date}</span>
         </div>
       </div>
     </div>`;
@@ -115,21 +114,22 @@ function formatDuration(d) {
   const h = Math.floor(m / 60), r = m % 60;
   return r ? `${h}h ${r}min` : `${h}h`;
 }
-function spinner() {
-  return `<div class="d-flex justify-content-center align-items-center" style="min-height:200px;"><div class="spinner-border text-danger" role="status"></div></div>`;
-}
+
 function emptyState(icon, msg) {
-  return `<div class="text-center py-5"><i class="bi ${icon}" style="font-size:3rem;color:#444;"></i><p class="mt-3" style="color:#999;">${msg}</p></div>`;
+  return `<div class="text-center py-5"><i class="bi ${icon}" style="font-size:3rem; color: var(--text-secondary, #444);"></i><p class="mt-3" style="color: var(--text-secondary, #999);">${msg}</p></div>`;
 }
+
 function placeholder(h, w = '100%') {
-  return `<div style="width:${w};height:${h};background:#2a2a2a;display:flex;align-items:center;justify-content:center;"><i class="bi bi-image text-secondary"></i></div>`;
+  return `<div style="width:${w};height:${h};background: var(--border, #2a2a2a); display:flex; align-items:center; justify-content:center;"><i class="bi bi-image" style="color: var(--text-secondary, #888);"></i></div>`;
 }
+
 function formatViews(n) {
   if (!n) return '0';
   if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
   return String(n);
 }
+
 function formatTime(d) {
   if (!d) return 'Récemment';
   try {
@@ -144,6 +144,8 @@ function formatTime(d) {
     return new Date(d).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' });
   } catch { return 'Récemment'; }
 }
+
 function esc(s) {
+  if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

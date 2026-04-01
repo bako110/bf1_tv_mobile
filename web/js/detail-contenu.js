@@ -33,6 +33,15 @@ function getUrlParams() {
   };
 }
 
+// Normaliser le type pour l'API
+function normalizeApiType(type) {
+  if (!type) return 'default';
+  const lowerType = type.toLowerCase();
+  // Pour les archives, on utilise 'archive'
+  if (lowerType === 'archive' || lowerType === 'archives') return 'archive';
+  return lowerType;
+}
+
 // Helpers
 function escapeHtml(str) {
   if (!str) return '';
@@ -102,11 +111,11 @@ const TYPE_CONFIG = {
   show:           { label: 'Émission',        icon: 'bi-tv-fill',                color: '#8b5cf6', bgGradient: 'linear-gradient(135deg, #8b5cf620, #8b5cf640)' },
   series:         { label: 'Série',           icon: 'bi-collection-play-fill',   color: '#8b5cf6', bgGradient: 'linear-gradient(135deg, #8b5cf620, #8b5cf640)' },
   reel:           { label: 'Reel',            icon: 'bi-play-circle-fill',       color: '#ec4899', bgGradient: 'linear-gradient(135deg, #ec489920, #ec489940)' },
-  breaking_news:     { label: 'Flash Info',  icon: 'bi-lightning-fill',         color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
-  emission_category:  { label: 'Émission',    icon: 'bi-tv-fill',                color: '#10b981', bgGradient: 'linear-gradient(135deg, #10b98120, #10b98140)' },
-  popular_program:    { label: 'Programme',   icon: 'bi-star-fill',              color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
-  program:            { label: 'Programme',   icon: 'bi-star-fill',              color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
-  default:            { label: 'Contenu',     icon: 'bi-play-circle',            color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' }
+  breaking_news:  { label: 'Flash Info',      icon: 'bi-lightning-fill',         color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
+  emission_category: { label: 'Émission',     icon: 'bi-tv-fill',                color: '#10b981', bgGradient: 'linear-gradient(135deg, #10b98120, #10b98140)' },
+  popular_program: { label: 'Programme',      icon: 'bi-star-fill',              color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
+  program:        { label: 'Programme',       icon: 'bi-star-fill',              color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
+  default:        { label: 'Contenu',         icon: 'bi-play-circle',            color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' }
 };
 
 // Variables globales
@@ -118,16 +127,10 @@ let currentUser = null;
 // ==================== FONCTION DE REDIRECTION ====================
 function redirectToDetail(id, type, title = '') {
   const slug = slugify(title);
-  let page = '';
-  
-  // Utiliser le slug si disponible, sinon fallback sur l'ID
   const query = slug ? `slug=${slug}&type=${type}` : `id=${id}&type=${type}`;
-  page = `detail-contenu.html?${query}`;
-  
-  window.location.href = page;
+  window.location.href = `detail-contenu.html?${query}`;
 }
 
-// Rendre la fonction accessible globalement
 window.redirectToDetail = redirectToDetail;
 // ================================================================
 
@@ -161,70 +164,66 @@ async function loadContentDetail() {
     return;
   }
   
-  currentType = type;
+  // Normaliser le type pour l'affichage et l'API
+  const displayType = type;
+  const apiType = normalizeApiType(type);
+  currentType = apiType;
   
-  const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.default;
+  const cfg = TYPE_CONFIG[apiType] || TYPE_CONFIG.default;
   
   try {
-    console.log(`📡 Chargement du contenu: ${type}/${slug || id}`);
+    console.log(`📡 Chargement du contenu: ${apiType}/${slug || id}`);
     
-    // Récupérer le contenu (par slug d'abord, puis par ID)
     let content = null;
     let accessError = null;
     
     try {
       if (slug) {
-        content = await getContentBySlug(slug, type);
+        content = await getContentBySlug(slug, apiType);
       } else {
-        content = await api.getShowById(id, type);
+        content = await api.getShowById(id, apiType);
       }
       currentId = content?._id || content?.id;
     } catch (err) {
       accessError = err;
       console.error('Erreur API:', err);
     }
-    
+
     if (!content) {
       const status = accessError?.status;
       const isLoggedIn = api.isAuthenticated();
-      
       if (status === 401) {
-        showAccessDenied('Connectez-vous pour accéder à ce contenu', false);
+        showError('Vous devez être connecté pour accéder à ce contenu.');
         return;
       }
       if (status === 403) {
-        showAccessDenied('Abonnement requis pour accéder à ce contenu', true);
+        showError('Vous n\'avez pas accès à ce contenu (abonnement requis ou accès restreint).');
         return;
       }
-      showError('Contenu non trouvé');
+      showError('Contenu non trouvé ou inaccessible.');
       return;
     }
     
     currentContent = content;
     currentUser = api.getUser();
     
-    // Récupérer les données supplémentaires
     const [related, comments, likesCount] = await Promise.all([
-      api.getRelatedByType(type, id).catch(() => []),
-      api.getComments(type, id).catch(() => []),
-      api.getLikesCount(type, id).catch(() => 0)
+      api.getRelatedByType(apiType, currentId).catch(() => []),
+      api.getComments(apiType, currentId).catch(() => []),
+      api.getLikesCount(apiType, currentId).catch(() => 0)
     ]);
-    
-    // Vérifier les likes et favoris
+
     let userLiked = false;
     let userFavorited = false;
     if (currentUser) {
       [userLiked, userFavorited] = await Promise.all([
-        api.checkLiked(type, id).catch(() => false),
-        api.checkFavorite(type, id).catch(() => false)
+        api.checkLiked(apiType, currentId).catch(() => false),
+        api.checkFavorite(apiType, currentId).catch(() => false)
       ]);
     }
     
-    // Rendre le HTML
     renderContent(content, cfg, related, comments, likesCount, userLiked, userFavorited);
-    
-    // Initialiser les événements
-    initEvents(type, id, comments.length, userLiked, userFavorited, likesCount);
+    initEvents(apiType, currentId, comments.length, userLiked, userFavorited, likesCount);
     
   } catch (error) {
     console.error('❌ Erreur chargement:', error);
@@ -246,17 +245,13 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
   const channel = content.channel_name || content.channel;
   const category = content.category || content.genre;
 
-  // Mettre à jour les méta Open Graph / Twitter dynamiquement
   updatePageMeta(title, description, image || 'https://bf1-tv-mobile.onrender.com/logo.png');
 
-  // Déterminer si c'est une vidéo YouTube
   const isYoutube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'));
   
   container.innerHTML = `
     <div class="detail-layout">
-      <!-- Colonne principale -->
       <div class="detail-main">
-        <!-- Player vidéo -->
         <div class="video-player-container" id="video-player-container">
           ${videoUrl ? `
             ${isYoutube ? renderYoutubePlayer(videoUrl, image) : renderVideoPlayer(videoUrl, image)}
@@ -276,7 +271,6 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
           `}
         </div>
         
-        <!-- Infos du contenu -->
         <div class="content-info">
           <div class="content-header">
             <span class="content-badge" style="background: ${cfg.color}">
@@ -300,7 +294,6 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
             </div>
           ` : ''}
           
-          <!-- Actions -->
           <div class="content-actions">
             <button class="action-btn like-btn ${userLiked ? 'active' : ''}" id="like-btn">
               <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
@@ -320,7 +313,6 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
             </button>
           </div>
           
-          <!-- Description -->
           ${description ? `
             <div class="content-description" id="description-container">
               <div class="description-text ${description.length > 400 ? 'collapsed' : ''}" id="description-text">
@@ -335,7 +327,6 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
           ` : ''}
         </div>
         
-        <!-- Commentaires -->
         <div class="comments-section" id="comments-section">
           <div class="comments-header">
             <h3><i class="bi bi-chat-dots-fill"></i> Commentaires <span id="comments-count">(${comments.length})</span></h3>
@@ -356,7 +347,6 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
         </div>
       </div>
       
-      <!-- Colonne latérale - Contenus similaires -->
       ${related.length > 0 ? `
         <div class="detail-sidebar">
           <h3 class="sidebar-title"><i class="bi bi-grid-3x3-gap-fill"></i> Vous aimerez aussi</h3>
@@ -369,7 +359,6 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
   `;
 }
 
-// Rendre le player YouTube
 function renderYoutubePlayer(videoUrl, poster) {
   const videoId = extractYoutubeId(videoUrl);
   if (!videoId) return renderVideoPlayer(videoUrl, poster);
@@ -385,7 +374,6 @@ function renderYoutubePlayer(videoUrl, poster) {
   `;
 }
 
-// Rendre le player vidéo standard
 function renderVideoPlayer(videoUrl, poster) {
   return `
     <video controls autoplay playsinline poster="${poster || ''}" class="video-player">
@@ -395,14 +383,12 @@ function renderVideoPlayer(videoUrl, poster) {
   `;
 }
 
-// Extraire l'ID YouTube
 function extractYoutubeId(url) {
   if (!url) return null;
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
   return match ? match[1] : null;
 }
 
-// Rendre un commentaire
 function renderComments(comments, user) {
   if (!comments.length) {
     return `<p class="no-comments">Aucun commentaire pour l'instant. Soyez le premier !</p>`;
@@ -415,7 +401,7 @@ function renderComments(comments, user) {
     
     return `
       <div class="comment-item" data-id="${c.id || c._id}">
-        <div class="comment-avatar" style="background: var(--red);">${escapeHtml(avatar)}</div>
+        <div class="comment-avatar" style="background: var(--primary, #e8222a);">${escapeHtml(avatar)}</div>
         <div class="comment-content">
           <div class="comment-header">
             <span class="comment-author">${escapeHtml(username)}</span>
@@ -434,13 +420,13 @@ function renderComments(comments, user) {
   }).join('');
 }
 
-// Rendre un élément similaire
 function renderRelatedItem(item, currentType) {
   const title = item.title || 'Sans titre';
   const image = getImageUrl(item.image_url || item.image || item.thumbnail);
   const duration = item.duration_minutes || item.duration;
   const id = item.id || item._id;
-  const type = item._contentType || currentType;
+  let type = item._contentType || currentType;
+  type = normalizeApiType(type);
   
   return `
     <div class="related-item" onclick="redirectToDetail('${id}', '${type}', '${escapeHtml(title)}')">
@@ -457,13 +443,12 @@ function renderRelatedItem(item, currentType) {
 }
 
 // Initialiser les événements
-function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCount) {
+function initEvents(apiType, contentId, commentsCount, userLiked, userFavorited, likesCount) {
   let currentLiked = userLiked;
   let currentFavorited = userFavorited;
   let currentLikesCount = likesCount;
   let currentCommentsCount = commentsCount;
   
-  // Like
   const likeBtn = document.getElementById('like-btn');
   if (likeBtn) {
     likeBtn.addEventListener('click', async () => {
@@ -472,27 +457,24 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
         setTimeout(() => window.location.href = 'connexion.html', 1500);
         return;
       }
-      
       likeBtn.disabled = true;
       try {
-        const res = await api.toggleLike(type, id);
+        const res = await api.toggleLike(apiType, contentId);
         currentLiked = res?.liked ?? !currentLiked;
         currentLikesCount = res?.count ?? (currentLiked ? currentLikesCount + 1 : Math.max(0, currentLikesCount - 1));
-        
         const icon = likeBtn.querySelector('i');
         const countSpan = likeBtn.querySelector('#like-count');
-        
         if (icon) icon.className = currentLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
         likeBtn.classList.toggle('active', currentLiked);
         if (countSpan) countSpan.textContent = formatNumber(currentLikesCount);
       } catch (err) {
         console.error('Erreur like:', err);
+        showToast('Erreur lors du like', 'error');
       }
       likeBtn.disabled = false;
     });
   }
-  
-  // Favori
+
   const favBtn = document.getElementById('favorite-btn');
   if (favBtn) {
     favBtn.addEventListener('click', async () => {
@@ -501,29 +483,27 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
         setTimeout(() => window.location.href = 'connexion.html', 1500);
         return;
       }
-      
       favBtn.disabled = true;
       try {
         if (currentFavorited) {
-          await api.removeFavorite(type, id);
+          await api.removeFavorite(apiType, contentId);
           currentFavorited = false;
         } else {
-          await api.addFavorite(type, id);
+          await api.addFavorite(apiType, contentId);
           currentFavorited = true;
         }
-        
         const icon = favBtn.querySelector('i');
         icon.className = currentFavorited ? 'bi bi-bookmark-fill' : 'bi bi-bookmark';
         favBtn.classList.toggle('active', currentFavorited);
         showToast(currentFavorited ? 'Ajouté aux favoris' : 'Retiré des favoris', 'success');
       } catch (err) {
         console.error('Erreur favori:', err);
+        showToast('Erreur lors de l\'ajout aux favoris', 'error');
       }
       favBtn.disabled = false;
     });
   }
   
-  // Commentaires
   const commentBtn = document.getElementById('comment-btn');
   if (commentBtn) {
     commentBtn.addEventListener('click', () => {
@@ -531,7 +511,6 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
     });
   }
   
-  // Partager
   const shareBtn = document.getElementById('share-btn');
   if (shareBtn) {
     shareBtn.addEventListener('click', () => {
@@ -546,37 +525,31 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
     });
   }
   
-  // Envoi de commentaire
   const submitBtn = document.getElementById('submit-comment');
   const commentInput = document.getElementById('comment-input');
   if (submitBtn && commentInput) {
     submitBtn.addEventListener('click', async () => {
       const text = commentInput.value.trim();
       if (!text) return;
-      
       if (!api.isAuthenticated()) {
         showToast('Connectez-vous pour commenter', 'error');
         setTimeout(() => window.location.href = 'connexion.html', 1500);
         return;
       }
-      
       submitBtn.disabled = true;
       try {
-        await api.addComment(type, id, text);
+        await api.addComment(apiType, contentId, text);
         commentInput.value = '';
-        
-        const comments = await api.getComments(type, id);
+        const comments = await api.getComments(apiType, contentId);
         const commentsList = document.getElementById('comments-list');
         if (commentsList) {
           commentsList.innerHTML = renderComments(comments, currentUser);
         }
-        
         currentCommentsCount = comments.length;
         const commentCountSpan = document.getElementById('comment-count');
         const commentsCountSpan = document.getElementById('comments-count');
         if (commentCountSpan) commentCountSpan.textContent = currentCommentsCount;
         if (commentsCountSpan) commentsCountSpan.textContent = `(${currentCommentsCount})`;
-        
         showToast('Commentaire ajouté', 'success');
       } catch (err) {
         console.error('Erreur commentaire:', err);
@@ -586,7 +559,6 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
     });
   }
   
-  // Lire la suite
   const readMoreBtn = document.getElementById('read-more-btn');
   if (readMoreBtn) {
     readMoreBtn.addEventListener('click', () => {
@@ -600,11 +572,9 @@ function initEvents(type, id, commentsCount, userLiked, userFavorited, likesCoun
     });
   }
   
-  // YouTube player
   initYoutubePlayers();
 }
 
-// Initialiser les lecteurs YouTube
 function initYoutubePlayers() {
   const players = document.querySelectorAll('.youtube-player-wrapper');
   players.forEach(wrapper => {
@@ -627,7 +597,6 @@ function initYoutubePlayers() {
   });
 }
 
-// Copier dans le presse-papier
 function copyToClipboard() {
   navigator.clipboard.writeText(window.location.href).then(() => {
     showToast('Lien copié dans le presse-papier', 'success');
@@ -636,7 +605,6 @@ function copyToClipboard() {
   });
 }
 
-// Afficher un toast
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast-notification ${type}`;
@@ -662,13 +630,12 @@ function showToast(message, type = 'info') {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Afficher une erreur
 function showError(message) {
   const container = document.getElementById('detail-container');
   if (container) {
     container.innerHTML = `
       <div class="error-container text-center py-5">
-        <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: var(--red);"></i>
+        <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: var(--primary, #e8222a);"></i>
         <h3 class="mt-3">Erreur</h3>
         <p>${escapeHtml(message)}</p>
         <button onclick="history.back()" class="btn-outline mt-3">Retour</button>

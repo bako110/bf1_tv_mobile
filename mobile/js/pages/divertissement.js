@@ -62,10 +62,10 @@ function buildGridCard(item) {
         <div style="position:absolute;top:8px;left:8px;">
         </div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
-          <p class="mb-1 fw-semibold" style="font-size:12px;color:var(--text-1,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-          <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--text-3,#888);"
-            <i class="bi bi-eye"></i><span>${views}</span>
-            <span>•</span><i class="bi bi-clock"></i><span>${time}</span>
+          <p class="mb-1 fw-semibold" style="font-size:12px;color: var(--description-grid-color, #fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+          <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--text-4,#888);">
+            <i class="bi bi-eye" style="color:var(--text-4,#888);"></i><span style="color:var(--text-4,#888);">${views}</span>
+            <span style="color:var(--text-4,#888);">•</span><i class="bi bi-clock" style="color:var(--text-4,#888);"></i><span style="color:var(--text-4,#888);">${time}</span>
           </div>
         </div>
       </div>
@@ -90,11 +90,11 @@ function buildListCard(item) {
           <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(226,62,62,0.85);color:#fff;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;margin-bottom:4px;">
             <i class="bi bi-mic-fill" style="font-size:9px;"></i>Divertissement
           </span>
-          <p class="mb-0" style="font-size:13px;color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+          <p class="mb-0" style="font-size:13px;color: var(--description-list-color, #fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
         </div>
-        <div class="d-flex align-items-center gap-1" style="font-size:11px;color:#888;">
-          <i class="bi bi-eye"></i><span>${views}</span>
-          <span>•</span><i class="bi bi-clock"></i><span>${time}</span>
+        <div class="d-flex align-items-center gap-1" style="font-size:11px;color:var(--text-3,#888);">
+          <i class="bi bi-eye" style="color:var(--text-4,#888);"></i><span style="color:var(--text-4,#888);">${views}</span>
+          <span style="color:var(--text-4,#888);">•</span><i class="bi bi-clock" style="color:var(--text-4,#888);"></i><span style="color:var(--text-4,#888);">${time}</span>
         </div>
       </div>
     </div>`;

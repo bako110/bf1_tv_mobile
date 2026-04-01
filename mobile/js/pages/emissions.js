@@ -68,8 +68,7 @@ function buildCategoryCard(cat) {
 
         <!-- name bottom -->
         <div class="position-absolute bottom-0 start-0 end-0 p-2">
-          <p class="mb-0 fw-bold text-white"
-             style="font-size:13px;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.8);">${esc(name)}</p>
+          <p class="mb-0 fw-bold" style="color:var(--description-grid-color, #fff);font-size:13px;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.8);">${esc(name)}</p>
         </div>
       </div>
     </div>
