@@ -570,6 +570,153 @@
   animation: slideIn 0.3s ease;
 }
 
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  .custom-modal {
+    background: var(--card-bg, #1a1a1a);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+  }
+  
+  .custom-modal-confirm {
+    max-width: 400px;
+  }
+  
+  .custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border, #2a2a2a);
+  }
+  
+  .custom-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text, #fff);
+  }
+  
+  .custom-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-secondary, #888);
+    padding: 0;
+    line-height: 1;
+  }
+  
+  .custom-modal-close:hover {
+    color: var(--text, #fff);
+  }
+  
+  .custom-modal-body {
+    padding: 20px;
+  }
+  
+  .custom-modal-body textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border, #333);
+    background: var(--bg-2, #0d0d0d);
+    color: var(--text, #fff);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+  }
+  
+  .custom-modal-body textarea:focus {
+    outline: none;
+    border-color: var(--primary, #e8222a);
+  }
+  
+  .custom-modal-body p {
+    margin: 0;
+    color: var(--text, #fff);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  
+  .custom-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border, #2a2a2a);
+  }
+  
+  .custom-modal-footer button {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border, #333);
+    color: var(--text-secondary, #888);
+  }
+  
+  .btn-cancel:hover {
+    background: var(--hover-bg, #2a2a2a);
+    color: var(--text, #fff);
+  }
+  
+  .btn-save, .btn-confirm {
+    background: var(--primary, #e8222a);
+    border: none;
+    color: white;
+  }
+  
+  .btn-save:hover, .btn-confirm:hover {
+    background: #c41e24;
+    transform: translateY(-1px);
+  }
+  
+  .btn-confirm {
+    background: #ef4444;
+  }
+  
+  .btn-confirm:hover {
+    background: #dc2626;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
 @keyframes slideIn {
   from {
     transform: translateX(100%);

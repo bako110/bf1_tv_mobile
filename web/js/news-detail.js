@@ -23,6 +23,7 @@ function updatePageMeta(title, description, image) {
 }
 
 let currentUser = null;
+let currentNewsId = null;
 
 export async function loadNewsDetail() {
   // Récupérer le slug ou l'ID depuis l'URL
@@ -46,23 +47,22 @@ export async function loadNewsDetail() {
       return;
     }
 
-    // Récupérer l'utilisateur courant
+    currentNewsId = news._id || news.id;
     currentUser = api.getUser();
 
     // Charger les commentaires et likes
     const [comments, likesCount] = await Promise.all([
-      api.getComments('breaking_news', news._id || news.id).catch(() => []),
-      api.getLikesCount('breaking_news', news._id || news.id).catch(() => 0)
+      api.getComments('breaking_news', currentNewsId).catch(() => []),
+      api.getLikesCount('breaking_news', currentNewsId).catch(() => 0)
     ]);
 
     // Vérifier les likes et favoris de l'utilisateur
     let userLiked = false;
     let userFavorited = false;
     if (api.isAuthenticated()) {
-      const contentId = news._id || news.id;
       [userLiked, userFavorited] = await Promise.all([
-        api.checkLiked('breaking_news', contentId).catch(() => false),
-        api.checkFavorite('breaking_news', contentId).catch(() => false)
+        api.checkLiked('breaking_news', currentNewsId).catch(() => false),
+        api.checkFavorite('breaking_news', currentNewsId).catch(() => false)
       ]);
     }
 
@@ -70,10 +70,10 @@ export async function loadNewsDetail() {
     renderNewsDetail(news, comments, likesCount, userLiked, userFavorited);
 
     // Initialiser les événements
-    initNewsEvents(news._id || news.id, comments, userLiked, userFavorited, likesCount);
+    initNewsEvents(currentNewsId, comments, userLiked, userFavorited, likesCount);
 
     // Charger les articles similaires
-    loadRelatedNews(news.category || 'Actualités', news._id || news.id);
+    loadRelatedNews(news.category || 'Actualités', currentNewsId);
 
   } catch (error) {
     console.error('❌ Erreur chargement détails:', error);
@@ -162,7 +162,12 @@ function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false
         ${currentUser ? `
           <div class="comment-form">
             <textarea id="comment-input" placeholder="Ajouter un commentaire..." maxlength="1000" rows="2"></textarea>
-            <button id="submit-comment" class="btn-red">Envoyer</button>
+            <button id="submit-comment" class="btn-red">
+              <span class="btn-text">Envoyer</span>
+              <span class="btn-spinner" style="display: none;">
+                <i class="bi bi-hourglass-split"></i>
+              </span>
+            </button>
           </div>
         ` : `
           <div class="comment-login-prompt">
@@ -181,10 +186,10 @@ function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false
     
     if (full.style.display === 'none') {
       preview.style.display = 'none';
-      full.style.display = '';
+      full.style.display = 'block';
       btn.innerHTML = '<span>Lire moins</span><i class="bi bi-chevron-up"></i>';
     } else {
-      preview.style.display = ''; // laisse le CSS (et le clamp mobile) reprendre
+      preview.style.display = 'block';
       full.style.display = 'none';
       btn.innerHTML = '<span>Lire la suite</span><i class="bi bi-chevron-down"></i>';
     }
@@ -195,7 +200,6 @@ async function loadRelatedNews(category, excludeId) {
   const container = document.getElementById('relatedNewsContainer');
   
   try {
-    // Charger toutes les news
     const allNews = await api.getNews();
     
     if (!allNews || allNews.length === 0) {
@@ -203,15 +207,14 @@ async function loadRelatedNews(category, excludeId) {
       return;
     }
 
-    // Filtrer tous les articles sauf l'article actuel et trier par date
     const related = allNews
       .filter(item => (item.id || item._id) !== excludeId)
       .sort((a, b) => {
         const dateA = new Date(a.created_at || a.published_at || 0);
         const dateB = new Date(b.created_at || b.published_at || 0);
-        return dateB - dateA; // Plus récent en premier
+        return dateB - dateA;
       })
-      .slice(0, 10); // Afficher jusqu'à 10 articles
+      .slice(0, 10);
 
     if (related.length === 0) {
       container.innerHTML = '<p class="text-secondary">Aucun article disponible</p>';
@@ -262,10 +265,8 @@ async function loadRelatedNews(category, excludeId) {
 function createContentPreview(content) {
   if (!content) return { preview: '<p>Contenu non disponible</p>', hasMore: false };
   
-  // Diviser le contenu en lignes ou par longueur de caractères
   const lines = content.split('\n').filter(line => line.trim());
   
-  // Si le contenu est court (3 lignes ou moins de 300 caractères), afficher tout
   if (lines.length <= 3 || content.length <= 300) {
     return { 
       preview: formatContent(content), 
@@ -273,7 +274,6 @@ function createContentPreview(content) {
     };
   }
   
-  // Prendre les 3 premières lignes et ajouter "..."
   const previewLines = lines.slice(0, 3);
   const previewText = previewLines.join('\n') + '\n...';
   
@@ -283,15 +283,9 @@ function createContentPreview(content) {
   };
 }
 
-// Fonction de debug pour voir le contenu
-window.debugContent = function() {
-  console.log('Content lines:', document.getElementById('contentPreview')?.textContent.split('\n').length);
-};
-
 function formatContent(content) {
   if (!content) return '<p>Contenu non disponible</p>';
   
-  // Convertir les retours à la ligne en paragraphes
   const paragraphs = content.split('\n\n').filter(p => p.trim());
   
   return paragraphs.map(p => `<p>${escHtml(p.trim())}</p>`).join('');
@@ -320,25 +314,37 @@ function formatNumber(num) {
   return num.toString();
 }
 
+function formatRelative(dateString) {
+  if (!dateString) return 'À l\'instant';
+  
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 60) return `${diffMins}m`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}j`;
+    
+    return formatDate(dateString);
+  } catch {
+    return 'Date inconnue';
+  }
+}
+
 function escHtml(str) {
+  if (!str) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
-}
-
-function showError(message) {
-  const container = document.getElementById('newsDetailContainer');
-  container.innerHTML = `
-    <div class="text-center py-5">
-      <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: var(--red);"></i>
-      <h2 class="mt-3">${escHtml(message)}</h2>
-      <a href="/pages/flashinfo.html" class="btn btn-outline-danger mt-3">
-        <i class="bi bi-arrow-left"></i> Retour aux Flash Infos
-      </a>
-    </div>
-  `;
 }
 
 function renderComments(comments, user) {
@@ -353,7 +359,7 @@ function renderComments(comments, user) {
     
     return `
       <div class="comment-item" data-id="${c.id || c._id}">
-        <div class="comment-avatar" style="background: var(--red);">${escHtml(avatar)}</div>
+        <div class="comment-avatar" style="background: var(--primary, #e8222a);">${escHtml(avatar)}</div>
         <div class="comment-content">
           <div class="comment-header">
             <span class="comment-author">${escHtml(username)}</span>
@@ -400,8 +406,10 @@ function initNewsEvents(newsId, comments, userLiked, userFavorited, likesCount) 
         if (icon) icon.className = currentLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
         likeBtn.classList.toggle('active', currentLiked);
         if (countSpan) countSpan.textContent = formatNumber(currentLikesCount);
+        showToast(currentLiked ? 'Like ajouté' : 'Like retiré', 'success');
       } catch (err) {
         console.error('Erreur like:', err);
+        showToast('Erreur lors du like', 'error');
       }
       likeBtn.disabled = false;
     });
@@ -433,6 +441,7 @@ function initNewsEvents(newsId, comments, userLiked, userFavorited, likesCount) 
         showToast(currentFavorited ? 'Ajouté aux favoris' : 'Retiré des favoris', 'success');
       } catch (err) {
         console.error('Erreur favoris:', err);
+        showToast('Erreur lors de l\'ajout aux favoris', 'error');
       }
       favBtn.disabled = false;
     });
@@ -449,7 +458,7 @@ function initNewsEvents(newsId, comments, userLiked, userFavorited, likesCount) 
     });
   }
 
-  // Envoi de commentaire
+  // Envoi de commentaire avec spinner
   const submitBtn = document.getElementById('submit-comment');
   const commentInput = document.getElementById('comment-input');
   if (submitBtn && commentInput) {
@@ -463,18 +472,25 @@ function initNewsEvents(newsId, comments, userLiked, userFavorited, likesCount) 
         return;
       }
       
+      // Afficher le spinner
+      const btnText = submitBtn.querySelector('.btn-text');
+      const btnSpinner = submitBtn.querySelector('.btn-spinner');
+      if (btnText) btnText.style.display = 'none';
+      if (btnSpinner) btnSpinner.style.display = 'inline-block';
       submitBtn.disabled = true;
+      commentInput.disabled = true;
+      
       try {
         await api.addComment('breaking_news', newsId, text);
         commentInput.value = '';
         
-        const comments = await api.getComments('breaking_news', newsId);
+        const newComments = await api.getComments('breaking_news', newsId);
         const commentsList = document.getElementById('comments-list');
         if (commentsList) {
-          commentsList.innerHTML = renderComments(comments, currentUser);
+          commentsList.innerHTML = renderComments(newComments, currentUser);
         }
         
-        currentCommentsCount = comments.length;
+        currentCommentsCount = newComments.length;
         const commentCountSpan = document.getElementById('comment-count');
         const commentsCountSpan = document.getElementById('comments-count');
         if (commentCountSpan) commentCountSpan.textContent = currentCommentsCount;
@@ -484,37 +500,166 @@ function initNewsEvents(newsId, comments, userLiked, userFavorited, likesCount) 
       } catch (err) {
         console.error('Erreur commentaire:', err);
         showToast('Erreur lors de l\'envoi', 'error');
+      } finally {
+        // Restaurer l'état
+        if (btnText) btnText.style.display = 'inline-block';
+        if (btnSpinner) btnSpinner.style.display = 'none';
+        submitBtn.disabled = false;
+        commentInput.disabled = false;
+        commentInput.focus();
       }
-      submitBtn.disabled = false;
+    });
+  }
+
+  // Gestion des actions sur les commentaires (edit/suppr) avec modals personnalisés
+  const commentsList = document.getElementById('comments-list');
+  if (commentsList) {
+    commentsList.addEventListener('click', async (e) => {
+      const editBtn = e.target.closest('.edit-comment');
+      const deleteBtn = e.target.closest('.delete-comment');
+      
+      if (editBtn) {
+        const commentId = editBtn.dataset.id;
+        const commentItem = editBtn.closest('.comment-item');
+        const commentTextElem = commentItem.querySelector('.comment-text');
+        const oldText = commentTextElem ? commentTextElem.textContent : '';
+        
+        showEditModal(oldText, async (newText) => {
+          if (newText && newText.trim() && newText !== oldText) {
+            try {
+              await api.updateComment(commentId, newText.trim());
+              const newComments = await api.getComments('breaking_news', newsId);
+              commentsList.innerHTML = renderComments(newComments, currentUser);
+              showToast('Commentaire modifié', 'success');
+            } catch (err) {
+              showToast('Erreur lors de la modification', 'error');
+            }
+          }
+        });
+      } else if (deleteBtn) {
+        const commentId = deleteBtn.dataset.id;
+        
+        showConfirmModal('Supprimer ce commentaire ?', async (confirmed) => {
+          if (confirmed) {
+            try {
+              await api.deleteComment(commentId);
+              const newComments = await api.getComments('breaking_news', newsId);
+              commentsList.innerHTML = renderComments(newComments, currentUser);
+              showToast('Commentaire supprimé', 'success');
+            } catch (err) {
+              showToast('Erreur lors de la suppression', 'error');
+            }
+          }
+        });
+      }
     });
   }
 }
 
-function formatRelative(dateString) {
-  if (!dateString) return 'À l\'instant';
+// Modal personnalisé pour l'édition
+function showEditModal(oldText, onSave) {
+  removeExistingModals();
   
-  try {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'À l\'instant';
-    if (diffMins < 60) return `${diffMins}m`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h`;
-    
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays}j`;
-    
-    return formatDate(dateString);
-  } catch {
-    return 'Date inconnue';
+  const modal = document.createElement('div');
+  modal.className = 'custom-modal-overlay';
+  modal.innerHTML = `
+    <div class="custom-modal">
+      <div class="custom-modal-header">
+        <h3><i class="bi bi-pencil-square"></i> Modifier le commentaire</h3>
+        <button class="custom-modal-close">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <textarea id="edit-comment-textarea" rows="4" placeholder="Votre commentaire...">${escHtml(oldText)}</textarea>
+      </div>
+      <div class="custom-modal-footer">
+        <button class="btn-cancel">Annuler</button>
+        <button class="btn-save">Enregistrer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  const textarea = modal.querySelector('#edit-comment-textarea');
+  textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  
+  modal.querySelector('.custom-modal-close').onclick = () => modal.remove();
+  modal.querySelector('.btn-cancel').onclick = () => modal.remove();
+  modal.querySelector('.btn-save').onclick = () => {
+    const newText = textarea.value.trim();
+    modal.remove();
+    onSave(newText);
+  };
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+// Modal personnalisé pour la confirmation
+function showConfirmModal(message, onConfirm) {
+  removeExistingModals();
+  
+  const modal = document.createElement('div');
+  modal.className = 'custom-modal-overlay';
+  modal.innerHTML = `
+    <div class="custom-modal custom-modal-confirm">
+      <div class="custom-modal-header">
+        <h3><i class="bi bi-question-circle-fill"></i> Confirmation</h3>
+        <button class="custom-modal-close">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <p>${escHtml(message)}</p>
+      </div>
+      <div class="custom-modal-footer">
+        <button class="btn-cancel">Annuler</button>
+        <button class="btn-confirm">Oui, supprimer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  modal.querySelector('.custom-modal-close').onclick = () => {
+    modal.remove();
+    onConfirm(false);
+  };
+  modal.querySelector('.btn-cancel').onclick = () => {
+    modal.remove();
+    onConfirm(false);
+  };
+  modal.querySelector('.btn-confirm').onclick = () => {
+    modal.remove();
+    onConfirm(true);
+  };
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+      onConfirm(false);
+    }
+  });
+}
+
+function removeExistingModals() {
+  const existingModals = document.querySelectorAll('.custom-modal-overlay');
+  existingModals.forEach(modal => modal.remove());
+}
+
+function showError(message) {
+  const container = document.getElementById('newsDetailContainer');
+  if (container) {
+    container.innerHTML = `
+      <div class="text-center py-5">
+        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: var(--red);"></i>
+        <h2 class="mt-3">${escHtml(message)}</h2>
+        <a href="/pages/flashinfo.html" class="btn btn-outline-danger mt-3">
+          <i class="bi bi-arrow-left"></i> Retour aux Flash Infos
+        </a>
+      </div>
+    `;
   }
 }
 
-// Afficher un toast
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast-notification ${type}`;

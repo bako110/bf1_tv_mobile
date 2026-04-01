@@ -37,7 +37,6 @@ function getUrlParams() {
 function normalizeApiType(type) {
   if (!type) return 'default';
   const lowerType = type.toLowerCase();
-  // Pour les archives, on utilise 'archive'
   if (lowerType === 'archive' || lowerType === 'archives') return 'archive';
   return lowerType;
 }
@@ -102,20 +101,20 @@ function getImageUrl(imagePath) {
 
 // Configuration par type
 const TYPE_CONFIG = {
-  sport:          { label: 'Sport',           icon: 'bi-trophy-fill',            color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
-  jtandmag:       { label: 'JT & Magazine',   icon: 'bi-newspaper',              color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
-  divertissement: { label: 'Divertissement',  icon: 'bi-emoji-smile-fill',       color: '#10b981', bgGradient: 'linear-gradient(135deg, #10b98120, #10b98140)' },
-  reportage:      { label: 'Reportage',       icon: 'bi-camera-fill',            color: '#3b82f6', bgGradient: 'linear-gradient(135deg, #3b82f620, #3b82f640)' },
-  archive:        { label: 'Archive',         icon: 'bi-archive-fill',           color: '#6b7280', bgGradient: 'linear-gradient(135deg, #6b728020, #6b728040)' },
-  movie:          { label: 'Film',            icon: 'bi-film',                   color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
-  show:           { label: 'Émission',        icon: 'bi-tv-fill',                color: '#8b5cf6', bgGradient: 'linear-gradient(135deg, #8b5cf620, #8b5cf640)' },
-  series:         { label: 'Série',           icon: 'bi-collection-play-fill',   color: '#8b5cf6', bgGradient: 'linear-gradient(135deg, #8b5cf620, #8b5cf640)' },
-  reel:           { label: 'Reel',            icon: 'bi-play-circle-fill',       color: '#ec4899', bgGradient: 'linear-gradient(135deg, #ec489920, #ec489940)' },
-  breaking_news:  { label: 'Flash Info',      icon: 'bi-lightning-fill',         color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' },
-  emission_category: { label: 'Émission',     icon: 'bi-tv-fill',                color: '#10b981', bgGradient: 'linear-gradient(135deg, #10b98120, #10b98140)' },
-  popular_program: { label: 'Programme',      icon: 'bi-star-fill',              color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
-  program:        { label: 'Programme',       icon: 'bi-star-fill',              color: '#f59e0b', bgGradient: 'linear-gradient(135deg, #f59e0b20, #f59e0b40)' },
-  default:        { label: 'Contenu',         icon: 'bi-play-circle',            color: '#e8222a', bgGradient: 'linear-gradient(135deg, #e8222a20, #e8222a40)' }
+  sport:          { label: 'Sport',           icon: 'bi-trophy-fill',            color: '#f59e0b' },
+  jtandmag:       { label: 'JT & Magazine',   icon: 'bi-newspaper',              color: '#e8222a' },
+  divertissement: { label: 'Divertissement',  icon: 'bi-emoji-smile-fill',       color: '#10b981' },
+  reportage:      { label: 'Reportage',       icon: 'bi-camera-fill',            color: '#3b82f6' },
+  archive:        { label: 'Archive',         icon: 'bi-archive-fill',           color: '#6b7280' },
+  movie:          { label: 'Film',            icon: 'bi-film',                   color: '#e8222a' },
+  show:           { label: 'Émission',        icon: 'bi-tv-fill',                color: '#8b5cf6' },
+  series:         { label: 'Série',           icon: 'bi-collection-play-fill',   color: '#8b5cf6' },
+  reel:           { label: 'Reel',            icon: 'bi-play-circle-fill',       color: '#ec4899' },
+  breaking_news:  { label: 'Flash Info',      icon: 'bi-lightning-fill',         color: '#e8222a' },
+  emission_category: { label: 'Émission',     icon: 'bi-tv-fill',                color: '#10b981' },
+  popular_program: { label: 'Programme',      icon: 'bi-star-fill',              color: '#f59e0b' },
+  program:        { label: 'Programme',       icon: 'bi-star-fill',              color: '#f59e0b' },
+  default:        { label: 'Contenu',         icon: 'bi-play-circle',            color: '#e8222a' }
 };
 
 // Variables globales
@@ -134,27 +133,6 @@ function redirectToDetail(id, type, title = '') {
 window.redirectToDetail = redirectToDetail;
 // ================================================================
 
-// Afficher l'erreur d'accès
-function showAccessDenied(message, isLoggedIn = true) {
-  const container = document.getElementById('detail-container');
-  if (!container) return;
-  
-  container.innerHTML = `
-    <div class="access-denied text-center py-5">
-      <div class="access-denied-icon">
-        <i class="bi bi-lock-fill"></i>
-      </div>
-      <h3>Accès restreint</h3>
-      <p>${escapeHtml(message)}</p>
-      <div class="access-denied-buttons">
-        <button onclick="history.back()" class="btn-outline">Retour</button>
-        ${!isLoggedIn ? '<button onclick="window.location.href=\'connexion.html\'" class="btn-red">Se connecter</button>' : 
-                        '<button onclick="window.location.href=\'abonnement.html\'" class="btn-red">Voir les offres</button>'}
-      </div>
-    </div>
-  `;
-}
-
 // Charger et afficher le contenu
 async function loadContentDetail() {
   const { slug, id, type } = getUrlParams();
@@ -164,8 +142,6 @@ async function loadContentDetail() {
     return;
   }
   
-  // Normaliser le type pour l'affichage et l'API
-  const displayType = type;
   const apiType = normalizeApiType(type);
   currentType = apiType;
   
@@ -191,7 +167,6 @@ async function loadContentDetail() {
 
     if (!content) {
       const status = accessError?.status;
-      const isLoggedIn = api.isAuthenticated();
       if (status === 401) {
         showError('Vous devez être connecté pour accéder à ce contenu.');
         return;
@@ -337,7 +312,12 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
           ${currentUser ? `
             <div class="comment-form">
               <textarea id="comment-input" placeholder="Ajouter un commentaire..." maxlength="1000" rows="2"></textarea>
-              <button id="submit-comment" class="btn-red">Envoyer</button>
+              <button id="submit-comment" class="btn-red">
+                <span class="btn-text">Envoyer</span>
+                <span class="btn-spinner" style="display: none;">
+                  <i class="bi bi-hourglass-split"></i>
+                </span>
+              </button>
             </div>
           ` : `
             <div class="comment-login-prompt">
@@ -400,7 +380,7 @@ function renderComments(comments, user) {
     const avatar = (username[0] || 'U').toUpperCase();
     
     return `
-      <div class="comment-item" data-id="${c.id || c._id}">
+      <div class="comment-item" data-id="${c.id || c._id}" data-text="${escapeHtml(c.text)}">
         <div class="comment-avatar" style="background: var(--primary, #e8222a);">${escapeHtml(avatar)}</div>
         <div class="comment-content">
           <div class="comment-header">
@@ -467,6 +447,7 @@ function initEvents(apiType, contentId, commentsCount, userLiked, userFavorited,
         if (icon) icon.className = currentLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
         likeBtn.classList.toggle('active', currentLiked);
         if (countSpan) countSpan.textContent = formatNumber(currentLikesCount);
+        showToast(currentLiked ? 'Like ajouté' : 'Like retiré', 'success');
       } catch (err) {
         console.error('Erreur like:', err);
         showToast('Erreur lors du like', 'error');
@@ -536,7 +517,15 @@ function initEvents(apiType, contentId, commentsCount, userLiked, userFavorited,
         setTimeout(() => window.location.href = 'connexion.html', 1500);
         return;
       }
+      
+      // Afficher le spinner et désactiver le bouton
+      const btnText = submitBtn.querySelector('.btn-text');
+      const btnSpinner = submitBtn.querySelector('.btn-spinner');
+      if (btnText) btnText.style.display = 'none';
+      if (btnSpinner) btnSpinner.style.display = 'inline-block';
       submitBtn.disabled = true;
+      commentInput.disabled = true;
+      
       try {
         await api.addComment(apiType, contentId, text);
         commentInput.value = '';
@@ -554,8 +543,14 @@ function initEvents(apiType, contentId, commentsCount, userLiked, userFavorited,
       } catch (err) {
         console.error('Erreur commentaire:', err);
         showToast('Erreur lors de l\'envoi', 'error');
+      } finally {
+        // Restaurer l'état du bouton
+        if (btnText) btnText.style.display = 'inline-block';
+        if (btnSpinner) btnSpinner.style.display = 'none';
+        submitBtn.disabled = false;
+        commentInput.disabled = false;
+        commentInput.focus();
       }
-      submitBtn.disabled = false;
     });
   }
   
@@ -573,6 +568,136 @@ function initEvents(apiType, contentId, commentsCount, userLiked, userFavorited,
   }
   
   initYoutubePlayers();
+  
+  // Gestion des actions sur les commentaires (edit/suppr) avec modals personnalisés
+  const commentsList = document.getElementById('comments-list');
+  if (commentsList) {
+    commentsList.addEventListener('click', async (e) => {
+      const editBtn = e.target.closest('.edit-comment');
+      const deleteBtn = e.target.closest('.delete-comment');
+      if (editBtn) {
+        const commentId = editBtn.dataset.id;
+        const commentItem = editBtn.closest('.comment-item');
+        const commentTextElem = commentItem.querySelector('.comment-text');
+        const oldText = commentTextElem ? commentTextElem.textContent : '';
+        showEditModal(oldText, async (newText) => {
+          if (newText && newText.trim() && newText !== oldText) {
+            try {
+              await api.updateComment(commentId, newText.trim());
+              const comments = await api.getComments(apiType, contentId);
+              commentsList.innerHTML = renderComments(comments, currentUser);
+              showToast('Commentaire modifié', 'success');
+            } catch (err) {
+              showToast('Erreur lors de la modification', 'error');
+            }
+          }
+        });
+      } else if (deleteBtn) {
+        const commentId = deleteBtn.dataset.id;
+        showConfirmModal('Supprimer ce commentaire ?', async (confirmed) => {
+          if (confirmed) {
+            try {
+              await api.deleteComment(commentId);
+              const comments = await api.getComments(apiType, contentId);
+              commentsList.innerHTML = renderComments(comments, currentUser);
+              showToast('Commentaire supprimé', 'success');
+            } catch (err) {
+              showToast('Erreur lors de la suppression', 'error');
+            }
+          }
+        });
+      }
+    });
+  }
+}
+
+// Modal personnalisé pour l'édition
+function showEditModal(oldText, onSave) {
+  removeExistingModals();
+  
+  const modal = document.createElement('div');
+  modal.className = 'custom-modal-overlay';
+  modal.innerHTML = `
+    <div class="custom-modal">
+      <div class="custom-modal-header">
+        <h3><i class="bi bi-pencil-square"></i> Modifier le commentaire</h3>
+        <button class="custom-modal-close">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <textarea id="edit-comment-textarea" rows="4" placeholder="Votre commentaire...">${escapeHtml(oldText)}</textarea>
+      </div>
+      <div class="custom-modal-footer">
+        <button class="btn-cancel">Annuler</button>
+        <button class="btn-save">Enregistrer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  const textarea = modal.querySelector('#edit-comment-textarea');
+  textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  
+  modal.querySelector('.custom-modal-close').onclick = () => modal.remove();
+  modal.querySelector('.btn-cancel').onclick = () => modal.remove();
+  modal.querySelector('.btn-save').onclick = () => {
+    const newText = textarea.value.trim();
+    modal.remove();
+    onSave(newText);
+  };
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+// Modal personnalisé pour la confirmation
+function showConfirmModal(message, onConfirm) {
+  removeExistingModals();
+  
+  const modal = document.createElement('div');
+  modal.className = 'custom-modal-overlay';
+  modal.innerHTML = `
+    <div class="custom-modal custom-modal-confirm">
+      <div class="custom-modal-header">
+        <h3><i class="bi bi-question-circle-fill"></i> Confirmation</h3>
+        <button class="custom-modal-close">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <p>${escapeHtml(message)}</p>
+      </div>
+      <div class="custom-modal-footer">
+        <button class="btn-cancel">Annuler</button>
+        <button class="btn-confirm">Oui, supprimer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  modal.querySelector('.custom-modal-close').onclick = () => {
+    modal.remove();
+    onConfirm(false);
+  };
+  modal.querySelector('.btn-cancel').onclick = () => {
+    modal.remove();
+    onConfirm(false);
+  };
+  modal.querySelector('.btn-confirm').onclick = () => {
+    modal.remove();
+    onConfirm(true);
+  };
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+      onConfirm(false);
+    }
+  });
+}
+
+function removeExistingModals() {
+  const existingModals = document.querySelectorAll('.custom-modal-overlay');
+  existingModals.forEach(modal => modal.remove());
 }
 
 function initYoutubePlayers() {
