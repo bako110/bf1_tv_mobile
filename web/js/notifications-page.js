@@ -71,24 +71,46 @@ function render() {
         ${n.message ? `<span class="notif-page-msg">${esc(n.message)}</span>` : ''}
       </div>
       <div class="notif-item-actions">
-        ${isUnread ? `<button class="notif-read-btn" title="Marquer comme lu" data-id="${esc(nid)}"><i class="bi bi-check2"></i></button>` : ''}
-        <button class="notif-del-btn" title="Supprimer" data-id="${esc(nid)}"><i class="bi bi-trash3"></i></button>
+        ${isUnread ? `<button class="notif-read-btn" data-id="${esc(nid)}" title="Marquer comme lu"><i class="bi bi-check2"></i></button>` : ''}
+        <button class="notif-del-btn" data-id="${esc(nid)}" title="Supprimer"><i class="bi bi-trash3"></i></button>
       </div>
     </div>`;
   }).join('');
 
-  list.querySelectorAll('.notif-read-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      _npMarkRead(btn.dataset.id);
-    });
-  });
-  list.querySelectorAll('.notif-del-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      _npDelete(btn.dataset.id);
-    });
-  });
+  // 🔥 Attacher les événements avec délégation ou directement
+  attachEventHandlers();
+}
+
+function attachEventHandlers() {
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+
+  // Supprimer les anciens écouteurs pour éviter les doublons
+  list.removeEventListener('click', handleListClick);
+  list.addEventListener('click', handleListClick);
+}
+
+function handleListClick(e) {
+  // 🔥 Empêcher la propagation
+  e.stopPropagation();
+  
+  // Bouton marquer comme lu
+  const readBtn = e.target.closest('.notif-read-btn');
+  if (readBtn) {
+    e.preventDefault();
+    const notifId = readBtn.dataset.id;
+    if (notifId) _npMarkRead(notifId);
+    return;
+  }
+  
+  // Bouton supprimer
+  const delBtn = e.target.closest('.notif-del-btn');
+  if (delBtn) {
+    e.preventDefault();
+    const notifId = delBtn.dataset.id;
+    if (notifId) _npDelete(notifId);
+    return;
+  }
 }
 
 // ─── Actions individuelles ─────────────────────────────────────────────────────
@@ -99,7 +121,10 @@ async function _npMarkRead(notifId) {
   if (!n || n.is_read) return;
 
   const row = document.querySelector(`.notif-page-item[data-id="${notifId}"]`);
-  if (row) row.style.opacity = '0.5';
+  if (row) {
+    row.style.opacity = '0.5';
+    row.style.pointerEvents = 'none';
+  }
 
   try {
     await api.markNotificationRead(notifId);
@@ -107,7 +132,10 @@ async function _npMarkRead(notifId) {
     render();
     showToast('Notification marquée comme lue.', 'success');
   } catch (e) {
-    if (row) row.style.opacity = '1';
+    if (row) {
+      row.style.opacity = '1';
+      row.style.pointerEvents = '';
+    }
     const msg = e?.status === 401
       ? 'Session expirée. Reconnectez-vous.'
       : e?.status === 404
@@ -121,7 +149,10 @@ async function _npMarkRead(notifId) {
 async function _npDelete(notifId) {
   if (!notifId) return;
   const row = document.querySelector(`.notif-page-item[data-id="${notifId}"]`);
-  if (row) { row.style.opacity = '0.4'; row.style.pointerEvents = 'none'; }
+  if (row) {
+    row.style.opacity = '0.4';
+    row.style.pointerEvents = 'none';
+  }
 
   try {
     await api.deleteNotification(notifId);
@@ -129,7 +160,10 @@ async function _npDelete(notifId) {
     render();
     showToast('Notification supprimée.', 'success');
   } catch (e) {
-    if (row) { row.style.opacity = '1'; row.style.pointerEvents = ''; }
+    if (row) {
+      row.style.opacity = '1';
+      row.style.pointerEvents = '';
+    }
     const msg = e?.status === 401
       ? 'Session expirée. Reconnectez-vous.'
       : e?.status === 403 || e?.status === 404
@@ -137,6 +171,48 @@ async function _npDelete(notifId) {
         : 'Erreur lors de la suppression. Réessayez.';
     showToast(msg, 'error');
     console.error('Erreur suppression:', e);
+  }
+}
+
+// ─── Actions groupées ─────────────────────────────────────────────────────────
+
+async function markAllRead(btnMarkAll) {
+  if (btnMarkAll) btnMarkAll.disabled = true;
+  try {
+    await api.markAllNotificationsRead();
+    _notifs.forEach(n => { n.is_read = true; });
+    render();
+    showToast('Toutes les notifications ont été marquées comme lues.', 'success');
+  } catch (e) {
+    const msg = e?.status === 401 ? 'Session expirée. Reconnectez-vous.' : 'Erreur. Réessayez.';
+    showToast(msg, 'error');
+    console.error('Erreur tout marquer lu:', e);
+  } finally {
+    if (btnMarkAll) btnMarkAll.disabled = false;
+  }
+}
+
+async function deleteAll(btnDeleteAll) {
+  const ok = await showConfirmModal({
+    message: 'Supprimer toutes vos notifications ? Cette action est irréversible.',
+    title: 'Tout supprimer',
+    confirmText: 'Supprimer tout',
+    variant: 'danger',
+  });
+  if (!ok) return;
+  
+  if (btnDeleteAll) btnDeleteAll.disabled = true;
+  try {
+    await api.deleteAllNotifications();
+    _notifs = [];
+    render();
+    showToast('Toutes les notifications ont été supprimées.', 'success');
+  } catch (e) {
+    const msg = e?.status === 401 ? 'Session expirée. Reconnectez-vous.' : 'Erreur lors de la suppression.';
+    showToast(msg, 'error');
+    console.error('Erreur suppression globale:', e);
+  } finally {
+    if (btnDeleteAll) btnDeleteAll.disabled = false;
   }
 }
 
@@ -174,44 +250,24 @@ export async function loadNotificationsPage() {
     const btnMarkAll = document.getElementById('btn-mark-all');
     const btnDeleteAll = document.getElementById('btn-delete-all');
 
+    // 🔥 Nettoyer les anciens écouteurs avant d'en ajouter de nouveaux
     if (btnMarkAll) {
-      btnMarkAll.addEventListener('click', async () => {
-        btnMarkAll.disabled = true;
-        try {
-          await api.markAllNotificationsRead();
-          _notifs.forEach(n => { n.is_read = true; });
-          render();
-          showToast('Toutes les notifications ont été marquées comme lues.', 'success');
-        } catch (e) {
-          const msg = e?.status === 401 ? 'Session expirée. Reconnectez-vous.' : 'Erreur. Réessayez.';
-          showToast(msg, 'error');
-          console.error(e);
-        }
-        btnMarkAll.disabled = false;
+      const newBtnMarkAll = btnMarkAll.cloneNode(true);
+      btnMarkAll.parentNode.replaceChild(newBtnMarkAll, btnMarkAll);
+      newBtnMarkAll.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        markAllRead(newBtnMarkAll);
       });
     }
 
     if (btnDeleteAll) {
-      btnDeleteAll.addEventListener('click', async () => {
-        const ok = await showConfirmModal({
-          message: 'Supprimer toutes vos notifications ? Cette action est irréversible.',
-          title: 'Tout supprimer',
-          confirmText: 'Supprimer tout',
-          variant: 'danger',
-        });
-        if (!ok) return;
-        btnDeleteAll.disabled = true;
-        try {
-          await api.deleteAllNotifications();
-          _notifs = [];
-          render();
-          showToast('Toutes les notifications ont été supprimées.', 'success');
-        } catch (e) {
-          const msg = e?.status === 401 ? 'Session expirée. Reconnectez-vous.' : 'Erreur lors de la suppression.';
-          showToast(msg, 'error');
-          console.error(e);
-        }
-        btnDeleteAll.disabled = false;
+      const newBtnDeleteAll = btnDeleteAll.cloneNode(true);
+      btnDeleteAll.parentNode.replaceChild(newBtnDeleteAll, btnDeleteAll);
+      newBtnDeleteAll.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        deleteAll(newBtnDeleteAll);
       });
     }
 

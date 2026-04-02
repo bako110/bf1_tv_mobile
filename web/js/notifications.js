@@ -212,6 +212,14 @@ export function initNotifications() {
     document.body.appendChild(ov);
   }
 
+  // 🔥 Empêcher les clics dans le panel de fermer le modal
+  const panel = document.querySelector('.notif-panel');
+  if (panel) {
+    panel.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
   // Câbler le bouton cloche
   const btn = document.querySelector('.notif-btn');
   if (btn) {
@@ -219,22 +227,36 @@ export function initNotifications() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const panel = document.querySelector('.notif-panel');
-      if (panel?.classList.contains('open')) { closePanel(); } else { openPanel(); }
+      if (panel?.classList.contains('open')) { 
+        closePanel(); 
+      } else { 
+        openPanel(); 
+      }
     });
   }
 
   // Câbler le bouton fermer
   const closeBtn = document.querySelector('.notif-panel-close');
-  if (closeBtn) closeBtn.addEventListener('click', closePanel);
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closePanel();
+    });
+  }
 
   // Délégation globale sur document.body — garantit que les boutons
   // sont toujours interceptés même si le panel est injecté après l'init
   document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('#notif-btn-mark-all, #notif-btn-delete-all, [data-del-id], [data-read-id]');
     if (!btn) return;
-    if (btn.id === 'notif-btn-mark-all')   { e.stopPropagation(); window._notifMarkAllRead(); return; }
-    if (btn.id === 'notif-btn-delete-all') { e.stopPropagation(); window._notifDeleteAll();   return; }
-    if (btn.dataset.delId)  { e.stopPropagation(); window._notifDelete(btn.dataset.delId);  return; }
+    
+    // 🔥 EMPÊCHER LA PROPAGATION pour tous les boutons
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (btn.id === 'notif-btn-mark-all')   { window._notifMarkAllRead(); return; }
+    if (btn.id === 'notif-btn-delete-all') { window._notifDeleteAll();   return; }
+    if (btn.dataset.delId)  { window._notifDelete(btn.dataset.delId);  return; }
     if (btn.dataset.readId) { window._notifMarkRead(btn.dataset.readId); return; }
   }, true); // capture phase — s'exécute avant tout stopPropagation intermédiaire
 

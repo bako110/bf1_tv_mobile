@@ -383,10 +383,8 @@ export async function markNotificationRead(notifId) {
 }
 
 export async function markAllNotificationsRead() {
-  console.log('📤 Envoi requête PATCH /notifications/mark-all-read');
   try {
     const result = await http.patch('/notifications/mark-all-read', {});
-    console.log('✅ Réponse reçue:', result);
     return result;
   } catch (error) {
     console.error('❌ Erreur détaillée:', error);
