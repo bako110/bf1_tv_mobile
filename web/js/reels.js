@@ -70,7 +70,8 @@ export async function loadReelsContent() {
       date: item.created_at || item.published_at || new Date(),
       author: item.author || item.created_by || 'BF1',
       avatar: item.avatar || '',
-      tags: item.tags || []
+      tags: item.tags || [],
+      allow_comments: item.allow_comments !== false // Par défaut true
     }));
     
     console.log(`✅ ${reelsData.length} reels chargés`);
@@ -150,6 +151,9 @@ function createReelElement(reel, index) {
   div.setAttribute('data-index', index);
   div.setAttribute('data-id', reel._id);
   
+  // Vérifier si les commentaires sont autorisés
+  const allowComments = reel.allow_comments !== false;
+  
   div.innerHTML = `
     <div class="reel-layout">
 
@@ -166,20 +170,29 @@ function createReelElement(reel, index) {
           </button>
         </div>
         <div class="reel-comments-list" id="comments-list-${reel._id}">
-          <div class="reel-comments-empty">
-            <i class="bi bi-chat-dots"></i>
-            <p>Chargement...</p>
+          ${allowComments ? `
+            <div class="reel-comments-empty">
+              <i class="bi bi-chat-dots"></i>
+              <p>Chargement...</p>
+            </div>
+          ` : `
+            <div class="reel-comments-empty">
+              <i class="bi bi-lock-fill"></i>
+              <p>Les commentaires sont désactivés pour ce reel</p>
+            </div>
+          `}
+        </div>
+        ${allowComments ? `
+          <div class="reel-comments-input-row">
+            <input type="text" class="reel-comment-input"
+                   id="comment-input-${reel._id}"
+                   placeholder="Ajouter un commentaire..."
+                   maxlength="200">
+            <button class="reel-comment-send-btn" onclick="submitComment('${reel._id}')">
+              <i class="bi bi-send-fill"></i>
+            </button>
           </div>
-        </div>
-        <div class="reel-comments-input-row">
-          <input type="text" class="reel-comment-input"
-                 id="comment-input-${reel._id}"
-                 placeholder="Ajouter un commentaire..."
-                 maxlength="200">
-          <button class="reel-comment-send-btn" onclick="submitComment('${reel._id}')">
-            <i class="bi bi-send-fill"></i>
-          </button>
-        </div>
+        ` : ''}
       </div>
 
       <!-- CENTRE : Vidéo -->
@@ -220,10 +233,17 @@ function createReelElement(reel, index) {
           <div class="reel-side-action-icon"><i class="bi ${likedReelIds.has(String(reel._id)) ? 'bi-heart-fill' : 'bi-heart'}" style="${likedReelIds.has(String(reel._id)) ? 'color:var(--red)' : ''}"></i></div>
           <span class="like-count">${formatNumber(reel.likes)}</span>
         </div>
-        <div class="reel-side-action comment-btn" data-id="${reel._id}">
-          <div class="reel-side-action-icon"><i class="bi bi-chat-fill"></i></div>
-          <span class="comment-count">${formatNumber(reel.comments || 0)}</span>
-        </div>
+        ${allowComments ? `
+          <div class="reel-side-action comment-btn" data-id="${reel._id}">
+            <div class="reel-side-action-icon"><i class="bi bi-chat-fill"></i></div>
+            <span class="comment-count">${formatNumber(reel.comments || 0)}</span>
+          </div>
+        ` : `
+          <div class="reel-side-action comment-btn-disabled" data-id="${reel._id}" style="cursor:pointer;">
+            <div class="reel-side-action-icon"><i class="bi bi-lock-fill"></i></div>
+            <span>Off</span>
+          </div>
+        `}
         <div class="reel-side-action share-btn" data-id="${reel._id}" data-title="${escapeHtml(reel.title)}">
           <div class="reel-side-action-icon"><i class="bi bi-share-fill"></i></div>
           <span>Partager</span>
@@ -236,10 +256,17 @@ function createReelElement(reel, index) {
           <div class="reel-mobile-action-icon"><i class="bi ${likedReelIds.has(String(reel._id)) ? 'bi-heart-fill' : 'bi-heart'}" style="${likedReelIds.has(String(reel._id)) ? 'color:var(--red)' : ''}"></i></div>
           <span class="like-count">${formatNumber(reel.likes)}</span>
         </div>
-        <div class="reel-mobile-action comment-btn" data-id="${reel._id}">
-          <div class="reel-mobile-action-icon"><i class="bi bi-chat-fill"></i></div>
-          <span class="comment-count">${formatNumber(reel.comments || 0)}</span>
-        </div>
+        ${allowComments ? `
+          <div class="reel-mobile-action comment-btn" data-id="${reel._id}">
+            <div class="reel-mobile-action-icon"><i class="bi bi-chat-fill"></i></div>
+            <span class="comment-count">${formatNumber(reel.comments || 0)}</span>
+          </div>
+        ` : `
+          <div class="reel-mobile-action comment-btn-disabled" data-id="${reel._id}" style="cursor:pointer;">
+            <div class="reel-mobile-action-icon"><i class="bi bi-lock-fill"></i></div>
+            <span>Off</span>
+          </div>
+        `}
         <div class="reel-mobile-action share-btn" data-id="${reel._id}" data-title="${escapeHtml(reel.title)}">
           <div class="reel-mobile-action-icon"><i class="bi bi-share-fill"></i></div>
           <span>Partager</span>
@@ -249,13 +276,22 @@ function createReelElement(reel, index) {
     </div>
   `;
 
-  // Événements desktop + mobile (les deux sélecteurs .like-btn, .comment-btn, .share-btn)
+  // Événements desktop + mobile
   div.querySelectorAll('.like-btn').forEach(btn => {
     btn.addEventListener('click', e => { e.stopPropagation(); toggleLike(btn, reel._id); });
   });
 
+  // Commentaires - avec vérification si autorisés
   div.querySelectorAll('.comment-btn').forEach(btn => {
     btn.addEventListener('click', e => { e.stopPropagation(); openComments(reel._id); });
+  });
+  
+  // Bouton commentaire désactivé - afficher un toast
+  div.querySelectorAll('.comment-btn-disabled').forEach(btn => {
+    btn.addEventListener('click', e => { 
+      e.stopPropagation(); 
+      showToast('Les commentaires sont désactivés pour ce reel.', 'info');
+    });
   });
 
   div.querySelectorAll('.share-btn').forEach(btn => {
@@ -602,13 +638,24 @@ async function submitComment(reelId) {
   } catch (error) {
     console.error('Erreur commentaire:', error);
     // Afficher une notification d'erreur
-    showNotification('Erreur lors de l\'envoi du commentaire', 'error');
+    showToast('Erreur lors de l\'envoi du commentaire', 'error');
   }
 }
 
 async function loadComments(reelId) {
   const commentsList = document.getElementById(`comments-list-${reelId}`);
   if (!commentsList) return;
+  
+  // Vérifier si les commentaires sont autorisés pour ce reel
+  const reel = reelsData.find(r => String(r._id) === String(reelId));
+  if (reel && reel.allow_comments === false) {
+    commentsList.innerHTML = `
+      <div class="reel-comments-empty">
+        <i class="bi bi-lock-fill"></i>
+        <p>Les commentaires sont désactivés pour ce reel</p>
+      </div>`;
+    return;
+  }
 
   try {
     const [comments, myCommentLikes] = await Promise.all([
@@ -699,10 +746,10 @@ window.confirmEditComment = async function(commentId, reelId) {
     await api.updateComment(commentId, newText);
     const textEl = document.getElementById(`comment-text-${commentId}`);
     if (textEl) textEl.innerHTML = escapeHtml(newText);
-    showNotification('Commentaire modifié', 'success');
+    showToast('Commentaire modifié', 'success');
   } catch (e) {
     console.error(e);
-    showNotification('Erreur lors de la modification', 'error');
+    showToast('Erreur lors de la modification', 'error');
   }
 };
 
@@ -720,11 +767,11 @@ window.deleteReelComment = async function(commentId, reelId) {
     await api.deleteComment(commentId);
     row?.remove();
     updateCommentCount(reelId, -1);
-    showNotification('Commentaire supprimé', 'success');
+    showToast('Commentaire supprimé', 'success');
   } catch (e) {
     console.error(e);
     if (row) { row.style.opacity = '1'; row.style.pointerEvents = ''; }
-    showNotification('Erreur lors de la suppression', 'error');
+    showToast('Erreur lors de la suppression', 'error');
   }
 };
 
@@ -765,6 +812,13 @@ window.likeReelComment = async function(commentId, btn) {
 };
 
 function openComments(reelId) {
+  // Vérifier si les commentaires sont autorisés
+  const reel = reelsData.find(r => String(r._id) === String(reelId));
+  if (reel && reel.allow_comments === false) {
+    showToast('Les commentaires sont désactivés pour ce reel.', 'info');
+    return;
+  }
+  
   if (window.innerWidth <= 768) {
     injectCommentDrawer();
     openCommentDrawer(reelId);
@@ -818,7 +872,7 @@ function shareReel(reelId, title) {
   } else {
     // Fallback : copier dans le presse-papiers
     navigator.clipboard.writeText(url).then(() => {
-      showNotification('Lien copié dans le presse-papiers !', 'success');
+      showToast('Lien copié dans le presse-papiers !', 'success');
     }).catch(() => {
       // Dernier fallback : afficher une popup
       showSharePopup(url, title);
@@ -943,6 +997,17 @@ function closeCommentDrawer() {
 async function loadDrawerComments(reelId) {
   const list = document.getElementById('reels-comment-list');
   if (!list) return;
+  
+  // Vérifier si les commentaires sont autorisés
+  const reel = reelsData.find(r => String(r._id) === String(reelId));
+  if (reel && reel.allow_comments === false) {
+    list.innerHTML = `
+      <div style="text-align:center;color:var(--text-3);padding:40px 20px;">
+        <i class="bi bi-lock-fill" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+        <p>Les commentaires sont désactivés pour ce reel</p>
+      </div>`;
+    return;
+  }
 
   try {
     const [comments, myCommentLikes] = await Promise.all([
@@ -1013,6 +1078,13 @@ async function submitDrawerComment() {
   const text = input?.value?.trim();
   if (!text || !reelId) return;
   
+  // Vérifier si les commentaires sont autorisés
+  const reel = reelsData.find(r => String(r._id) === String(reelId));
+  if (reel && reel.allow_comments === false) {
+    showToast('Les commentaires sont désactivés pour ce reel.', 'info');
+    return;
+  }
+  
   try {
     await api.addComment('reel', reelId, text);
     input.value = '';
@@ -1020,7 +1092,7 @@ async function submitDrawerComment() {
     updateCommentCount(reelId, 1);
   } catch (error) {
     console.error('Erreur commentaire drawer:', error);
-    showNotification('Erreur lors de l\'envoi du commentaire', 'error');
+    showToast('Erreur lors de l\'envoi du commentaire', 'error');
   }
 }
 
@@ -1033,30 +1105,43 @@ function timeAgo(dateStr) {
   return `il y a ${Math.floor(diff / 86400)}j`;
 }
 
-function showNotification(message, type = 'info') {
-  const notification = document.createElement('div');
-  notification.style.cssText = `
+function showToast(message, type = 'info') {
+  // Supprimer les toasts existants
+  const existingToasts = document.querySelectorAll('.reel-toast-notification');
+  existingToasts.forEach(toast => toast.remove());
+  
+  const toast = document.createElement('div');
+  toast.className = `reel-toast-notification ${type}`;
+  toast.innerHTML = `
+    <div class="toast-content">
+      <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : type === 'error' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill'}"></i>
+      <span>${escapeHtml(message)}</span>
+    </div>
+  `;
+  toast.style.cssText = `
     position: fixed;
-    top: 20px;
-    right: 20px;
-    background: ${type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#007bff'};
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
     color: white;
-    padding: 12px 20px;
+    padding: 12px 24px;
     border-radius: 8px;
     z-index: 10001;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    font-size: 0.9rem;
-    max-width: 300px;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 200px;
+    max-width: 80%;
+    pointer-events: none;
   `;
-  notification.textContent = message;
-  
-  document.body.appendChild(notification);
+  document.body.appendChild(toast);
   
   setTimeout(() => {
-    notification.style.opacity = '0';
-    notification.style.transform = 'translateX(100%)';
-    notification.style.transition = 'all 0.3s ease';
-    setTimeout(() => notification.remove(), 300);
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
 
