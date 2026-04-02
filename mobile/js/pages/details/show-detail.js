@@ -346,6 +346,8 @@ export async function loadShowDetail(id, type) {
     const date     = formatDate(show.created_at || show.date || show.published_at);
     const duration = show.duration ? `${Math.floor(show.duration / 60)}min` : '';
 
+    // Stocker allow_comments pour accès global (modal)
+    window._showDetailData = { allow_comments: show.allow_comments };
     // ── HTML principal ────────────────────────────────────────────────────────
     container.innerHTML = `
 
@@ -410,6 +412,7 @@ export async function loadShowDetail(id, type) {
             <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
             <span id="sd-like-count">${likesCount}</span>
           </button>
+          ${(show.allow_comments === false) ? '' : `
           <button onclick="openSdComments()"
                   style="display:inline-flex;align-items:center;gap:6px;
                          background:var(--bg-3,#1a1a1a);
@@ -419,6 +422,7 @@ export async function loadShowDetail(id, type) {
             <i class="bi bi-chat-dots"></i>
             <span id="sd-cm-count-btn">${comments.length} commentaire${comments.length !== 1 ? 's' : ''}</span>
           </button>
+          `}
           <button id="sd-fav-btn" onclick="toggleSdFavorite()"
                   style="display:inline-flex;align-items:center;gap:6px;
                          background:${userFavorited ? '#F59E0B' : 'var(--bg-3,#1a1a1a)'};
@@ -511,6 +515,13 @@ export async function loadShowDetail(id, type) {
 
       </div>`;
 
+    // Affichage section commentaires (hors modal)
+    if (show.allow_comments !== false) {
+      // Appel de la fonction d'affichage des commentaires si elle existe
+      if (typeof renderSdComments === 'function') {
+        renderSdComments(comments, show, user, id, type);
+      }
+    }
     // ── Toggle description ────────────────────────────────────────────────────
     window._sdToggleDesc = function() {
       const wrap = document.getElementById('sd-desc-wrap');
@@ -640,6 +651,9 @@ export async function loadShowDetail(id, type) {
     }
 
     window.openSdComments = async function() {
+      if (window._showDetailData && window._showDetailData.allow_comments === false) {
+        return;
+      }
       const existing = document.getElementById('sd-comments-modal');
       if (existing) existing.remove();
       const modal = document.createElement('div');

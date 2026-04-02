@@ -145,40 +145,62 @@ function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false
           <i class="bi ${userFavorited ? 'bi-bookmark-fill' : 'bi-bookmark'}"></i>
           <span>Favoris</span>
         </button>
-        <button class="action-btn comment-btn" id="comment-btn" ${news.allow_comments === false ? 'style="display:none"' : ''}>
-          <i class="bi bi-chat-dots"></i>
-          <span id="comment-count">${comments.length}</span>
-        </button>
+        ${news.allow_comments === false ? `
+          <button class="action-btn comment-btn-disabled" id="comment-btn-disabled" title="Commentaires désactivés" style="background: #eee; cursor: pointer;">
+            <i class="bi bi-lock-fill" style="color: #b0b0b0;"></i>
+          </button>
+        ` : `
+          <button class="action-btn comment-btn" id="comment-btn">
+            <i class="bi bi-chat-dots"></i>
+            <span id="comment-count">${comments.length}</span>
+          </button>
+        `}
       </div>
 
       <!-- Commentaires -->
-      ${(news.allow_comments === false) ? '' : `
-      <div class="comments-section" id="comments-section">
-        <div class="comments-header">
-          <h3><i class="bi bi-chat-dots-fill"></i> Commentaires <span id="comments-count">(${comments.length})</span></h3>
+      ${(news.allow_comments === false) ? `
+        <div class="comments-section comments-disabled" id="comments-section-disabled" style="text-align:center; color:#b0b0b0; padding:2rem 0;">
+          <i class="bi bi-lock-fill" style="font-size:2rem;"></i>
+          <div style="margin-top:10px; font-size:1rem;">Les commentaires sont désactivés pour cette actualité.</div>
         </div>
-        <div class="comments-list" id="comments-list">
-          ${renderComments(comments, currentUser)}
+      ` : `
+        <div class="comments-section" id="comments-section">
+          <div class="comments-header">
+            <h3><i class="bi bi-chat-dots-fill"></i> Commentaires <span id="comments-count">(${comments.length})</span></h3>
+          </div>
+          <div class="comments-list" id="comments-list">
+            ${renderComments(comments, currentUser)}
+          </div>
+          ${currentUser ? `
+            <div class="comment-form">
+              <textarea id="comment-input" placeholder="Ajouter un commentaire..." maxlength="1000" rows="2"></textarea>
+              <button id="submit-comment" class="btn-red">
+                <span class="btn-text">Envoyer</span>
+                <span class="btn-spinner" style="display: none;">
+                  <i class="bi bi-hourglass-split"></i>
+                </span>
+              </button>
+            </div>
+          ` : `
+            <div class="comment-login-prompt">
+              <p><a href="connexion.html">Connectez-vous</a> pour laisser un commentaire</p>
+            </div>
+          `}
         </div>
-        ${currentUser ? `
-          <div class="comment-form">
-            <textarea id="comment-input" placeholder="Ajouter un commentaire..." maxlength="1000" rows="2"></textarea>
-            <button id="submit-comment" class="btn-red">
-              <span class="btn-text">Envoyer</span>
-              <span class="btn-spinner" style="display: none;">
-                <i class="bi bi-hourglass-split"></i>
-              </span>
-            </button>
-          </div>
-        ` : `
-          <div class="comment-login-prompt">
-            <p><a href="connexion.html">Connectez-vous</a> pour laisser un commentaire</p>
-          </div>
-        `}
-      </div>
       `}
     </div>
   `;
+
+  // Gestion du clic sur l'icône commentaire désactivé (avec toast au lieu d'alert)
+  if (news.allow_comments === false) {
+    const btnDisabled = document.getElementById('comment-btn-disabled');
+    if (btnDisabled) {
+      btnDisabled.addEventListener('click', function(e) {
+        e.preventDefault();
+        showToast('Les commentaires sont désactivés pour cette actualité.', 'info');
+      });
+    }
+  }
 
   // Fonction pour toggle le contenu
   window.toggleReadMore = function() {
@@ -186,14 +208,16 @@ function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false
     const full = document.getElementById('contentFull');
     const btn = document.querySelector('.read-more-btn');
     
-    if (full.style.display === 'none') {
-      preview.style.display = 'none';
-      full.style.display = 'block';
-      btn.innerHTML = '<span>Lire moins</span><i class="bi bi-chevron-up"></i>';
-    } else {
-      preview.style.display = 'block';
-      full.style.display = 'none';
-      btn.innerHTML = '<span>Lire la suite</span><i class="bi bi-chevron-down"></i>';
+    if (full && preview && btn) {
+      if (full.style.display === 'none') {
+        preview.style.display = 'none';
+        full.style.display = 'block';
+        btn.innerHTML = '<span>Lire moins</span><i class="bi bi-chevron-up"></i>';
+      } else {
+        preview.style.display = 'block';
+        full.style.display = 'none';
+        btn.innerHTML = '<span>Lire la suite</span><i class="bi bi-chevron-down"></i>';
+      }
     }
   };
 }
@@ -663,28 +687,43 @@ function showError(message) {
 }
 
 function showToast(message, type = 'info') {
+  // Supprimer les toasts existants
+  const existingToasts = document.querySelectorAll('.toast-notification');
+  existingToasts.forEach(toast => toast.remove());
+  
   const toast = document.createElement('div');
   toast.className = `toast-notification ${type}`;
   toast.innerHTML = `
     <div class="toast-content">
-      <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}"></i>
+      <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : type === 'error' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill'}"></i>
       <span>${escHtml(message)}</span>
     </div>
   `;
   toast.style.cssText = `
     position: fixed;
     bottom: 20px;
-    right: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
     color: white;
-    padding: 12px 20px;
+    padding: 12px 24px;
     border-radius: 8px;
     z-index: 9999;
     animation: slideIn 0.3s ease;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 200px;
+    max-width: 80%;
+    pointer-events: none;
   `;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 // Initialisation

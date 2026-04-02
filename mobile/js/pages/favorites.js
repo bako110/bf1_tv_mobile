@@ -61,20 +61,20 @@ function renderCard(fav) {
       <div style="position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(0,0,0,0.8) 100%);"></div>
       <!-- Badge type -->
       <span style="position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;gap:4px;
-                   background:${cfg.color};color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;">
+                   background:${cfg.color};color:var(--text-1,#fff);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;">
         <i class="bi ${cfg.icon}" style="font-size:9px;"></i>${esc(cfg.label)}
       </span>
       <!-- Bouton retirer -->
       <button onclick="event.stopPropagation();removeFav('${favId}','${esc(fav.content_type)}','${esc(String(fav.content_id||''))}')"
               style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.65);border:none;
-                     border-radius:50%;width:28px;height:28px;color:#fff;cursor:pointer;
+                     border-radius:50%;width:28px;height:28px;color:var(--text-1,#fff);cursor:pointer;
                      display:flex;align-items:center;justify-content:center;font-size:14px;" title="Retirer des favoris">
         <i class="bi bi-bookmark-x-fill"></i>
       </button>
     </div>
     <!-- Titre -->
     <div style="padding:10px 12px 12px;">
-      <p style="margin:0;font-size:13px;font-weight:600;color:#fff;
+      <p style="margin:0;font-size:13px;font-weight:600;color:var(--text-1,#fff);
                 overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
                 line-height:1.4;">${esc(title)}</p>
     </div>
