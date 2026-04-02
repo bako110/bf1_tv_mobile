@@ -243,14 +243,23 @@ async function loadAllData() {
       return dateB - dateA;
     });
 
-    // Mettre à jour les likes réels depuis l'API pour chaque contenu
+    // Types supportés par l'endpoint /views
+    const viewsSupportedTypes = new Set(['sport', 'sports', 'reportage', 'divertissement', 'archive', 'jtandmag', 'show', 'movie', 'reel']);
+
+    // Mettre à jour les likes et les vues réels depuis l'API pour chaque contenu
     await Promise.all(
       allData.map(async (item) => {
+        const id = item._id || item.id;
+        const type = item._contentType;
         try {
-          const realLikes = await api.getLikesCount(item._contentType, item._id || item.id);
+          const realLikes = await api.getLikesCount(type, id);
           item.likes = formatNumber(realLikes);
-        } catch (e) {
-          // ignore
+        } catch (e) { /* ignore */ }
+        if (viewsSupportedTypes.has(type)) {
+          try {
+            const realViews = await api.getViewsCount(type, id);
+            item.views = formatNumber(realViews);
+          } catch (e) { /* ignore */ }
         }
       })
     );

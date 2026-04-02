@@ -340,6 +340,13 @@ export async function getLikesCount(contentType, contentId) {
   } catch { return 0; }
 }
 
+export async function getViewsCount(contentType, contentId) {
+  try {
+    const res = await http.get(`/views/${contentType}/${contentId}`);
+    return (res && typeof res.views === 'number') ? res.views : 0;
+  } catch { return 0; }
+}
+
 export async function toggleLike(contentType, contentId) {
   return http.post('/likes/toggle', { content_type: contentType, content_id: contentId });
 }

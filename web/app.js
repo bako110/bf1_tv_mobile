@@ -115,24 +115,9 @@ const GridToggle = {
 };
 
 /* ── Notifications panel ── */
-const Notifs = {
-  init() {
-    const btn = document.querySelector('.notif-btn');
-    const panel = document.querySelector('.notif-panel');
-    const close = document.querySelector('.notif-panel-close');
-    if (!btn || !panel) return;
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      panel.classList.toggle('open');
-    });
-    if (close) close.addEventListener('click', () => panel.classList.remove('open'));
-    document.addEventListener('click', (e) => {
-      if (!btn.contains(e.target) && !panel.contains(e.target)) {
-        panel.classList.remove('open');
-      }
-    });
-  }
-};
+// Géré entièrement par notifications.js (autoInit + overlay dédié)
+// Ne pas dupliquer ici — le document.addEventListener('click') global
+// fermerait le panel lors des clics sur les modals de confirmation.
 
 /* ── Chat interactions ── */
 const Chat = {
@@ -380,11 +365,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialiser le menu mobile (qui attend que le header soit chargé)
   MobileMenu.init();
-  
-  // Initialiser les notifications (qui dépend du header)
-  setTimeout(() => {
-    Notifs.init();
-  }, 500);
   
   // Scroll reveal
   setTimeout(() => ScrollReveal.init(), 100);
