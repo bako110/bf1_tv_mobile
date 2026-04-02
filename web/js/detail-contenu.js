@@ -274,7 +274,7 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
               <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
               <span id="like-count">${formatNumber(likesCount)}</span>
             </button>
-            <button class="action-btn comment-btn" id="comment-btn">
+            <button class="action-btn comment-btn" id="comment-btn" ${content.allow_comments === false ? 'style="display:none"' : ''}>
               <i class="bi bi-chat-dots"></i>
               <span id="comment-count">${comments.length}</span>
             </button>
@@ -302,6 +302,7 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
           ` : ''}
         </div>
         
+        ${(content.allow_comments === false) ? '' : `
         <div class="comments-section" id="comments-section">
           <div class="comments-header">
             <h3><i class="bi bi-chat-dots-fill"></i> Commentaires <span id="comments-count">(${comments.length})</span></h3>
@@ -325,6 +326,7 @@ function renderContent(content, cfg, related, comments, likesCount, userLiked, u
             </div>
           `}
         </div>
+        `}
       </div>
       
       ${related.length > 0 ? `

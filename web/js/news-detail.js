@@ -145,13 +145,14 @@ function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false
           <i class="bi ${userFavorited ? 'bi-bookmark-fill' : 'bi-bookmark'}"></i>
           <span>Favoris</span>
         </button>
-        <button class="action-btn comment-btn" id="comment-btn">
+        <button class="action-btn comment-btn" id="comment-btn" ${news.allow_comments === false ? 'style="display:none"' : ''}>
           <i class="bi bi-chat-dots"></i>
           <span id="comment-count">${comments.length}</span>
         </button>
       </div>
 
       <!-- Commentaires -->
+      ${(news.allow_comments === false) ? '' : `
       <div class="comments-section" id="comments-section">
         <div class="comments-header">
           <h3><i class="bi bi-chat-dots-fill"></i> Commentaires <span id="comments-count">(${comments.length})</span></h3>
@@ -175,6 +176,7 @@ function renderNewsDetail(news, comments = [], likesCount = 0, userLiked = false
           </div>
         `}
       </div>
+      `}
     </div>
   `;
 
