@@ -149,23 +149,24 @@ async function loadAllEmissions() {
       api.getReportages(),
       api.getJTandMag()
     ]);
-    
+
     const allData = [];
     
-    // SPORT - Utiliser les vues réelles de l'API
+    // SPORT
     const sportsList = (sports && sports.sports) ? sports.sports : (Array.isArray(sports) ? sports : []);
     for (const item of sportsList) {
       const itemId = item._id || item.id;
-      // Récupérer les vues réelles depuis l'API
       let realViews = item.views || 0;
       let realLikes = item.likes || 0;
       
-      // Essayer de récupérer les vues réelles si disponibles
       try {
         const viewsCount = await api.getViewsCount('sport', itemId).catch(() => null);
         if (viewsCount !== null) realViews = viewsCount;
-        const likesCount = await api.getLikesCount('sport', itemId).catch(() => null);
-        if (likesCount !== null) realLikes = likesCount;
+        
+        // Récupérer les likes réels avec await
+        const likesCount = await api.getLikesCount('sport', itemId);
+        realLikes = likesCount;
+        console.log(`🏆 SPORT - "${item.title}" - Likes réels: ${realLikes}`);
       } catch (e) {
         console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
       }
@@ -188,21 +189,24 @@ async function loadAllEmissions() {
       });
     }
     
-    // DIVERTISSEMENT - Utiliser les vues réelles
-    const divertissementList = divertissement || [];
+    // DIVERTISSEMENT
+    const divertissementList = Array.isArray(divertissement) ? divertissement : [];
+    console.log(`🎬 Traitement de ${divertissementList.length} divertissements...`);
+    
     for (const item of divertissementList) {
       const itemId = item._id || item.id;
       let realViews = item.views || 0;
-      let realLikes = item.likes ;
       
       try {
         const viewsCount = await api.getViewsCount('divertissement', itemId).catch(() => null);
         if (viewsCount !== null) realViews = viewsCount;
-        const likesCount = await api.getLikesCount('divertissement', itemId).catch(() => null);
-        if (likesCount !== null) realLikes = likesCount;
       } catch (e) {
-        console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
+        console.warn(`Impossible de récupérer les vues pour ${item.title}:`, e);
       }
+      
+      // Récupérer les likes réels avec await (uniquement pour les likes)
+      const realLikes = await api.getLikesCount('divertissement', itemId);
+      console.log(`🎬 DIVERTISSEMENT - "${item.title}" - Likes réels: ${realLikes}`);
       
       allData.push({
         id: itemId,
@@ -214,7 +218,7 @@ async function loadAllEmissions() {
         type: 'divertissement',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
         views: realViews,
-        likes: realLikes,
+        likes: realLikes,  // Utilise les likes réels de l'API
         duration: item.duration_minutes || 60,
         date: item.created_at || item.published_at,
         isLive: item.is_live || false,
@@ -222,21 +226,21 @@ async function loadAllEmissions() {
       });
     }
     
-    // REPORTAGE - Utiliser les vues réelles
-    const reportagesList = reportages || [];
+    // REPORTAGE
+    const reportagesList = Array.isArray(reportages) ? reportages : [];
     for (const item of reportagesList) {
       const itemId = item._id || item.id;
       let realViews = item.views || 0;
-      let realLikes = item.likes || 0;
       
       try {
         const viewsCount = await api.getViewsCount('reportage', itemId).catch(() => null);
         if (viewsCount !== null) realViews = viewsCount;
-        const likesCount = await api.getLikesCount('reportage', itemId).catch(() => null);
-        if (likesCount !== null) realLikes = likesCount;
       } catch (e) {
-        console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
+        console.warn(`Impossible de récupérer les vues pour ${item.title}:`, e);
       }
+      
+      // Récupérer les likes réels avec await
+      const realLikes = await api.getLikesCount('reportage', itemId);
       
       allData.push({
         id: itemId,
@@ -256,21 +260,21 @@ async function loadAllEmissions() {
       });
     }
     
-    // JOURNAL & MAGAZINE - Utiliser les vues réelles
-    const jtandmagList = jtandmag || [];
+    // JOURNAL & MAGAZINE
+    const jtandmagList = Array.isArray(jtandmag) ? jtandmag : [];
     for (const item of jtandmagList) {
       const itemId = item._id || item.id;
       let realViews = item.views || 0;
-      let realLikes = item.likes || 0;
       
       try {
         const viewsCount = await api.getViewsCount('jtandmag', itemId).catch(() => null);
         if (viewsCount !== null) realViews = viewsCount;
-        const likesCount = await api.getLikesCount('jtandmag', itemId).catch(() => null);
-        if (likesCount !== null) realLikes = likesCount;
       } catch (e) {
-        console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
+        console.warn(`Impossible de récupérer les vues pour ${item.title}:`, e);
       }
+      
+      // Récupérer les likes réels avec await
+      const realLikes = await api.getLikesCount('jtandmag', itemId);
       
       allData.push({
         id: itemId,
@@ -300,11 +304,16 @@ async function loadAllEmissions() {
     allEmissions = allData;
     filteredEmissions = [...allEmissions];
     
-    console.log(`✅ ${allEmissions.length} émissions chargées`);
-    console.log(`   - Sport: ${allEmissions.filter(e => e.category === 'sport').length}`);
-    console.log(`   - Divertissement: ${allEmissions.filter(e => e.category === 'divertissement').length}`);
-    console.log(`   - Reportage: ${allEmissions.filter(e => e.category === 'reportage').length}`);
-    console.log(`   - Journal & Magazine: ${allEmissions.filter(e => e.category === 'journal').length}`);
+    // Récapitulatif des divertissements avec leurs likes réels
+    const divertissementsFinal = allEmissions.filter(e => e.category === 'divertissement');
+    console.log(`\n✅ ${allEmissions.length} émissions chargées`);
+    console.log(`   - Divertissement: ${divertissementsFinal.length}`);
+    if (divertissementsFinal.length > 0) {
+      console.log('📺 Détail des divertissements avec leurs LIKES RÉELS:');
+      divertissementsFinal.forEach((div, idx) => {
+        console.log(`   ${idx + 1}. "${div.title}" - ${div.views} vues, ${div.likes} likes (depuis API /likes/content/)`);
+      });
+    }
     
     // Mettre à jour les stats
     updateHeroStats();
