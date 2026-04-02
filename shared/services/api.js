@@ -379,11 +379,11 @@ export async function getNotifications() {
 }
 
 export async function markNotificationRead(notifId) {
-  return http.patch(`/notifications/${notifId}/read`);
+  return http.patch(`/notifications/${notifId}/read`, {});
 }
 
 export async function markAllNotificationsRead() {
-  return http.patch('/notifications/mark-all-read');
+  return http.patch('/notifications/mark-all-read', {});
 }
 
 export async function deleteNotification(notifId) {

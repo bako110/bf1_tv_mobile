@@ -152,11 +152,26 @@ async function loadAllEmissions() {
     
     const allData = [];
     
-    // SPORT
+    // SPORT - Utiliser les vues réelles de l'API
     const sportsList = (sports && sports.sports) ? sports.sports : (Array.isArray(sports) ? sports : []);
-    sportsList.forEach(item => {
+    for (const item of sportsList) {
+      const itemId = item._id || item.id;
+      // Récupérer les vues réelles depuis l'API
+      let realViews = item.views || 0;
+      let realLikes = item.likes || 0;
+      
+      // Essayer de récupérer les vues réelles si disponibles
+      try {
+        const viewsCount = await api.getViewsCount('sport', itemId).catch(() => null);
+        if (viewsCount !== null) realViews = viewsCount;
+        const likesCount = await api.getLikesCount('sport', itemId).catch(() => null);
+        if (likesCount !== null) realLikes = likesCount;
+      } catch (e) {
+        console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
+      }
+      
       allData.push({
-        id: item._id || item.id,
+        id: itemId,
         title: item.title,
         description: item.description || '',
         channel: 'BF1 Sport',
@@ -164,19 +179,33 @@ async function loadAllEmissions() {
         category: 'sport',
         type: 'sport',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        views: item.views || Math.floor(Math.random() * 100000) + 5000,
-        likes: item.likes || Math.floor(Math.random() * 10000) + 500,
+        views: realViews,
+        likes: realLikes,
         duration: item.duration_minutes || 90,
         date: item.created_at || item.published_at,
         isLive: item.is_live || false,
         hasReplay: item.has_replay !== false
       });
-    });
+    }
     
-    // DIVERTISSEMENT
-    (divertissement || []).forEach(item => {
+    // DIVERTISSEMENT - Utiliser les vues réelles
+    const divertissementList = divertissement || [];
+    for (const item of divertissementList) {
+      const itemId = item._id || item.id;
+      let realViews = item.views || 0;
+      let realLikes = item.likes ;
+      
+      try {
+        const viewsCount = await api.getViewsCount('divertissement', itemId).catch(() => null);
+        if (viewsCount !== null) realViews = viewsCount;
+        const likesCount = await api.getLikesCount('divertissement', itemId).catch(() => null);
+        if (likesCount !== null) realLikes = likesCount;
+      } catch (e) {
+        console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
+      }
+      
       allData.push({
-        id: item._id || item.id,
+        id: itemId,
         title: item.title,
         description: item.description || '',
         channel: 'BF1 Divertissement',
@@ -184,19 +213,33 @@ async function loadAllEmissions() {
         category: 'divertissement',
         type: 'divertissement',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        views: item.views || Math.floor(Math.random() * 80000) + 2000,
-        likes: item.likes || Math.floor(Math.random() * 8000) + 300,
+        views: realViews,
+        likes: realLikes,
         duration: item.duration_minutes || 60,
         date: item.created_at || item.published_at,
         isLive: item.is_live || false,
         hasReplay: item.has_replay !== false
       });
-    });
+    }
     
-    // REPORTAGE
-    (reportages || []).forEach(item => {
+    // REPORTAGE - Utiliser les vues réelles
+    const reportagesList = reportages || [];
+    for (const item of reportagesList) {
+      const itemId = item._id || item.id;
+      let realViews = item.views || 0;
+      let realLikes = item.likes || 0;
+      
+      try {
+        const viewsCount = await api.getViewsCount('reportage', itemId).catch(() => null);
+        if (viewsCount !== null) realViews = viewsCount;
+        const likesCount = await api.getLikesCount('reportage', itemId).catch(() => null);
+        if (likesCount !== null) realLikes = likesCount;
+      } catch (e) {
+        console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
+      }
+      
       allData.push({
-        id: item._id || item.id,
+        id: itemId,
         title: item.title,
         description: item.description || '',
         channel: 'BF1 Reportage',
@@ -204,19 +247,33 @@ async function loadAllEmissions() {
         category: 'reportage',
         type: 'reportage',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        views: item.views || Math.floor(Math.random() * 40000) + 1000,
-        likes: item.likes || Math.floor(Math.random() * 4000) + 200,
+        views: realViews,
+        likes: realLikes,
         duration: item.duration_minutes || 52,
         date: item.created_at || item.published_at,
         isLive: false,
         hasReplay: true
       });
-    });
+    }
     
-    // JOURNAL & MAGAZINE
-    (jtandmag || []).forEach(item => {
+    // JOURNAL & MAGAZINE - Utiliser les vues réelles
+    const jtandmagList = jtandmag || [];
+    for (const item of jtandmagList) {
+      const itemId = item._id || item.id;
+      let realViews = item.views || 0;
+      let realLikes = item.likes || 0;
+      
+      try {
+        const viewsCount = await api.getViewsCount('jtandmag', itemId).catch(() => null);
+        if (viewsCount !== null) realViews = viewsCount;
+        const likesCount = await api.getLikesCount('jtandmag', itemId).catch(() => null);
+        if (likesCount !== null) realLikes = likesCount;
+      } catch (e) {
+        console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
+      }
+      
       allData.push({
-        id: item._id || item.id,
+        id: itemId,
         title: item.title,
         description: item.description || '',
         channel: 'BF1 Info',
@@ -224,14 +281,14 @@ async function loadAllEmissions() {
         category: 'journal',
         type: 'jtandmag',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        views: item.views || Math.floor(Math.random() * 150000) + 10000,
-        likes: item.likes || Math.floor(Math.random() * 15000) + 1000,
+        views: realViews,
+        likes: realLikes,
         duration: item.duration_minutes || 70,
         date: item.created_at || item.published_at,
         isLive: item.is_live || false,
         hasReplay: true
       });
-    });
+    }
     
     // Trier par date (plus récent en premier)
     allData.sort((a, b) => {
@@ -292,7 +349,7 @@ function filterEmissions() {
     filtered = filtered.filter(e => e.category === currentCategory);
   }
 
-  // Tri
+  // Tri avec vues réelles
   switch (currentFilter) {
     case 'trending':
       filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
@@ -474,7 +531,7 @@ function redirectToDetail(id, type, title = '') {
 
 // Charger les catégories populaires
 function loadPopularCategories() {
-  categoriesContainer = document.querySelector('.videos-grid.mb-5');
+  const categoriesContainer = document.querySelector('.videos-grid.mb-5');
   if (!categoriesContainer) {
     console.warn('Conteneur catégories non trouvé');
     return;
@@ -511,27 +568,24 @@ function loadPopularCategories() {
   document.querySelectorAll('.category-card').forEach(card => {
     card.addEventListener('click', () => {
       const category = card.dataset.category;
-      currentChannel = 'all';
+      currentCategory = category;
       currentSearch = '';
       currentFilter = 'trending';
       
       if (searchInput) searchInput.value = '';
-      if (channelSelect) channelSelect.value = 'all';
       document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
       document.querySelector('.filter-pill[data-filter="trending"]')?.classList.add('active');
+      document.querySelectorAll('.em-cat-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.em-cat-tab[data-cat="${category}"]`)?.classList.add('active');
       
-      // Filtrer par catégorie
-      let filtered = allEmissions.filter(e => e.category === category);
-      filteredEmissions = filtered;
-      currentPage = 1;
-      renderEmissions();
+      filterEmissions();
     });
   });
 }
 
 // Charger les données de continuation (historique local)
 function loadContinueWatching() {
-  continueContainer = document.querySelector('.continue-cards');
+  const continueContainer = document.querySelector('.continue-cards');
   if (!continueContainer) {
     console.warn('Conteneur continue-cards non trouvé');
     return;
@@ -619,11 +673,13 @@ function initEventListeners() {
   }
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      currentSearch = '';
-      clearBtn.classList.remove('visible');
-      searchInput.focus();
-      filterEmissions();
+      if (searchInput) {
+        searchInput.value = '';
+        currentSearch = '';
+        clearBtn.classList.remove('visible');
+        searchInput.focus();
+        filterEmissions();
+      }
     });
   }
 }
@@ -651,6 +707,8 @@ async function init() {
   // Charger les composants
   filterEmissions();
   initEventListeners();
+  loadPopularCategories();
+  loadContinueWatching();
   
   console.log(`✅ Page Émissions initialisée - ${allEmissions.length} émissions disponibles`);
 }
