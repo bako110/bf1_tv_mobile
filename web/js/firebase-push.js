@@ -100,6 +100,7 @@ export function listenForegroundMessages() {
 // ─── Envoi du token au backend ────────────────────────────────────────────────
 async function _saveFcmToken(token) {
   const authToken = localStorage.getItem('bf1_token');
+  console.log('[Push] Token FCM obtenu:', token);
   if (!authToken) return;
 
   try {
