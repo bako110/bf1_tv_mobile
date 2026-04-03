@@ -72,6 +72,9 @@ export async function loadNewsDetail() {
     // Initialiser les événements
     initNewsEvents(currentNewsId, comments, userLiked, userFavorited, likesCount);
 
+    // Incrémenter les vues (anti-doublon 24h géré côté backend)
+    api.incrementView('breaking_news', currentNewsId).catch(() => {});
+
     // Charger les articles similaires
     loadRelatedNews(news.category || 'Actualités', currentNewsId);
 
