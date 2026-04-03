@@ -152,25 +152,10 @@ async function loadAllEmissions() {
 
     const allData = [];
     
-    // SPORT
+    // SPORT — vues et likes viennent directement de l'API
     const sportsList = (sports && sports.sports) ? sports.sports : (Array.isArray(sports) ? sports : []);
     for (const item of sportsList) {
       const itemId = item._id || item.id;
-      let realViews = item.views || 0;
-      let realLikes = item.likes || 0;
-      
-      try {
-        const viewsCount = await api.getViewsCount('sport', itemId).catch(() => null);
-        if (viewsCount !== null) realViews = viewsCount;
-        
-        // Récupérer les likes réels avec await
-        const likesCount = await api.getLikesCount('sport', itemId);
-        realLikes = likesCount;
-        console.log(`🏆 SPORT - "${item.title}" - Likes réels: ${realLikes}`);
-      } catch (e) {
-        console.warn(`Impossible de récupérer les stats pour ${item.title}:`, e);
-      }
-      
       allData.push({
         id: itemId,
         title: item.title,
@@ -180,34 +165,19 @@ async function loadAllEmissions() {
         category: 'sport',
         type: 'sport',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        views: realViews,
-        likes: realLikes,
+        views: item.views || 0,
+        likes: item.likes || 0,
         duration: item.duration_minutes || 90,
         date: item.created_at || item.published_at,
         isLive: item.is_live || false,
         hasReplay: item.has_replay !== false
       });
     }
-    
+
     // DIVERTISSEMENT
     const divertissementList = Array.isArray(divertissement) ? divertissement : [];
-    console.log(`🎬 Traitement de ${divertissementList.length} divertissements...`);
-    
     for (const item of divertissementList) {
       const itemId = item._id || item.id;
-      let realViews = item.views || 0;
-      
-      try {
-        const viewsCount = await api.getViewsCount('divertissement', itemId).catch(() => null);
-        if (viewsCount !== null) realViews = viewsCount;
-      } catch (e) {
-        console.warn(`Impossible de récupérer les vues pour ${item.title}:`, e);
-      }
-      
-      // Récupérer les likes réels avec await (uniquement pour les likes)
-      const realLikes = await api.getLikesCount('divertissement', itemId);
-      console.log(`🎬 DIVERTISSEMENT - "${item.title}" - Likes réels: ${realLikes}`);
-      
       allData.push({
         id: itemId,
         title: item.title,
@@ -217,31 +187,19 @@ async function loadAllEmissions() {
         category: 'divertissement',
         type: 'divertissement',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        views: realViews,
-        likes: realLikes,  // Utilise les likes réels de l'API
+        views: item.views || 0,
+        likes: item.likes || 0,
         duration: item.duration_minutes || 60,
         date: item.created_at || item.published_at,
         isLive: item.is_live || false,
         hasReplay: item.has_replay !== false
       });
     }
-    
+
     // REPORTAGE
     const reportagesList = Array.isArray(reportages) ? reportages : [];
     for (const item of reportagesList) {
       const itemId = item._id || item.id;
-      let realViews = item.views || 0;
-      
-      try {
-        const viewsCount = await api.getViewsCount('reportage', itemId).catch(() => null);
-        if (viewsCount !== null) realViews = viewsCount;
-      } catch (e) {
-        console.warn(`Impossible de récupérer les vues pour ${item.title}:`, e);
-      }
-      
-      // Récupérer les likes réels avec await
-      const realLikes = await api.getLikesCount('reportage', itemId);
-      
       allData.push({
         id: itemId,
         title: item.title,
@@ -251,31 +209,19 @@ async function loadAllEmissions() {
         category: 'reportage',
         type: 'reportage',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        views: realViews,
-        likes: realLikes,
+        views: item.views || 0,
+        likes: item.likes || 0,
         duration: item.duration_minutes || 52,
         date: item.created_at || item.published_at,
         isLive: false,
         hasReplay: true
       });
     }
-    
+
     // JOURNAL & MAGAZINE
     const jtandmagList = Array.isArray(jtandmag) ? jtandmag : [];
     for (const item of jtandmagList) {
       const itemId = item._id || item.id;
-      let realViews = item.views || 0;
-      
-      try {
-        const viewsCount = await api.getViewsCount('jtandmag', itemId).catch(() => null);
-        if (viewsCount !== null) realViews = viewsCount;
-      } catch (e) {
-        console.warn(`Impossible de récupérer les vues pour ${item.title}:`, e);
-      }
-      
-      // Récupérer les likes réels avec await
-      const realLikes = await api.getLikesCount('jtandmag', itemId);
-      
       allData.push({
         id: itemId,
         title: item.title,
@@ -285,8 +231,8 @@ async function loadAllEmissions() {
         category: 'journal',
         type: 'jtandmag',
         image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        views: realViews,
-        likes: realLikes,
+        views: item.views || 0,
+        likes: item.likes || 0,
         duration: item.duration_minutes || 70,
         date: item.created_at || item.published_at,
         isLive: item.is_live || false,
