@@ -104,9 +104,7 @@ async function _saveFcmToken(token) {
   if (!authToken) return;
 
   try {
-    // Recuperer l'URL de l'API depuis le module de config shared
-    const { API_CONFIG } = await import('../../shared/config/config.js');
-    const res = await fetch(`${API_CONFIG.API_BASE_URL}/users/fcm-token`, {
+    const res = await fetch(`https://bf1.fly.dev/api/v1/users/fcm-token`, {
       method:  'POST',
       headers: {
         'Content-Type':  'application/json',
