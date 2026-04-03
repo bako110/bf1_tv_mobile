@@ -38,14 +38,21 @@ function injectOgTags(html, { title, description, image, url }) {
 
 const mimeTypes = {
   '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.css': 'text/css',
+  '.js':   'text/javascript',
+  '.css':  'text/css',
   '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif':  'image/gif',
+  '.svg':  'image/svg+xml',
+  '.ico':  'image/x-icon',
+  '.mp3':  'audio/mpeg',
+  '.mpeg': 'audio/mpeg',
+  '.ogg':  'audio/ogg',
+  '.wav':  'audio/wav',
+  '.woff': 'font/woff',
+  '.woff2':'font/woff2',
 };
 
 const server = http.createServer(async (req, res) => {

@@ -337,12 +337,7 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-// Auto-refresh toutes les 30 secondes pour les flash infos urgents
-setInterval(() => {
-  if (!isLoading) {
-    loadFlashInfo();
-  }
-}, 30000);
+// Auto-refresh supprime — les nouvelles arrivent via notifications push Firebase
 
 // Exporter pour utilisation globale
 window.loadFlashInfo = loadFlashInfo;
