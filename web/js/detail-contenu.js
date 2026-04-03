@@ -467,8 +467,8 @@ function initEvents(apiType, contentId, commentsCount, userLiked, userFavorited,
       likeBtn.disabled = true;
       try {
         const res = await api.toggleLike(apiType, contentId);
-        currentLiked = res?.liked ?? !currentLiked;
-        currentLikesCount = res?.count ?? (currentLiked ? currentLikesCount + 1 : Math.max(0, currentLikesCount - 1));
+        currentLiked = res?.action === 'liked';
+        currentLikesCount = res?.likes ?? (currentLiked ? currentLikesCount + 1 : Math.max(0, currentLikesCount - 1));
         const icon = likeBtn.querySelector('i');
         const countSpan = likeBtn.querySelector('#like-count');
         if (icon) icon.className = currentLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
