@@ -111,8 +111,12 @@ const server = http.createServer(async (req, res) => {
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/html' });
-      res.end(`<h1>404 - Fichier non trouvé</h1><p>Chemin: ${req.url}</p>`);
+      // Rediriger vers la page 404 personnalisée
+      const page404 = path.join(__dirname, 'web', 'pages', '404.html');
+      fs.readFile(page404, (err2, content404) => {
+        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(err2 ? '<h1>404 - Page introuvable</h1>' : content404);
+      });
       return;
     }
     const headers = { 'Content-Type': contentType };
