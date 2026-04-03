@@ -115,6 +115,12 @@ loginFormElement.addEventListener('submit', async (e) => {
     const response = await api.login(identifier, password);
     if (response && response.access_token) {
       showAlert('Connexion réussie ! Redirection...', 'success');
+      // Enregistrer le token FCM apres connexion
+      try {
+        const { requestPushPermission, listenForegroundMessages } = await import('./firebase-push.js');
+        await requestPushPermission();
+        listenForegroundMessages();
+      } catch (_) {}
       setTimeout(() => { window.location.href = 'accueil.html'; }, 1500);
     } else {
       showAlert('Identifiants incorrects. Veuillez réessayer.', 'error');
@@ -163,6 +169,12 @@ registerFormElement.addEventListener('submit', async (e) => {
     const response = await api.register(username, email, password);
     if (response && response.access_token) {
       showAlert('Inscription réussie ! Bienvenue sur BF1 TV !', 'success');
+      // Enregistrer le token FCM apres inscription
+      try {
+        const { requestPushPermission, listenForegroundMessages } = await import('./firebase-push.js');
+        await requestPushPermission();
+        listenForegroundMessages();
+      } catch (_) {}
       setTimeout(() => { window.location.href = 'accueil.html'; }, 1500);
     } else {
       showAlert(response.message || "Erreur lors de l'inscription", 'error');
