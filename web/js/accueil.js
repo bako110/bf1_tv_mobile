@@ -116,7 +116,6 @@ function redirectToDetail(item, category) {
 // Charger toutes les données depuis l'API
 async function loadAllData() {
   try {
-    console.log('📡 Chargement des données depuis l\'API...');
     
     const [news, sports, categories, divertissement, reportages, archives, jtandmag] = await Promise.all([
       api.getNews(),
@@ -246,8 +245,6 @@ async function loadAllData() {
     // Les vues et likes sont déjà inclus dans les données API — pas d'appels individuels
 
     allVideosData = allData;
-    console.log(`✅ ${allData.length} contenus chargés`);
-    console.log(`📅 Les ${ITEMS_PER_PAGE} derniers contenus:`, allData.slice(0, ITEMS_PER_PAGE).map(item => ({ title: item.title, date: item.date })));
 
     return allData;
   } catch (error) {
@@ -393,19 +390,14 @@ function escapeHtml(str) {
  * Mettre à jour les 6 cartes de catégories avec les vraies données
  */
 function updateCategoryCards() {
-  console.log('🎬 updateCategoryCards() appelée');
-  console.log('📊 allVideosData length:', allVideosData.length);
   
   const track = document.getElementById('track-categories');
-  console.log('🔍 track-categories trouvé?', !!track);
   
   if (!track) {
-    console.warn('⚠️ Track-categories non trouvé');
     return;
   }
 
   const cards = track.querySelectorAll('.bpc');
-  console.log('📇 Nombre de cartes trouvées:', cards.length);
 
   // Mapping: carte → catégorie → premiere donnée
   const categories = [
@@ -418,19 +410,15 @@ function updateCategoryCards() {
   ];
 
   categories.forEach((cat, idx) => {
-    console.log(`\n🔄 Traitement catégorie ${idx}: ${cat.name}`);
     
     if (!cards[idx]) {
-      console.warn(`⚠️ Pas de carte à l'index ${idx}`);
       return;
     }
 
     // Trouver le premier item de cette catégorie
     const item = allVideosData.find(v => v.category === cat.name);
-    console.log(`🔎 Item trouvé pour ${cat.name}?`, !!item);
     
     if (!item) {
-      console.warn(`⚠️ Pas d'item trouvé pour ${cat.name}`);
       return;
     }
 
@@ -438,7 +426,6 @@ function updateCategoryCards() {
     const imageUrl = item.image || 'https://via.placeholder.com/260x390';
     const views = item.views || Math.floor(Math.random() * 200000);
 
-    console.log(`✅ Mise à jour carte ${idx}: "${title}"`);
 
     // Remplacer le contenu de la carte
     cards[idx].innerHTML = `
@@ -467,7 +454,6 @@ function updateCategoryCards() {
     `;
   });
   
-  console.log('✅ updateCategoryCards() terminée');
 }
 
 // ==================== CAROUSEL HERO (jusqu'à 24 images - AUTO SCROLL) ====================
@@ -478,7 +464,6 @@ const CAROUSEL_AUTO_SCROLL_INTERVAL = 5000; // 5 secondes
 
 async function fetchCarouselImages() {
   try {
-    console.log('📸 Récupération des images du carousel...');
 
     // Utiliser le service partagé api.getCarousel() → GET /api/v1/carousel
     try {
@@ -495,11 +480,9 @@ async function fetchCarouselImages() {
           description: img.description || '',
         }));
       if (images.length > 0) {
-        console.log(`✅ Carousel API: ${images.length} slides`);
         return images.slice(0, 24);
       }
     } catch (err) {
-      console.log('⚠️ Carousel API non disponible, utilisation des données alternatives');
     }
 
     // Fallback: utiliser les contenus déjà chargés
@@ -510,7 +493,6 @@ async function fetchCarouselImages() {
         description: item.description || item.content || '',
         views: item.views
       }));
-      console.log(`✅ Fallback: ${images.length} images depuis contenu`);
       return images;
     }
 
@@ -537,16 +519,13 @@ function initHeroCarousel() {
   const nextBtn = document.getElementById('heroCarouselNext');
   
   if (!container) {
-    console.log('⚠️ Container carousel non trouvé');
     return;
   }
   
   if (carouselImages.length === 0) {
-    console.log('ℹ️ Pas d\'images pour le carousel');
     return;
   }
   
-  console.log(`🎬 Initialisation du carousel avec ${carouselImages.length} images (AUTO-SCROLL 5s)`);
   
   // Remplir le container avec les slides (style RTI Play)
   container.innerHTML = '';
@@ -617,7 +596,6 @@ function initHeroCarousel() {
   // Démarrer l'auto-scroll
   startAutoScroll();
   
-  console.log('✅ Carousel initialisé avec auto-scroll');
 }
 
 function startAutoScroll() {
@@ -629,14 +607,12 @@ function startAutoScroll() {
     slideCarousel(1);
   }, CAROUSEL_AUTO_SCROLL_INTERVAL);
   
-  console.log('▶️ Auto-scroll démarré (5s)');
 }
 
 function stopAutoScroll() {
   if (carouselAutoScrollInterval) {
     clearInterval(carouselAutoScrollInterval);
     carouselAutoScrollInterval = null;
-    console.log('⏸️ Auto-scroll arrêté');
   }
 }
 
@@ -733,32 +709,24 @@ async function fetchLiveStreamUrl() {
  * Initialise le lecteur vidéo HLS dans le hero-preview
  */
 async function setupLiveVideoPlayer() {
-  console.log('🔍 Recherche de .hero-preview-thumb...');
   const previewThumb = document.querySelector('.hero-preview-thumb');
-  console.log('🔍 previewThumb trouvé?', !!previewThumb);
   
   if (!previewThumb) {
-    console.warn('⚠️ hero-preview-thumb non trouvé - Attente 500ms et nouvelle tentative');
     await new Promise(resolve => setTimeout(resolve, 500));
     const retryThumb = document.querySelector('.hero-preview-thumb');
     if (!retryThumb) {
       console.error('❌ IMPOSSIBLE de trouver .hero-preview-thumb après retry');
       return;
     }
-    console.log('✅ .hero-preview-thumb trouvé au retry');
     return setupLiveVideoPlayer(); // Relancer avec le bon élément
   }
   
   try {
     // Récupérer l'URL du flux HLS
-    console.log('🌐 Récupération de l\'URL du flux HLS...');
     const hlsUrl = await fetchLiveStreamUrl();
     if (!hlsUrl) {
-      console.log('ℹ️ Flux non disponible (utilisateur non connecté)');
       return;
     }
-    console.log('✅ URL HLS reçue:', hlsUrl.substring(0, 50) + '...');
-    console.log('📺 Configuration du lecteur vidéo en direct');
     
     // Créer l'élément vidéo DIRECTEMENT (pas de container wrapper)
     const videoElement = document.createElement('video');
@@ -778,38 +746,26 @@ async function setupLiveVideoPlayer() {
     videoElement.setAttribute('playsinline', 'true');
     videoElement.muted = true;
     
-    console.log('🔨 Élément vidéo créé:', videoElement);
     
     // Insérer la vidéo AU DÉBUT du preview-thumb (avant le play-pulse)
     previewThumb.insertBefore(videoElement, previewThumb.firstChild);
-    console.log('✅ Vidéo injectée dans le DOM');
-    console.log('📐 Taille du preview:', previewThumb.offsetWidth, 'x', previewThumb.offsetHeight);
     
     // Ajouter position: relative au preview-thumb si nécessaire
     if (getComputedStyle(previewThumb).position === 'static') {
       previewThumb.style.position = 'relative';
-      console.log('🔧 Position relative appliquée au preview-thumb');
     }
     
     // Stocker l'URL dans sessionStorage pour direct.html
     sessionStorage.setItem('liveStreamUrl', hlsUrl);
     
     // Initialiser le lecteur HLS
-    console.log('🎬 Vérification du support HLS...');
-    console.log('📊 canPlayType HLS natif?', videoElement.canPlayType('application/vnd.apple.mpegurl'));
-    console.log('📊 Hls disponible?', typeof Hls !== 'undefined');
-    console.log('📊 Hls.isSupported()?', typeof Hls !== 'undefined' ? Hls.isSupported() : 'N/A');
     
     if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
       // Support natif HLS (Safari, etc.)
-      console.log('🔧 Utilisation du lecteur HLS NATIF');
       videoElement.src = hlsUrl;
-      videoElement.play().catch(e => console.log('⚠️ Auto-play bloqué:', e));
-      console.log('✅ Lecteur HLS natif utilisé');
     } 
     else if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       // Utiliser HLS.js pour les navigateurs Chromium
-      console.log('🔧 Utilisation de HLS.js');
       const hls = new Hls({ enableWorker: true, autoStartLoad: true, debug: true });
       
       hls.on(Hls.Events.ERROR, (event, data) => {
@@ -819,16 +775,11 @@ async function setupLiveVideoPlayer() {
       hls.loadSource(hlsUrl);
       hls.attachMedia(videoElement);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log('✅ Manifest HLS parsé, démarrage de la lecture');
-        videoElement.play().catch(e => console.log('⚠️ Auto-play bloqué:', e));
       });
-      console.log('✅ Lecteur HLS.js utilisé');
     } 
     else {
       // Fallback: Aucun support HLS - enlever la vidéo et garder le play-pulse
-      console.warn('❌ Aucun support HLS détecté');
       videoElement.remove();
-      console.warn('❌ Aucun lecteur HLS disponible');
     }
     
   } catch (error) {
@@ -845,7 +796,6 @@ async function setupLiveVideoPlayer() {
  * Configure la navigation des boutons précédent/suivant pour les catégories
  */
 function setupCategoryNavigation() {
-  console.log('🔧 Configuration de la navigation des catégories');
   
   // Sélectionner tous les boutons de navigation
   const navButtons = document.querySelectorAll('.brs-nav');
@@ -859,7 +809,6 @@ function setupCategoryNavigation() {
       const track = document.getElementById(trackAttribute);
       
       if (!track) {
-        console.warn(`⚠️ Track non trouvée: ${trackAttribute}`);
         return;
       }
       
@@ -867,57 +816,41 @@ function setupCategoryNavigation() {
       const scrollAmount = 300; // Largeur d'une carte (260px) + gap (24px) + buffer
       
       if (isNextButton) {
-        console.log('➡️ Scroll suivant');
         track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
       } else {
-        console.log('⬅️ Scroll précédent');
         track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
       }
     });
   });
   
-  console.log('✅ Navigation des catégories configurée');
 }
 
 // ==================== FIN NAVIGATION CATÉGORIES ====================
 
 // Initialisation
 async function init() {
-  console.log('🚀 Initialisation de la page accueil - START');
-  console.log('📄 document.readyState:', document.readyState);
   
   // Petit délai pour s'assurer que le DOM est bien chargé
-  console.log('⏳ Attente de 100ms pour stabiliser le DOM...');
   await new Promise(resolve => setTimeout(resolve, 100));
   
   // Initialiser le lecteur vidéo HLS pour le preview en direct
-  console.log('📺 Initialisation du lecteur vidéo en direct...');
   await setupLiveVideoPlayer();
-  console.log('✅ Lecteur vidéo prêt');
   
-  console.log('📡 Appel loadAllData()...');
   await loadAllData();
-  console.log('✅ LoadAllData() terminé');
   
   // Petit délai pour laisser les données se mettre en place
   setTimeout(async () => {
-    console.log('🎬 MAINTENANT on appelle updateCategoryCards()');
-    console.log('allVideosData.length:', allVideosData.length);
     updateCategoryCards();
-    console.log('✅ updateCategoryCards() TERMINÉE');
     
     // Initialiser le carousel
-    console.log('📸 Initialisation du carousel...');
     carouselImages = await fetchCarouselImages();
     initHeroCarousel();
-    console.log('✅ Carousel prêt');
     
     // Configurer la navigation des catégories
     setupCategoryNavigation();
   }, 100);
   
   // Ajouter les événements aux filtres
-  console.log('🔘 Setup des filter pills...');
   document.querySelectorAll('.filter-pill').forEach(pill => {
     pill.addEventListener('click', (e) => {
       e.preventDefault();
@@ -937,7 +870,6 @@ async function init() {
   setGridMode(3);
   renderVideos('all');
   
-  console.log(`✅ Page accueil initialisée - Affichage des ${ITEMS_PER_PAGE} derniers contenus`);
 }
 
 
@@ -945,13 +877,10 @@ async function init() {
 // Rendre la fonction toggleTheme accessible globalement
 // toggleTheme exposé par theme.js
 
-console.log('🔧 accueil.js chargé');
 
 // Vérifier si le DOM est déjà chargé
 if (document.readyState === 'loading') {
-  console.log('⏳ DOM pas encore chargé, attente...');
   document.addEventListener('DOMContentLoaded', init);
 } else {
-  console.log('✅ DOM déjà chargé, appel direct init()');
   init();
 }
