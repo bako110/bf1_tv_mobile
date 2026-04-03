@@ -347,6 +347,18 @@ export async function getViewsCount(contentType, contentId) {
   } catch { return 0; }
 }
 
+export async function incrementView(contentType, contentId) {
+  try {
+    const userId = getUser()?._id || getUser()?.id || null;
+    const res = await http.post('/views/increment', {
+      content_type: contentType,
+      content_id: contentId,
+      user_id: userId,
+    });
+    return res?.views ?? 0;
+  } catch { return 0; }
+}
+
 export async function toggleLike(contentType, contentId) {
   return http.post('/likes/toggle', { content_type: contentType, content_id: contentId });
 }

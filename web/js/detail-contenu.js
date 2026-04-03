@@ -199,6 +199,9 @@ async function loadContentDetail() {
     
     renderContent(content, cfg, related, comments, likesCount, userLiked, userFavorited);
     initEvents(apiType, currentId, comments.length, userLiked, userFavorited, likesCount);
+
+    // Incrémenter les vues (anti-doublon 24h géré côté backend)
+    api.incrementView(apiType, currentId).catch(() => {});
     
   } catch (error) {
     console.error('❌ Erreur chargement:', error);
