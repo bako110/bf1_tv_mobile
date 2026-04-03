@@ -1,6 +1,23 @@
 // js/services/programme.js
 import { getProgramWeek, getProgramGrid, getPrograms } from '../../shared/services/api.js';
 import { slugify, cacheProgram, getProgramDetailUrl } from '/js/slugUtils.js';
+import { API_CONFIG } from '../../shared/config/config.js';
+const API_BASE = API_CONFIG.API_BASE_URL;
+
+function _headers() {
+  const token = localStorage.getItem('bf1_token');
+  const h = { 'Content-Type': 'application/json' };
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  return h;
+}
+
+async function getMyReminders() {
+  try {
+    const r = await fetch(`${API_BASE}/programs/reminders/my?status=scheduled&upcoming_only=true`, { headers: _headers() });
+    if (!r.ok) return [];
+    return await r.json();
+  } catch { return []; }
+}
 
 export class ProgrammesService {
   constructor() {
@@ -11,23 +28,91 @@ export class ProgrammesService {
       timePeriod: 'all',
       sortBy: 'time',
     };
-    
+
     this.currentWeek = 0;
     this.currentSelectedDate = null;
     this.programsByDay = {};
     this.currentDayPrograms = [];
     this.isLoading = false;
+    this.reminderIds = new Set(); // IDs des programmes ayant déjà un rappel
   }
 
   async init() {
-    // Charger d'abord la semaine complète
-    await this.loadWeeklyPrograms(0);
+    // Charger d'abord la semaine complète + les rappels existants
+    await Promise.all([
+      this.loadWeeklyPrograms(0),
+      this.loadMyReminders()
+    ]);
     // Initialiser avec la date d'aujourd'hui
     this.currentSelectedDate = this.getTodayDate();
     this.selectDayByDate(this.currentSelectedDate);
     this.setupEventListeners();
     this.renderDaySelector();
     this.updateDayFilterValue(this.currentSelectedDate);
+  }
+
+  async loadMyReminders() {
+    try {
+      const reminders = await getMyReminders();
+      this.reminderIds = new Set((reminders || []).map(r => String(r.program_id)));
+    } catch {
+      // Non connecté ou API indisponible — on ignore
+    }
+  }
+
+  async createReminder(programId) {
+    const token = localStorage.getItem('bf1_token');
+    if (!token) {
+      this.showToast('Connectez-vous pour créer un rappel', 'error');
+      return;
+    }
+
+    const btn = document.querySelector(`.reminder-btn[data-id="${programId}"]`);
+
+    // Désactiver immédiatement + spinner pour éviter les double-clics
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" style="width:12px;height:12px;border-width:2px;"></span> Envoi...';
+    }
+
+    try {
+      const r = await fetch(`${API_BASE}/programs/${programId}/reminders`, {
+        method: 'POST',
+        headers: _headers(),
+        body: JSON.stringify({ program_id: programId, minutes_before: 5, reminder_type: 'push' })
+      });
+      if (r.status === 401) {
+        this.showToast('Connectez-vous pour créer un rappel', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-bell"></i> Rappel'; }
+        return;
+      }
+      if (!r.ok) throw new Error('API error');
+
+      this.reminderIds.add(String(programId));
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('reminder-set');
+        btn.style.background = 'var(--red,#E23E3E)';
+        btn.style.color = '#fff';
+        btn.innerHTML = '<i class="bi bi-bell-fill"></i> Rappel actif';
+      }
+      this.showToast('Rappel créé ! Vous serez alerté 5 min avant.', 'success');
+    } catch {
+      this.showToast('Impossible de créer le rappel', 'error');
+      // Restaurer le bouton en cas d'erreur
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-bell"></i> Rappel';
+      }
+    }
+  }
+
+  showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.innerHTML = `<div><i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}"></i><span>${message}</span></div>`;
+    toast.style.cssText = `position:fixed;bottom:20px;right:20px;background:${type === 'success' ? '#10b981' : '#ef4444'};color:white;padding:12px 20px;border-radius:8px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
   }
 
   // Retourne la date du jour en UTC (Afrique/Ouagadougou = UTC+0)
@@ -347,6 +432,15 @@ export class ProgrammesService {
       });
     }
     
+    // Bouton rappel — délégation sur le document (capture phase pour intercepter avant programme-item)
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.reminder-btn');
+      if (!btn || !btn.dataset.id) return;
+      e.stopPropagation();
+      e.preventDefault();
+      await this.createReminder(btn.dataset.id);
+    }, true);
+
     document.querySelectorAll('.filter-tab').forEach(tab => {
       tab.addEventListener('click', (e) => {
         document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
@@ -491,10 +585,12 @@ export class ProgrammesService {
       `;
       
       periodPrograms.forEach(program => {
-        const thumbHtml = program.image 
+        const thumbHtml = program.image
           ? `<img src="${program.image}" alt="${program.title}"/>`
           : `<div style="width:100%;height:100%;background:var(--bg-3);display:flex;align-items:center;justify-content:center;color:var(--text-3)"><i class="bi bi-camera-video-fill"></i></div>`;
-        
+
+        const hasReminder = this.reminderIds.has(String(program.id));
+
         html += `
           <div class="programme-item anim-up" data-id="${program.id}" data-title="${this.escapeHtml(program.title)}">
             <div class="programme-time">${program.timeDisplay}</div>
@@ -506,7 +602,14 @@ export class ProgrammesService {
               </div>
               ${program.description ? `<div class="programme-desc small text-secondary mt-1">${this.escapeHtml(program.description.substring(0, 60))}${program.description.length > 60 ? '...' : ''}</div>` : ''}
             </div>
-            ${this.getBadge(program)}
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              ${this.getBadge(program)}
+              <button class="reminder-btn${hasReminder ? ' reminder-set' : ''}" data-id="${program.id}"
+                style="font-size:0.75rem;padding:5px 10px;border-radius:8px;border:1px solid var(--red,#E23E3E);background:${hasReminder ? 'var(--red,#E23E3E)' : 'transparent'};color:${hasReminder ? '#fff' : 'var(--red,#E23E3E)'};cursor:pointer;white-space:nowrap;"
+                ${hasReminder ? 'disabled' : ''}>
+                <i class="bi ${hasReminder ? 'bi-bell-fill' : 'bi-bell'}"></i> ${hasReminder ? 'Rappel actif' : 'Rappel'}
+              </button>
+            </div>
           </div>
         `;
       });
@@ -515,7 +618,8 @@ export class ProgrammesService {
     container.innerHTML = html;
     
     document.querySelectorAll('.programme-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.reminder-btn')) return;
         const id = item.dataset.id;
         const title = item.dataset.title || '';
         this.showProgrammeDetails(id, title);
