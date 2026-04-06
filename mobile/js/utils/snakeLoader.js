@@ -643,16 +643,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Export ES6 module
+// Export ES6 module — snake loader (pull-to-refresh uniquement)
 export function createSnakeLoader(size = 40) {
   const loader = new window.SnakeLoader({
     size: size,
     color: '#E23E3E'
   });
-  
   const container = document.createElement('div');
   loader.render(container);
   return container;
+}
+
+// Spinner léger pour les chargements initiaux de page
+export function createPageSpinner(minHeight = '200px') {
+  const wrap = document.createElement('div');
+  wrap.style.cssText =
+    `display:flex;align-items:center;justify-content:center;width:100%;min-height:${minHeight};`;
+  wrap.innerHTML =
+    '<div style="width:32px;height:32px;border:3px solid rgba(226,62,62,0.2);' +
+    'border-top-color:#E23E3E;border-radius:50%;animation:_psp .7s linear infinite;"></div>' +
+    '<style>@keyframes _psp{to{transform:rotate(360deg)}}</style>';
+  return wrap;
 }
 
 export default createSnakeLoader;

@@ -5,139 +5,64 @@ let journalMagazineData = [];
 let currentFilter = 'Tous';
 let isLoading = false;
 let currentPage = 1;
-let itemsPerPage = 9;
+const itemsPerPage = 9;
+let totalItems = 0;
 let totalPages = 1;
 
-export async function loadJournalMagazineContent() {
+async function fetchAndRender(page) {
+  if (isLoading) return;
   const container = document.getElementById('journalArticles');
-  const filterContainer = document.querySelector('.filter-pills');
-  
-  if (!container) {
-    console.error('❌ Container non trouvé');
-    return;
-  }
+  if (!container) return;
 
   isLoading = true;
-  container.innerHTML = `
-    <div class="text-center py-5">
-      <div class="spinner-border text-danger" role="status">
-        <span class="visually-hidden">Chargement...</span>
-      </div>
-      <p class="mt-3 text-secondary">Chargement des journaux et magazines...</p>
-    </div>
-  `;
+  const skip = (page - 1) * itemsPerPage;
+  container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-danger" role="status"></div></div>`;
 
   try {
-    console.log('📡 Appel API getJTandMag()...');
-    const response = await api.getJTandMag();
-    console.log('📦 Réponse API brute:', response);
-    console.log('📦 Type de réponse:', typeof response);
-    console.log('📦 Est un tableau?', Array.isArray(response));
-    
-    // Traiter les données - l'API retourne probablement un tableau directement
-    let rawData = [];
-    
-    if (Array.isArray(response)) {
-      rawData = response;
-      console.log('✅ Cas 1: Tableau direct,', rawData.length, 'éléments');
-    } else if (response && response.data && Array.isArray(response.data)) {
-      rawData = response.data;
-      console.log('✅ Cas 2: response.data,', rawData.length, 'éléments');
-    } else if (response && response.items && Array.isArray(response.items)) {
-      rawData = response.items;
-      console.log('✅ Cas 3: response.items,', rawData.length, 'éléments');
-    } else if (response && response.jtandmag && Array.isArray(response.jtandmag)) {
-      rawData = response.jtandmag;
-      console.log('✅ Cas 4: response.jtandmag,', rawData.length, 'éléments');
-    } else if (response && response.results && Array.isArray(response.results)) {
-      rawData = response.results;
-      console.log('✅ Cas 5: response.results,', rawData.length, 'éléments');
-    } else if (response && typeof response === 'object') {
-      // Essayer de collecter toutes les propriétés qui semblent être des articles
-      const possibleItems = [];
-      for (const key in response) {
-        if (response[key] && typeof response[key] === 'object' && response[key].title) {
-          possibleItems.push(response[key]);
-        }
-      }
-      if (possibleItems.length > 0) {
-        rawData = possibleItems;
-        console.log('✅ Cas 6: Objet avec propriétés,', rawData.length, 'éléments');
-      }
-    }
-    
-    console.log('📊 Données brutes après extraction:', rawData.length, 'éléments');
-    
-    // Si toujours vide, essayer getNews() comme fallback
-    if (rawData.length === 0) {
-      console.log('🔄 Tentative avec getNews()...');
-      const newsData = await api.getNews();
-      if (Array.isArray(newsData)) {
-        rawData = newsData.filter(item => 
-          (item.category === 'Journal' || 
-           item.category === 'Magazine' ||
-           item.edition === 'Journal' || 
-           item.edition === 'Magazine' ||
-           item.type === 'journal' ||
-           item.type === 'magazine')
-        );
-        console.log('✅ Données filtrées depuis news:', rawData.length);
-      }
-    }
-    
-    // Mapper toutes les données
-    journalMagazineData = rawData.map((item, index) => ({
+    const res = await api.getJTandMag(skip, itemsPerPage);
+    const raw = res.items || (Array.isArray(res) ? res : []);
+    totalItems = res.total ?? raw.length;
+    totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    currentPage = page;
+
+    journalMagazineData = raw.map((item, index) => ({
       ...item,
       _id: item._id || item.id || index,
-      title: item.title || item.name || 'Sans titre',
-      description: item.description || item.content || item.excerpt || '',
+      title: item.title || 'Sans titre',
+      description: item.description || '',
       image: getImageUrl(item.image_url || item.image || item.thumbnail || item.poster),
       category: item.category || item.type || item.edition || 'Journal',
       subcategory: item.subcategory || '',
       author: item.author || item.created_by || 'Rédaction BF1',
-      views: item.views || item.view_count || 0,
-      likes: item.likes || item.like_count || 0,
+      views: item.views || 0,
+      likes: item.likes || 0,
       date: item.created_at || item.published_at || item.date || new Date(),
-      live: item.live || false,
       tags: item.tags || [],
-      urgent: item.urgent || item.is_breaking_news || false,
-      video_url: item.video_url
+      video_url: item.video_url,
     }));
-    
-    console.log(`✅ ${journalMagazineData.length} journaux et magazines mappés`);
-    
-    // Afficher les titres pour vérification
+
     if (journalMagazineData.length > 0) {
-      console.log('📝 Liste des titres:');
-      journalMagazineData.slice(0, 10).forEach((item, i) => {
-        console.log(`   ${i+1}. ${item.title} (${item.category})`);
-      });
+      const articlesHTML = journalMagazineData.map((item, i) => buildJournalMagazineCard(item, i)).join('');
+      const paginationHTML = renderPagination();
+      container.innerHTML = `<div class="journal-grid">${articlesHTML}</div>${paginationHTML}
+        <div class="journal-stats"><i class="bi bi-journal-text"></i> ${totalItems} émission${totalItems > 1 ? 's' : ''} au total</div>`;
+      updateTrendsSection(journalMagazineData);
     } else {
-      console.warn('⚠️ Aucune donnée journal/magazine trouvée!');
+      container.innerHTML = `<div class="text-center py-5"><i class="bi bi-journal-text" style="font-size:3rem;color:#666;"></i><p class="mt-3 text-secondary">Aucun journal ou magazine disponible</p></div>`;
     }
-
-    // Construire les filtres dynamiquement à partir des catégories réelles
-    if (filterContainer) {
-      renderFiltersFromData(filterContainer);
-    }
-    
-    currentPage = 1;
-    renderJournalMagazineList(container);
-
   } catch (error) {
-    console.error('❌ Erreur détaillée chargement journal/magazine:', error);
-    container.innerHTML = `
-      <div class="text-center py-5">
-        <i class="bi bi-journal-text" style="font-size:3rem;color:#666;"></i>
-        <p class="mt-3 text-secondary">Erreur: ${error.message || 'Impossible de charger les journaux et magazines'}</p>
-        <button class="btn btn-outline-danger btn-sm mt-2" onclick="window.loadJournalMagazineContent()">
-          <i class="bi bi-arrow-clockwise"></i> Réessayer
-        </button>
-      </div>
-    `;
+    console.error('❌ Erreur chargement journal/magazine:', error);
+    container.innerHTML = `<div class="text-center py-5"><p class="mt-3 text-secondary">Erreur: ${error.message || 'Impossible de charger'}</p>
+      <button class="btn btn-outline-danger btn-sm mt-2" onclick="window.loadJournalMagazineContent()"><i class="bi bi-arrow-clockwise"></i> Réessayer</button></div>`;
   } finally {
     isLoading = false;
   }
+}
+
+export async function loadJournalMagazineContent() {
+  const filterContainer = document.querySelector('.filter-pills');
+  if (filterContainer) renderFiltersFromData(filterContainer);
+  await fetchAndRender(1);
 }
 
 function getImageUrl(imagePath) {
@@ -190,74 +115,13 @@ function renderFiltersFromData(container) {
           b.classList.remove('active');
         }
       });
-      const mainContainer = document.getElementById('journalArticles');
-      if (mainContainer) renderJournalMagazineList(mainContainer);
+      fetchAndRender(1);
     });
 
     container.appendChild(btn);
   });
 }
 
-function renderJournalMagazineList(container) {
-  let filtered = journalMagazineData;
-  
-  // Filtrer par catégorie
-  if (currentFilter !== 'Tous') {
-    filtered = filtered.filter(item => {
-      const cat = item.category || '';
-      const subcat = item.subcategory || '';
-      const tags = item.tags || [];
-      const filterLower = currentFilter.toLowerCase();
-      
-      return cat.toLowerCase().includes(filterLower) ||
-             subcat.toLowerCase().includes(filterLower) ||
-             tags.some(tag => tag.toLowerCase().includes(filterLower));
-    });
-    console.log(`🎯 Après filtre "${currentFilter}": ${filtered.length} éléments`);
-  }
-
-  // Trier par date (plus récent en premier)
-  const sorted = [...filtered].sort((a, b) => {
-    const dateA = new Date(a.date || 0);
-    const dateB = new Date(b.date || 0);
-    return dateB - dateA;
-  });
-
-  // Calculer la pagination
-  totalPages = Math.ceil(sorted.length / itemsPerPage);
-  if (totalPages === 0) totalPages = 1;
-  if (currentPage > totalPages) currentPage = totalPages;
-  if (currentPage < 1) currentPage = 1;
-  
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const pageItems = sorted.slice(startIndex, endIndex);
-
-  if (pageItems.length > 0) {
-    const articlesHTML = pageItems.map((item, index) => buildJournalMagazineCard(item, startIndex + index)).join('');
-    const paginationHTML = renderPagination(sorted.length);
-    
-    container.innerHTML = `
-      <div class="journal-grid">
-        ${articlesHTML}
-      </div>
-      ${paginationHTML}
-      <div class="journal-stats">
-        <i class="bi bi-journal-text"></i> ${sorted.length} émission${sorted.length > 1 ? 's' : ''} au total
-      </div>
-    `;
-    
-    updateTrendsSection(sorted);
-  } else {
-    container.innerHTML = `
-      <div class="text-center py-5">
-        <i class="bi bi-journal-text" style="font-size:3rem;color:#666;"></i>
-        <p class="mt-3 text-secondary">Aucun journal ou magazine disponible</p>
-        <p class="text-secondary small">${journalMagazineData.length} éléments au total</p>
-      </div>
-    `;
-  }
-}
 
 function buildJournalMagazineCard(item, index) {
   const imageUrl = item.image || '';
@@ -299,69 +163,45 @@ function buildJournalMagazineCard(item, index) {
   `;
 }
 
-function renderPagination(totalItems) {
+function renderPagination() {
   if (totalPages <= 1) return '';
-  
-  let paginationHTML = '<div class="pagination-container">';
-  
+
   const prevDisabled = currentPage === 1 ? 'disabled' : '';
-  paginationHTML += `
-    <button class="pagination-btn ${prevDisabled}" onclick="window.changeJournalPage(${currentPage - 1})" ${prevDisabled ? 'disabled' : ''}>
-      <i class="bi bi-chevron-left"></i> Précédent
-    </button>
-  `;
-  
-  paginationHTML += '<div class="pagination-numbers">';
-  
+  const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+
   let startPage = Math.max(1, currentPage - 2);
   let endPage = Math.min(totalPages, currentPage + 2);
-  
-  if (currentPage <= 3) {
-    endPage = Math.min(5, totalPages);
-  }
-  if (currentPage >= totalPages - 2) {
-    startPage = Math.max(1, totalPages - 4);
-  }
-  
+  if (currentPage <= 3) endPage = Math.min(5, totalPages);
+  if (currentPage >= totalPages - 2) startPage = Math.max(1, totalPages - 4);
+
+  let nums = '';
   if (startPage > 1) {
-    paginationHTML += `<button class="pagination-number" onclick="window.changeJournalPage(1)">1</button>`;
-    if (startPage > 2) {
-      paginationHTML += '<span class="pagination-dots">...</span>';
-    }
+    nums += `<button class="pagination-number" onclick="window.changeJournalPage(1)">1</button>`;
+    if (startPage > 2) nums += '<span class="pagination-dots">...</span>';
   }
-  
   for (let i = startPage; i <= endPage; i++) {
-    const activeClass = i === currentPage ? 'active' : '';
-    paginationHTML += `<button class="pagination-number ${activeClass}" onclick="window.changeJournalPage(${i})">${i}</button>`;
+    nums += `<button class="pagination-number ${i === currentPage ? 'active' : ''}" onclick="window.changeJournalPage(${i})">${i}</button>`;
   }
-  
   if (endPage < totalPages) {
-    if (endPage < totalPages - 1) {
-      paginationHTML += '<span class="pagination-dots">...</span>';
-    }
-    paginationHTML += `<button class="pagination-number" onclick="window.changeJournalPage(${totalPages})">${totalPages}</button>`;
+    if (endPage < totalPages - 1) nums += '<span class="pagination-dots">...</span>';
+    nums += `<button class="pagination-number" onclick="window.changeJournalPage(${totalPages})">${totalPages}</button>`;
   }
-  
-  paginationHTML += '</div>';
-  
-  const nextDisabled = currentPage === totalPages ? 'disabled' : '';
-  paginationHTML += `
-    <button class="pagination-btn ${nextDisabled}" onclick="window.changeJournalPage(${currentPage + 1})" ${nextDisabled ? 'disabled' : ''}>
-      Suivant <i class="bi bi-chevron-right"></i>
-    </button>
-  `;
-  
-  paginationHTML += '</div>';
-  
+
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-  paginationHTML += `
-    <div class="pagination-info">
-      Affichage de ${startItem} à ${endItem} sur ${totalItems} articles
+
+  return `
+    <div class="pagination-container">
+      <button class="pagination-btn ${prevDisabled}" onclick="window.changeJournalPage(${currentPage - 1})" ${prevDisabled}>
+        <i class="bi bi-chevron-left"></i> Précédent
+      </button>
+      <div class="pagination-numbers">${nums}</div>
+      <button class="pagination-btn ${nextDisabled}" onclick="window.changeJournalPage(${currentPage + 1})" ${nextDisabled}>
+        Suivant <i class="bi bi-chevron-right"></i>
+      </button>
     </div>
+    <div class="pagination-info">Affichage de ${startItem} à ${endItem} sur ${totalItems} articles</div>
   `;
-  
-  return paginationHTML;
 }
 
 function updateTrendsSection(allData) {
@@ -410,9 +250,7 @@ function updateTrendsSection(allData) {
 
 window.changeJournalPage = function(page) {
   if (page < 1 || page > totalPages) return;
-  currentPage = page;
-  const mainContainer = document.getElementById('journalArticles');
-  if (mainContainer) renderJournalMagazineList(mainContainer);
+  fetchAndRender(page, currentSearch);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 

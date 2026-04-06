@@ -113,144 +113,59 @@ function redirectToDetail(item, category) {
   window.location.href = page;
 }
 
-// Charger toutes les données depuis l'API
-async function loadAllData() {
-  try {
-    
-    const [news, sports, categories, divertissement, reportages, archives, jtandmag] = await Promise.all([
-      api.getNews(),
-      api.getSports(),
-      api.getCategories(),
-      api.getDivertissement(),
-      api.getReportages(),
-      api.getArchive(),
-      api.getJTandMag()
-    ]);
+// Normaliser un tableau d'items vers le format d'affichage uniforme
+function normalizeItems(items, contentType, channel, category) {
+  return (Array.isArray(items) ? items : []).map(item => ({
+    ...item,
+    _contentType: contentType,
+    channel,
+    category,
+    views: formatNumber(item.views || 0),
+    likes: formatNumber(item.likes || 0),
+    image: getImageUrl(item.image_url || item.image || item.thumbnail),
+    live: item.live || false,
+    date: item.created_at || item.published_at
+  }));
+}
 
-    const allData = [];
+// Phase 1 : charger les actualités (affichées immédiatement)
+// Limite faible : on n'affiche que 8 cartes sur l'accueil
+async function loadPhase1() {
+  const newsRes = await api.getNews(0, 20).catch(() => ({}));
+  const news = newsRes.items || (Array.isArray(newsRes) ? newsRes : []);
+  const normalized = normalizeItems(news, 'news', 'BF1 Info', 'actualites');
+  normalized.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  allVideosData = normalized;
+  renderVideos(currentCategory);
+}
 
-    // Actualités
-    (news || []).forEach(item => {
-      allData.push({
-        ...item,
-        _contentType: 'news',
-        channel: 'BF1 Info',
-        category: 'actualites',
-        views: formatNumber(item.views || 0),
-        likes: formatNumber(item.likes || 0),
-        image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        live: item.live || false,
-        date: item.created_at || item.published_at
-      });
-    });
+// Phase 2 : charger le reste en arrière-plan et mettre à jour silencieusement
+// Limite modérée : assez pour alimenter les cartes catégories + filtre, sans surcharger
+async function loadPhase2() {
+  const [sportsRes, divertissementRes, reportagesRes, archivesRes, jtandmagRes] = await Promise.all([
+    api.getSports(0, 30).catch(() => ({})),
+    api.getDivertissement(0, 30).catch(() => ({})),
+    api.getReportages(0, 30).catch(() => ({})),
+    api.getArchive(0, 30).catch(() => ({})),
+    api.getJTandMag(0, 30).catch(() => ({})),
+  ]);
 
-    // Sports
-    const sportsList = (sports && sports.sports) ? sports.sports : (Array.isArray(sports) ? sports : []);
-    sportsList.forEach(item => {
-      allData.push({
-        ...item,
-        _contentType: 'sport',
-        channel: 'BF1 Sport',
-        category: 'sport',
-        views: formatNumber(item.views || 0),
-        likes: formatNumber(item.likes || 0),
-        image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        live: item.live || false,
-        date: item.created_at || item.published_at
-      });
-    });
+  const extract = (res) => res?.items || res?.sports || (Array.isArray(res) ? res : []);
 
-    // Culture
-    (categories || []).forEach(item => {
-      allData.push({
-        ...item,
-        _contentType: 'culture',
-        channel: 'BF1 Culture',
-        category: 'culture',
-        views: formatNumber(item.views || 0),
-        likes: formatNumber(item.likes || 0),
-        image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        live: false,
-        date: item.created_at || item.published_at
-      });
-    });
+  const extra = [
+    ...normalizeItems(extract(sportsRes), 'sport', 'BF1 Sport', 'sport'),
+    ...normalizeItems(extract(divertissementRes), 'divertissement', 'BF1 Divertissement', 'divertissement'),
+    ...normalizeItems(extract(reportagesRes), 'reportage', 'BF1 Reportage', 'reportage'),
+    ...normalizeItems(extract(archivesRes), 'archive', 'BF1 Archives', 'archive'),
+    ...normalizeItems(extract(jtandmagRes), 'jtandmag', 'BF1 Info', 'jtandmag'),
+  ];
 
-    // Divertissement
-    (divertissement || []).forEach(item => {
-      allData.push({
-        ...item,
-        _contentType: 'divertissement',
-        channel: 'BF1 Divertissement',
-        category: 'divertissement',
-        views: formatNumber(item.views || 0),
-        likes: formatNumber(item.likes || 0),
-        image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        live: false,
-        date: item.created_at || item.published_at
-      });
-    });
+  allVideosData = [...allVideosData, ...extra];
+  allVideosData.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
-    // Reportages
-    (reportages || []).forEach(item => {
-      allData.push({
-        ...item,
-        _contentType: 'reportage',
-        channel: 'BF1 Reportage',
-        category: 'reportage',
-        views: formatNumber(item.views || 0),
-        likes: formatNumber(item.likes || 0),
-        image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        live: false,
-        date: item.created_at || item.published_at
-      });
-    });
-
-    // Archives
-    (archives || []).forEach(item => {
-      allData.push({
-        ...item,
-        _contentType: 'archive',
-        channel: 'BF1 Archives',
-        category: 'archive',
-        views: formatNumber(item.views || 0),
-        likes: formatNumber(item.likes || 0),
-        image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        live: false,
-        date: item.created_at || item.published_at
-      });
-    });
-
-    // JT et Magazines
-    (jtandmag || []).forEach(item => {
-      allData.push({
-        ...item,
-        _contentType: 'jtandmag',
-        channel: 'BF1 Info',
-        category: 'jtandmag',
-        views: formatNumber(item.views || 0),
-        likes: formatNumber(item.likes || 0),
-        image: getImageUrl(item.image_url || item.image || item.thumbnail),
-        live: item.live || false,
-        date: item.created_at || item.published_at
-      });
-    });
-
-    // Trier par date (plus récent en premier)
-    allData.sort((a, b) => {
-      const dateA = new Date(a.date || 0);
-      const dateB = new Date(b.date || 0);
-      return dateB - dateA;
-    });
-
-    // Les vues et likes sont déjà inclus dans les données API — pas d'appels individuels
-
-    allVideosData = allData;
-
-    return allData;
-  } catch (error) {
-    console.error('❌ Erreur chargement des données:', error);
-    return [];
-  }
+  // Mettre à jour la grille et les cartes catégories discrètement
+  renderVideos(currentCategory);
+  updateCategoryCards();
 }
 
 // Rendre les cartes vidéo
@@ -829,28 +744,7 @@ function setupCategoryNavigation() {
 
 // Initialisation
 async function init() {
-  
-  // Petit délai pour s'assurer que le DOM est bien chargé
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
-  // Initialiser le lecteur vidéo HLS pour le preview en direct
-  await setupLiveVideoPlayer();
-  
-  await loadAllData();
-  
-  // Petit délai pour laisser les données se mettre en place
-  setTimeout(async () => {
-    updateCategoryCards();
-    
-    // Initialiser le carousel
-    carouselImages = await fetchCarouselImages();
-    initHeroCarousel();
-    
-    // Configurer la navigation des catégories
-    setupCategoryNavigation();
-  }, 100);
-  
-  // Ajouter les événements aux filtres
+  // Ajouter les événements aux filtres et boutons d'affichage
   document.querySelectorAll('.filter-pill').forEach(pill => {
     pill.addEventListener('click', (e) => {
       e.preventDefault();
@@ -858,18 +752,23 @@ async function init() {
       if (category) setActiveCategory(category);
     });
   });
-  
-  // Ajouter les événements aux boutons d'affichage
   document.querySelectorAll('.display-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = parseInt(btn.dataset.mode);
-      setGridMode(mode);
-    });
+    btn.addEventListener('click', () => setGridMode(parseInt(btn.dataset.mode)));
   });
-  
+  setupCategoryNavigation();
   setGridMode(3);
-  renderVideos('all');
-  
+
+  // Phase 1 : news + carousel + live en parallèle → affichage immédiat
+  const [carouselData] = await Promise.all([
+    fetchCarouselImages(),
+    loadPhase1(),
+    setupLiveVideoPlayer(),
+  ]);
+  carouselImages = carouselData;
+  initHeroCarousel();
+
+  // Phase 2 : reste des contenus en arrière-plan
+  loadPhase2();
 }
 
 

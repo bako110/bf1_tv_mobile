@@ -1,5 +1,5 @@
 import { getUserSettings, updateUserSettings, resetUserSettings } from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
 import { themeManager } from '../utils/themeManager.js';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ export async function loadSettings() {
   if (!container) return;
 
   container.innerHTML = '';
-  container.appendChild(createSnakeLoader(50));
+  container.appendChild(createPageSpinner());
 
   try {
     _settings = await getUserSettings();

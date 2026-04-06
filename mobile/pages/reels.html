@@ -5,22 +5,337 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reels - BF1</title>
 </head>
-<body style="background:#000;overflow:hidden;margin:0;padding:0;">
+<body style="background:#000;margin:0;padding:0;overflow:hidden;">
 
-  <div id="reels-container"
-       style="overflow-y:scroll;
-              scroll-snap-type:y mandatory;
-              -webkit-overflow-scrolling:touch;
-              scrollbar-width:none;
-              -ms-overflow-style:none;
-              position:relative;
-              width:100%;">
+<style>
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Wrapper feed (plein écran, sans JS pour la hauteur) ── */
+#reels-feed {
+  position: fixed;
+  inset: 0;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-snap-stop: always;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  background: #000;
+  /* La nav du bas sera au-dessus via z-index dans app.js */
+}
+#reels-feed::-webkit-scrollbar { display: none; }
+
+/* ── Slide = 100% viewport height ── */
+.reel-slide {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* dynamic viewport height, meilleur sur mobile */
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+  background: #000;
+  flex-shrink: 0;
+}
+
+/* ── Vidéo plein écran ── */
+.reel-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  background: #000;
+}
+
+/* ── Gradient bas ── */
+.reel-gradient {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 70%;
+  background: linear-gradient(to top,
+    rgba(0,0,0,0.92) 0%,
+    rgba(0,0,0,0.5)  40%,
+    transparent      100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Infos bas gauche ── */
+.reel-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 76px;
+  padding: 16px 14px 28px;
+  z-index: 3;
+  pointer-events: none;
+}
+.reel-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.reel-author-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #1e1e1e;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.reel-author-name {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}
+.reel-title {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}
+.reel-desc {
+  margin: 0;
+  color: rgba(255,255,255,0.85);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+/* ── Actions droite (TikTok style) ── */
+.reel-actions {
+  position: absolute;
+  right: 10px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 3;
+}
+.reel-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.reel-action-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+  transition: transform 0.12s, background 0.12s;
+  will-change: transform;
+}
+.reel-action-btn:active .reel-action-icon {
+  transform: scale(0.85);
+}
+.reel-action-label {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+/* ── Flash play/pause ── */
+.reel-flash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+}
+.reel-flash.active {
+  animation: flashAnim 0.55s ease forwards;
+}
+@keyframes flashAnim {
+  0%   { opacity: 0.9; transform: scale(0.75); }
+  35%  { opacity: 0.9; transform: scale(1.2);  }
+  100% { opacity: 0;   transform: scale(1.35); }
+}
+.reel-flash i {
+  font-size: 68px;
+  color: rgba(255,255,255,0.88);
+  filter: drop-shadow(0 2px 12px rgba(0,0,0,0.5));
+}
+
+/* ── Progress bar ── */
+.reel-progress {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: rgba(255,255,255,0.18);
+  z-index: 4;
+}
+.reel-progress-fill {
+  height: 100%;
+  background: #E23E3E;
+  width: 0%;
+  will-change: width;
+}
+
+/* ── Double tap heart ── */
+.dt-heart {
+  position: absolute;
+  pointer-events: none;
+  z-index: 6;
+  font-size: 82px;
+  color: #E23E3E;
+  filter: drop-shadow(0 2px 12px rgba(226,62,62,0.55));
+  animation: dtHeart 0.75s ease forwards;
+  transform-origin: center center;
+}
+@keyframes dtHeart {
+  0%   { opacity: 1; transform: scale(0.2) rotate(-12deg); }
+  28%  { opacity: 1; transform: scale(1.25) rotate(6deg);  }
+  58%  { opacity: 1; transform: scale(1) rotate(-3deg);    }
+  100% { opacity: 0; transform: scale(1.1) translateY(-28px) rotate(0deg); }
+}
+
+/* ── Like pop ── */
+@keyframes likePop {
+  0%   { transform: scale(1);    }
+  30%  { transform: scale(1.45); }
+  60%  { transform: scale(0.88); }
+  100% { transform: scale(1);    }
+}
+.like-popping { animation: likePop 0.32s ease; }
+
+/* ── Mute indicator ── */
+#reel-mute-ind {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0.6);
+  background: rgba(0,0,0,0.72);
+  border-radius: 50%;
+  width: 72px; height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s, transform 0.18s;
+}
+#reel-mute-ind.show {
+  opacity: 1;
+  transform: translate(-50%,-50%) scale(1);
+}
+
+/* ── Drawer commentaires ── */
+#reel-comment-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+}
+#reel-comment-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+#reel-comment-drawer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #111;
+  border-radius: 20px 20px 0 0;
+  z-index: 10001;
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+#reel-comment-drawer.open { transform: translateY(0); }
+
+/* ── Toast ── */
+#reel-toast {
+  position: fixed;
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%);
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+  white-space: nowrap;
+}
+#reel-toast.show { opacity: 1; }
+</style>
+
+<!-- Feed principal -->
+<div id="reels-feed"></div>
+
+<!-- Mute indicator -->
+<div id="reel-mute-ind">
+  <i class="bi bi-volume-mute-fill" style="font-size:28px;color:#fff;" id="reel-mute-icon"></i>
+</div>
+
+<!-- Drawer commentaires -->
+<div id="reel-comment-overlay" onclick="window.__reelCloseComments()"></div>
+<div id="reel-comment-drawer">
+  <div style="width:38px;height:4px;background:#2a2a2a;border-radius:2px;margin:12px auto 0;flex-shrink:0;"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;flex-shrink:0;border-bottom:1px solid #1e1e1e;">
+    <span id="reel-comment-title" style="color:#fff;font-weight:700;font-size:15px;">Commentaires</span>
+    <button onclick="window.__reelCloseComments()"
+            style="background:rgba(255,255,255,.08);border:none;color:#aaa;width:32px;height:32px;
+                   border-radius:50%;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+      <i class="bi bi-x-lg"></i>
+    </button>
   </div>
+  <div id="reel-comment-list" style="flex:1;overflow-y:auto;padding:0 16px;-webkit-overflow-scrolling:touch;"></div>
+  <div style="padding:10px 12px;border-top:1px solid #1e1e1e;display:flex;gap:8px;flex-shrink:0;
+              padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));background:#111;align-items:center;">
+    <input id="reel-comment-input" placeholder="Écrire un commentaire…"
+           style="flex:1;background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:22px;
+                  padding:10px 16px;color:#fff;font-size:14px;outline:none;transition:border-color .2s;"
+           onfocus="this.style.borderColor='#E23E3E'"
+           onblur="this.style.borderColor='#2a2a2a'"
+           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.__reelSubmitComment();}"/>
+    <button id="reel-comment-send" onclick="window.__reelSubmitComment()"
+            style="background:#E23E3E;border:none;border-radius:50%;width:42px;height:42px;color:#fff;
+                   font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </div>
+</div>
 
-  <style>
-    #reels-container::-webkit-scrollbar { display:none; }
-    .reel-item { scroll-snap-align:start; scroll-snap-stop:always; }
-  </style>
+<!-- Toast -->
+<div id="reel-toast"></div>
 
 </body>
 </html>

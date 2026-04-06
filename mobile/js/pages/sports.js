@@ -1,10 +1,14 @@
 import * as api from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
+import { setupInfiniteScroll } from '../utils/infiniteScroll.js';
 
+const LIMIT = 20;
 let allSports = [];
 let currentMode = 'grid';
 let currentType = 'all';
 let sportTypes = ['all'];
+let currentSkip = 0;
+let currentTotal = 0;
 
 export async function loadSports() {
   const listEl = document.getElementById('sports-list');
@@ -12,14 +16,17 @@ export async function loadSports() {
   const toggleBtn = document.getElementById('sports-toggle-btn');
   if (!listEl) return;
 
+  allSports = []; currentSkip = 0; currentTotal = 0;
   listEl.innerHTML = '';
-  listEl.appendChild(createSnakeLoader(40));
+  listEl.appendChild(createPageSpinner());
 
   try {
-    const data = await api.getSports().catch(() => []);
-    allSports = (Array.isArray(data) ? data : []).sort((a, b) =>
+    const data = await api.getSports(0, LIMIT).catch(() => ({ items: [], total: 0 }));
+    allSports = (data.items || []).sort((a, b) =>
       new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0)
     );
+    currentSkip = allSports.length;
+    currentTotal = data.total || 0;
 
     // Extraire les types de sport uniques
     const seen = new Set();
@@ -29,6 +36,7 @@ export async function loadSports() {
 
     if (catBar) renderCategories(catBar);
     renderList(listEl);
+    attachInfiniteScroll(listEl);
 
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
@@ -36,12 +44,30 @@ export async function loadSports() {
         const icon = document.getElementById('sports-toggle-icon');
         if (icon) icon.className = currentMode === 'grid' ? 'bi bi-list' : 'bi bi-grid';
         renderList(listEl);
+        attachInfiniteScroll(listEl);
       });
     }
   } catch (err) {
     console.error('Erreur Sports:', err);
     listEl.innerHTML = emptyState('bi-basketball', 'Impossible de charger les sports');
   }
+}
+
+function attachInfiniteScroll(listEl) {
+  setupInfiniteScroll({
+    listEl, sentinelId: 'sports-sentinel',
+    fetchFn: (skip, limit) => api.getSports(skip, limit),
+    renderCard: (item) => currentMode === 'grid' ? buildGridCard(item) : buildListCard(item),
+    getSkip: () => currentSkip, getTotal: () => currentTotal,
+    onNewItems: (items, total) => {
+      allSports = [...allSports, ...items];
+      currentSkip += items.length;
+      if (total) currentTotal = total;
+      // Mettre à jour les types de sport
+      items.forEach(s => { if (s.sport_type && !sportTypes.includes(s.sport_type)) sportTypes.push(s.sport_type); });
+    },
+    getMode: () => currentMode, gridCols: 2, limit: LIMIT
+  });
 }
 
 function renderCategories(container) {
@@ -77,11 +103,9 @@ function renderList(container) {
     return;
   }
 
-  if (currentMode === 'grid') {
-    container.innerHTML = `<div class="px-3 pt-2 pb-3" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${filtered.map(buildGridCard).join('')}</div>`;
-  } else {
-    container.innerHTML = `<div class="px-3 pt-2 pb-3">${filtered.map(buildListCard).join('')}</div>`;
-  }
+  const isGrid = currentMode === 'grid';
+  const wrapStyle = isGrid ? 'display:grid;grid-template-columns:1fr 1fr;gap:12px;' : '';
+  container.innerHTML = `<div class="bf1-cards-wrapper px-3 pt-2 pb-3" style="${wrapStyle}">${filtered.map(isGrid ? buildGridCard : buildListCard).join('')}</div>`;
 }
 
 function buildGridCard(item) {
@@ -89,6 +113,7 @@ function buildGridCard(item) {
   const title = item.title || 'Sans titre';
   const type = item.sport_type || 'Sport';
   const views = formatViews(item.views || item.view_count || item.views_count || 0);
+  const likes = formatViews(item.likes || 0);
   const time = formatTime(item.created_at || item.date);
 
   return `
@@ -97,15 +122,13 @@ function buildGridCard(item) {
         ? `<img src="${esc(img)}" alt="" style="width:100%;height:130px;object-fit:cover;display:block;">`
         : placeholder('130px')}
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.9) 100%);"></div>
-      <div style="position:absolute;top:8px;left:8px;">
-      </div>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;">
-        <p class="mb-1 fw-semibold" style="font-size:12px;color: var(--description-grid-color, #fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-        <div class="d-flex align-items-center gap-1" style="font-size:10px;">
-        <i class="bi bi-eye" style="color:var(--text-4,#888);"></i><span style="color:var(--text-4,#888);">${views}</span>
-        <span style="color:var(--text-4,#888);">•</span>
-        <i class="bi bi-clock" style="color:var(--text-4,#888);"></i><span style="color:var(--text-4,#888);">${time}</span>
-      </div>
+        <p class="mb-1 fw-semibold" style="font-size:12px;color:var(--description-grid-color,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+        <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--text-4,#888);">
+          <i class="bi bi-eye"></i><span>${views}</span>
+          <span>•</span><i class="bi bi-heart-fill" style="color:#E23E3E;font-size:9px;"></i><span>${likes}</span>
+          <span>•</span><i class="bi bi-clock"></i><span>${time}</span>
+        </div>
       </div>
     </div>`;
 }
@@ -115,6 +138,7 @@ function buildListCard(item) {
   const title = item.title ;
   const type = item.sport_type ;
   const views = formatViews(item.views || item.view_count || item.views_count || 0);
+  const likes = formatViews(item.likes || 0);
   const time = formatTime(item.created_at || item.date);
 
   return `
@@ -128,6 +152,7 @@ function buildListCard(item) {
         <p class="mb-1 fw-semibold" style="font-size:13px;color: var(--description-list-color, #fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${esc(title)}</p>
         <div class="d-flex align-items-center gap-1" style="font-size:11px;color:var(--text-3,#888);">
           <i class="bi bi-eye"></i><span>${views}</span>
+          <span>•</span><i class="bi bi-heart-fill" style="color:#E23E3E;font-size:9px;"></i><span>${likes}</span>
           <span>•</span><i class="bi bi-clock"></i><span>${time}</span>
         </div>
       </div>

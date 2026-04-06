@@ -44,9 +44,9 @@ function renderList(notifs) {
   if (!notifs.length) {
     list.innerHTML = `
       <div style="text-align:center;padding:60px 20px;">
-        <i class="bi bi-bell-slash" style="font-size:52px;color:#333;display:block;margin-bottom:16px;"></i>
-        <p style="color:#666;font-size:15px;margin:0;">Aucune notification</p>
-        <p style="color:#444;font-size:13px;margin:4px 0 0;">Vous êtes à jour !</p>
+        <i class="bi bi-bell-slash" style="font-size:52px;color:var(--text-3,#555);display:block;margin-bottom:16px;"></i>
+        <p style="color:var(--text-2,#888);font-size:15px;margin:0;">Aucune notification</p>
+        <p style="color:var(--text-3,#666);font-size:13px;margin:4px 0 0;">Vous êtes à jour !</p>
       </div>`;
     return;
   }
@@ -57,27 +57,29 @@ function renderList(notifs) {
     return `
     <div class="notif-item" data-id="${nid}"
          style="display:flex;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;
-                background:${isUnread ? 'rgba(226,62,62,0.06)' : 'transparent'};border-bottom:1px solid #111;"
-         onclick="markNotifRead('${nid}', this)"
-         onmouseover="this.style.background='#0d0d0d'" onmouseout="this.style.background='${isUnread ? 'rgba(226,62,62,0.06)' : 'transparent'}'">
+                background:${isUnread ? 'rgba(226,62,62,0.07)' : 'transparent'};
+                border-bottom:1px solid var(--divider,#1a1a1a);"
+         onclick="markNotifRead('${nid}', this)">
       <!-- Icône -->
       <div style="flex-shrink:0;width:44px;height:44px;border-radius:50%;
-                  background:${isUnread ? '#E23E3E' : '#1a1a1a'};
+                  background:${isUnread ? '#E23E3E' : 'var(--surface,#1a1a1a)'};
                   display:flex;align-items:center;justify-content:center;">
-        <i class="bi bi-bell${isUnread ? '-fill' : ''}" style="color:${isUnread ? '#fff' : '#555'};font-size:18px;"></i>
+        <i class="bi bi-bell${isUnread ? '-fill' : ''}"
+           style="color:${isUnread ? '#fff' : 'var(--text-3,#666)'};font-size:18px;"></i>
       </div>
       <!-- Contenu -->
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-          <p style="margin:0;font-size:14px;font-weight:${isUnread ? '700' : '500'};color:${isUnread ? '#fff' : '#ccc'};
+          <p style="margin:0;font-size:14px;font-weight:${isUnread ? '700' : '500'};
+                    color:${isUnread ? 'var(--text,#fff)' : 'var(--text-2,#bbb)'};
                     overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;">${esc(n.title)}</p>
-          <span style="flex-shrink:0;font-size:11px;color:#555;">${formatRelative(n.created_at)}</span>
+          <span style="flex-shrink:0;font-size:11px;color:var(--text-3,#666);">${formatRelative(n.created_at)}</span>
         </div>
-        <p style="margin:0;font-size:13px;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4;">${esc(n.message)}</p>
+        <p style="margin:0;font-size:13px;color:var(--text-2,#888);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4;">${esc(n.message)}</p>
       </div>
       <!-- Supprimer -->
       <button onclick="event.stopPropagation();deleteNotif('${nid}', this.closest('.notif-item'))"
-              style="flex-shrink:0;background:none;border:none;color:#333;cursor:pointer;padding:4px;font-size:16px;align-self:center;"
+              style="flex-shrink:0;background:none;border:none;color:var(--text-3,#555);cursor:pointer;padding:4px;font-size:16px;align-self:center;"
               title="Supprimer">
         <i class="bi bi-x-lg"></i>
       </button>
@@ -95,13 +97,12 @@ window.markNotifRead = async function(notifId, rowEl) {
     n.is_read = true;
     if (rowEl) {
       rowEl.style.background = 'transparent';
-      rowEl.setAttribute('onmouseout', `this.style.background='transparent'`);
       const icon = rowEl.querySelector('.bi-bell-fill');
-      if (icon) { icon.className = 'bi bi-bell'; icon.style.color = '#555'; }
+      if (icon) { icon.className = 'bi bi-bell'; icon.style.color = 'var(--text-3,#666)'; }
       const circle = rowEl.querySelector('[style*="border-radius:50%"]');
-      if (circle) circle.style.background = '#1a1a1a';
+      if (circle) circle.style.background = 'var(--surface,#1a1a1a)';
       const title = rowEl.querySelector('p');
-      if (title) { title.style.fontWeight = '500'; title.style.color = '#ccc'; }
+      if (title) { title.style.fontWeight = '500'; title.style.color = 'var(--text-2,#bbb)'; }
     }
     const badge = document.getElementById('notif-unread-count');
     const unread = _notifications.filter(x => !x.is_read).length;
@@ -171,21 +172,21 @@ export async function loadNotifications() {
       <!-- Header -->
       <div style="padding:16px 16px 0;display:flex;align-items:center;gap:10px;">
         <i class="bi bi-bell-fill" style="font-size:22px;color:#E23E3E;"></i>
-        <h2 style="font-size:20px;font-weight:700;margin:0;">Notifications</h2>
+        <h2 style="font-size:20px;font-weight:700;margin:0;color:var(--text,#fff);">Notifications</h2>
       </div>
 
       <!-- Carte principale -->
-      <div style="margin:24px 16px;background:#0f0f0f;border-radius:16px;
-                  border:1px solid #1e1e1e;overflow:hidden;">
+      <div style="margin:24px 16px;background:var(--surface,#0f0f0f);border-radius:16px;
+                  border:1px solid var(--divider,#1e1e1e);overflow:hidden;">
 
         <!-- Illustration -->
-        <div style="background:linear-gradient(135deg,#1a0000,#0f0f0f);padding:32px 24px 24px;
-                    text-align:center;border-bottom:1px solid #1a1a1a;">
+        <div style="background:linear-gradient(135deg,rgba(226,62,62,0.08),var(--surface,#0f0f0f));
+                    padding:32px 24px 24px;text-align:center;border-bottom:1px solid var(--divider,#1a1a1a);">
           <span id="_ns-bell"><i class="bi bi-bell-fill" style="font-size:52px;color:#E23E3E;"></i></span>
-          <h3 style="font-size:17px;font-weight:700;margin:16px 0 6px;">
+          <h3 style="font-size:17px;font-weight:700;margin:16px 0 6px;color:var(--text,#fff);">
             Restez informé en temps réel
           </h3>
-          <p style="color:#666;font-size:13px;margin:0;line-height:1.5;">
+          <p style="color:var(--text-3,#666);font-size:13px;margin:0;line-height:1.5;">
             Recevez les dernières actualités,<br>
             breaking news et alertes BF1 TV.
           </p>
@@ -193,13 +194,13 @@ export async function loadNotifications() {
 
         <!-- Ce que vous recevrez -->
         <div style="padding:20px 20px 16px;">
-          <p style="font-size:11px;font-weight:700;color:#444;letter-spacing:.7px;
+          <p style="font-size:11px;font-weight:700;color:var(--text-3,#555);letter-spacing:.7px;
                     text-transform:uppercase;margin:0 0 12px;">Ce que vous recevrez</p>
           ${[
-            ['bi-newspaper',    '#E23E3E', 'Actualités & Breaking news'],
-            ['bi-broadcast',    '#E23E3E', 'Alertes émissions en direct'],
-            ['bi-star-fill',    '#E23E3E', 'Nouveaux contenus exclusifs'],
-            ['bi-chat-dots-fill','#E23E3E','Réponses à vos commentaires'],
+            ['bi-newspaper',     '#E23E3E', 'Actualités & Breaking news'],
+            ['bi-broadcast',     '#E23E3E', 'Alertes émissions en direct'],
+            ['bi-star-fill',     '#E23E3E', 'Nouveaux contenus exclusifs'],
+            ['bi-chat-dots-fill','#E23E3E', 'Réponses à vos commentaires'],
           ].map(([ic, col, txt]) => `
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
               <div style="width:34px;height:34px;border-radius:8px;flex-shrink:0;
@@ -207,20 +208,20 @@ export async function loadNotifications() {
                           display:flex;align-items:center;justify-content:center;">
                 <i class="bi ${ic}" style="color:${col};font-size:15px;"></i>
               </div>
-              <span style="font-size:14px;color:#ccc;">${txt}</span>
+              <span style="font-size:14px;color:var(--text-2,#ccc);">${txt}</span>
             </div>`).join('')}
         </div>
 
         <!-- Conditions -->
-        <div style="margin:0 20px 20px;background:#161616;border-radius:10px;
-                    padding:12px 14px;border:1px solid #222;">
+        <div style="margin:0 20px 20px;background:var(--bg,#111);border-radius:10px;
+                    padding:12px 14px;border:1px solid var(--divider,#222);">
           <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
             <input type="checkbox" id="_notif-accept-cb"
                    ${accepted ? 'checked' : ''}
                    style="margin-top:3px;width:18px;height:18px;accent-color:#E23E3E;
                           flex-shrink:0;cursor:pointer;">
-            <span style="font-size:12px;color:#777;line-height:1.6;">
-              J'accepte de recevoir des notifications de <strong style="color:#aaa;">BF1 TV</strong>
+            <span style="font-size:12px;color:var(--text-3,#777);line-height:1.6;">
+              J'accepte de recevoir des notifications de <strong style="color:var(--text-2,#aaa);">BF1 TV</strong>
               et je comprends que je peux les désactiver à tout moment depuis les
               paramètres de l'application.
             </span>
@@ -231,19 +232,19 @@ export async function loadNotifications() {
         <div style="padding:0 20px 24px;">
           <button id="_notif-connect-btn"
                   onclick="window._notifConnect()"
-                  style="width:100%;background:${accepted ? '#E23E3E' : '#1a1a1a'};
-                         border:none;border-radius:12px;padding:15px;
-                         color:${accepted ? '#fff' : '#555'};
+                  style="width:100%;background:${accepted ? '#E23E3E' : 'var(--surface,#1a1a1a)'};
+                         border:1px solid ${accepted ? '#E23E3E' : 'var(--divider,#2a2a2a)'};
+                         border-radius:12px;padding:15px;
+                         color:${accepted ? '#fff' : 'var(--text-3,#555)'};
                          font-size:15px;font-weight:700;cursor:pointer;
-                         transition:background .2s,color .2s;
+                         transition:background .2s,color .2s,border-color .2s;
                          display:flex;align-items:center;justify-content:center;gap:8px;">
             <i class="bi bi-box-arrow-in-right"></i>
             Se connecter pour activer
           </button>
-          <p style="text-align:center;margin:12px 0 0;font-size:12px;color:#383838;">
+          <p style="text-align:center;margin:12px 0 0;font-size:12px;color:var(--text-3,#555);">
             Pas encore de compte ?
-            <a href="#/register"
-               style="color:#E23E3E;text-decoration:none;font-weight:600;">
+            <a href="#/register" style="color:#E23E3E;text-decoration:none;font-weight:600;">
               S'inscrire gratuitement
             </a>
           </p>
@@ -257,8 +258,9 @@ export async function loadNotifications() {
       const ok = cb.checked;
       localStorage.setItem(_NOTIF_KEY, ok ? '1' : '0');
       if (btn) {
-        btn.style.background = ok ? '#E23E3E' : '#1a1a1a';
-        btn.style.color      = ok ? '#fff'    : '#555';
+        btn.style.background   = ok ? '#E23E3E' : 'var(--surface,#1a1a1a)';
+        btn.style.borderColor  = ok ? '#E23E3E' : 'var(--divider,#2a2a2a)';
+        btn.style.color        = ok ? '#fff'    : 'var(--text-3,#555)';
       }
     });
 
@@ -283,8 +285,10 @@ export async function loadNotifications() {
   // Loader
   container.innerHTML = `
     <div style="text-align:center;padding:60px;">
-      <div style="display:inline-block;width:40px;height:40px;border:3px solid #1a1a1a;
-                  border-top-color:#E23E3E;border-radius:50%;animation:notifSpin 0.7s linear infinite;"></div>
+      <div style="display:inline-block;width:36px;height:36px;
+                  border:3px solid var(--divider,#1a1a1a);
+                  border-top-color:#E23E3E;border-radius:50%;
+                  animation:notifSpin 0.7s linear infinite;"></div>
     </div>
     <style>@keyframes notifSpin{to{transform:rotate(360deg)}}</style>`;
 
@@ -298,25 +302,27 @@ export async function loadNotifications() {
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px;">
         <div>
-          <h2 style="font-size:20px;font-weight:700;margin:0;">Notifications</h2>
-          <span id="notif-unread-count" style="font-size:13px;color:#666;">
+          <h2 style="font-size:20px;font-weight:700;margin:0;color:var(--text,#fff);">Notifications</h2>
+          <span id="notif-unread-count" style="font-size:13px;color:var(--text-3,#666);">
             ${unread > 0 ? `${unread} non lue${unread !== 1 ? 's' : ''}` : 'Tout lu'}
           </span>
         </div>
         <i class="bi bi-bell-fill" style="font-size:24px;color:#E23E3E;"></i>
       </div>
 
-      <!-- Barre d'actions  -->
+      <!-- Barre d'actions -->
       <div id="notif-actions" style="display:${_notifications.length ? 'flex' : 'none'};
-           gap:8px;padding:0 16px 12px;border-bottom:1px solid #111;">
+           gap:8px;padding:0 16px 12px;border-bottom:1px solid var(--divider,#1a1a1a);">
         <button id="notif-mark-all-btn" onclick="markAllRead()"
-                style="display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;
-                       border:none;border-radius:8px;padding:8px 14px;color:#aaa;cursor:pointer;font-size:13px;">
+                style="display:inline-flex;align-items:center;gap:6px;background:var(--surface,#1a1a1a);
+                       border:1px solid var(--divider,#2a2a2a);border-radius:8px;padding:8px 14px;
+                       color:var(--text-2,#aaa);cursor:pointer;font-size:13px;">
           <i class="bi bi-check2-all"></i> Tout marquer lu
         </button>
         <button id="notif-delete-all-btn" onclick="deleteAllNotifs()"
-                style="display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;
-                       border:none;border-radius:8px;padding:8px 14px;color:#E23E3E;cursor:pointer;font-size:13px;">
+                style="display:inline-flex;align-items:center;gap:6px;background:var(--surface,#1a1a1a);
+                       border:1px solid var(--divider,#2a2a2a);border-radius:8px;padding:8px 14px;
+                       color:#E23E3E;cursor:pointer;font-size:13px;">
           <i class="bi bi-trash3"></i> Tout supprimer
         </button>
       </div>
@@ -331,7 +337,7 @@ export async function loadNotifications() {
     container.innerHTML = `
       <div style="text-align:center;padding:60px 20px;">
         <i class="bi bi-exclamation-circle" style="font-size:40px;color:#E23E3E;"></i>
-        <p style="color:#888;margin-top:12px;">Erreur lors du chargement</p>
+        <p style="color:var(--text-2,#888);margin-top:12px;">Erreur lors du chargement</p>
         <button onclick="loadNotificationsPage()" style="background:#E23E3E;border:none;border-radius:8px;
                 padding:9px 24px;color:#fff;cursor:pointer;margin-top:12px;">Réessayer</button>
       </div>`;

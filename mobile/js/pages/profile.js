@@ -1,5 +1,5 @@
 import { isAuthenticated, getUser, logout, getMySubscription } from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
 import { themeManager } from '../utils/themeManager.js';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -211,6 +211,8 @@ async function renderProfile(container, user) {
   window._bf1Logout = () => {
     if (!confirm('Voulez-vous vraiment vous déconnecter ?')) return;
     logout();
+    // Vider tout le cache keep-alive pour forcer le rechargement des pages
+    window._invalidateKaCache?.();
     window.location.hash = '#/home';
   };
 
@@ -256,7 +258,7 @@ export async function loadProfile() {
 
   // Spinner pendant le chargement de l'abonnement
   container.innerHTML = '';
-  container.appendChild(createSnakeLoader(50));
+  container.appendChild(createPageSpinner());
 
   try {
     const user = getUser();

@@ -88,6 +88,7 @@ export async function loadHome() {
     const [
       newsData,
       jtMagData,
+      teleRealiteData,
       divertissementData,
       sportsData,
       reportagesData,
@@ -95,37 +96,36 @@ export async function loadHome() {
       liveData,
       emissionsData
     ] = await Promise.all([
-      api.getNews().catch((e) => { console.warn('News error:', e); return []; }),
-      api.getJTandMag?.().catch((e) => { console.warn('JTandMag error:', e); return []; }) || Promise.resolve([]),
-      api.getDivertissement?.().catch((e) => { console.warn('Divertissement error:', e); return []; }) || Promise.resolve([]),
-      api.getSports?.().catch((e) => { console.warn('Sports error:', e); return []; }) || Promise.resolve([]),
-      api.getReportages?.().catch((e) => { console.warn('Reportages error:', e); return []; }) || Promise.resolve([]),
-      api.getArchive?.().catch((e) => { console.warn('Archive error:', e); return []; }) || Promise.resolve([]),
+      api.getNews(0, 20).catch((e) => { console.warn('News error:', e); return { items: [] }; }),
+      api.getJTandMag?.(0, 20).catch((e) => { console.warn('JTandMag error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
+      api.getTeleRealite?.(0, 20).catch((e) => { console.warn('TeleRealite error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
+      api.getDivertissement?.(0, 20).catch((e) => { console.warn('Divertissement error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
+      api.getSports?.(0, 20).catch((e) => { console.warn('Sports error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
+      api.getReportages?.(0, 20).catch((e) => { console.warn('Reportages error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
+      api.getArchive?.(0, 20).catch((e) => { console.warn('Archive error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
       api.getLive().catch((e) => { console.warn('Live error:', e); return null; }),
       api.getEmissions().catch((e) => { console.warn('Emissions error:', e); return []; }),
     ]);
 
-    console.log('✅ Données reçues:', {
-      news: newsData.length,
-      jtMag: jtMagData.length,
-      divertissement: divertissementData.length,
-      sports: sportsData.length,
-      reportages: reportagesData.length,
-      archives: archivesData.length,
-      live: !!liveData,
-      emissions: emissionsData.length,
-    });
+    const newsItems         = newsData.items         || [];
+    const jtMagItems        = jtMagData.items        || [];
+    const teleRealiteItems  = teleRealiteData.items  || [];
+    const divertItems       = divertissementData.items || [];
+    const sportsItems       = sportsData.items       || [];
+    const reportagesItems   = reportagesData.items   || [];
+    const archivesItems     = archivesData.items     || [];
 
     // Charger le LIVE BF1
     await loadLiveSection(liveData);
 
-    // Trier chaque section par date (les plus récents en premier) 📅
-    const sortedNews = _sortByDate(newsData, 'created_at', 'published_at');
-    const sortedJTMag = _sortByDate(jtMagData, 'created_at', 'published_at');
-    const sortedDivertissement = _sortByDate(divertissementData, 'created_at', 'published_at');
-    const sortedSports = _sortByDate(sportsData, 'created_at', 'published_at');
-    const sortedReportages = _sortByDate(reportagesData, 'aired_at', 'created_at');
-    const sortedArchives = _sortByDate(archivesData, 'created_at');
+    // Trier chaque section par date (les plus récents en premier)
+    const sortedNews = _sortByDate(newsItems, 'created_at', 'published_at');
+    const sortedJTMag = _sortByDate(jtMagItems, 'created_at', 'published_at');
+    const sortedTeleRealite = _sortByDate(teleRealiteItems, 'created_at', 'published_at');
+    const sortedDivertissement = _sortByDate(divertItems, 'created_at', 'published_at');
+    const sortedSports = _sortByDate(sportsItems, 'created_at', 'published_at');
+    const sortedReportages = _sortByDate(reportagesItems, 'aired_at', 'created_at');
+    const sortedArchives = _sortByDate(archivesItems, 'created_at');
 
     // Charger les autres sections
     await loadHorizontalSection('flashInfo', sortedNews.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
@@ -133,6 +133,8 @@ export async function loadHome() {
       image: item.image_url || item.image,
       href: `#/news/${item.id || item._id}`,
       time: formatTime(item.created_at || item.published_at),
+      views: item.views,
+      likes: item.likes,
       badge: { icon: 'bi-lightning-fill', text: item.category || item.edition || 'Actualités' },
     }));
 
@@ -141,6 +143,17 @@ export async function loadHome() {
       image: item.image_url || item.thumbnail || item.image,
       href: `#/show/jtandmag/${item.id || item._id}`,
       time: formatTime(item.created_at || item.published_at),
+      views: item.views,
+      likes: item.likes,
+    }));
+
+    await loadHorizontalSection('teleRealite', sortedTeleRealite.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
+      title: item.title || 'Sans titre',
+      image: item.image_url || item.thumbnail || item.image,
+      href: `#/show/tele_realite/${item.id || item._id}`,
+      time: formatTime(item.created_at || item.published_at),
+      views: item.views,
+      likes: item.likes,
     }));
 
     await loadHorizontalSection('divertissements', sortedDivertissement.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
@@ -148,6 +161,8 @@ export async function loadHome() {
       image: item.image_url || item.thumbnail || item.image,
       href: `#/show/divertissement/${item.id || item._id}`,
       time: formatTime(item.created_at || item.published_at),
+      views: item.views,
+      likes: item.likes,
     }));
 
     await loadHorizontalSection('sports', sortedSports.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
@@ -155,6 +170,8 @@ export async function loadHome() {
       image: item.image_url || item.thumbnail || item.image,
       href: `#/show/sport/${item.id || item._id}`,
       time: formatTime(item.created_at || item.published_at),
+      views: item.views,
+      likes: item.likes,
     }));
 
     await loadHorizontalSection('reportages', sortedReportages.slice(0, INITIAL_DISPLAY_COUNT), (item) => ({
@@ -163,6 +180,8 @@ export async function loadHome() {
       href: `#/show/reportage/${item.id || item._id}`,
       duration: item.duration_minutes,
       time: formatTime(item.aired_at || item.created_at),
+      views: item.views || item.views_count,
+      likes: item.likes,
     }));
 
     await loadHorizontalSection('archives', sortedArchives.slice(0, INITIAL_DISPLAY_COUNT), (item) => {
@@ -358,11 +377,21 @@ async function loadHorizontalSection(sectionName, items, formatItem) {
           ${genericBadge}
           ${lockOverlay}
           <div style="position:absolute; bottom:8px; left:8px; right:8px;">
-            <p class="bf1-card-title" style="color:#fff; font-size:0.7rem; font-weight:600; line-height:1.3; margin:0 0 3px;
+            <p class="bf1-card-title" style="color:#fff; font-size:0.7rem; font-weight:600; line-height:1.3; margin:0 0 4px;
                       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-shadow:0 1px 3px rgba(0,0,0,0.7);">${f.title}</p>
-            <div style="display:flex; align-items:center; gap:3px;">
-              <i class="bi bi-clock bf1-card-time" style="color:rgba(255,255,255,0.7); font-size:0.55rem;"></i>
-              <span class="bf1-card-time" style="color:rgba(255,255,255,0.7); font-size:0.6rem;">${f.duration ? f.duration + 'min · ' : ''}${f.time}</span>
+            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+              ${f.views != null ? `<span style="display:flex;align-items:center;gap:2px;">
+                <i class="bi bi-eye" style="color:rgba(255,255,255,0.5);font-size:0.5rem;"></i>
+                <span style="color:rgba(255,255,255,0.5);font-size:0.58rem;">${f.views >= 1000 ? (f.views/1000).toFixed(1)+'k' : f.views}</span>
+              </span>` : ''}
+              ${f.likes != null && f.likes > 0 ? `<span style="display:flex;align-items:center;gap:2px;">
+                <i class="bi bi-heart-fill" style="color:#E23E3E;font-size:0.5rem;"></i>
+                <span style="color:rgba(255,255,255,0.5);font-size:0.58rem;">${f.likes >= 1000 ? (f.likes/1000).toFixed(1)+'k' : f.likes}</span>
+              </span>` : ''}
+              <span style="display:flex;align-items:center;gap:2px;">
+                <i class="bi bi-clock" style="color:rgba(255,255,255,0.5);font-size:0.5rem;"></i>
+                <span style="color:rgba(255,255,255,0.5);font-size:0.58rem;">${f.duration ? f.duration + 'min · ' : ''}${f.time}</span>
+              </span>
             </div>
           </div>
         </div>
@@ -432,12 +461,13 @@ function formatViewers(count) {
 
 function attachScrollListeners() {
   const sectionMap = {
-    'flashInfo-content':      '#/news',
-    'jtMag-content':         '#/jtandmag',
+    'flashInfo-content':       '#/news',
+    'jtMag-content':           '#/jtandmag',
+    'teleRealite-content':     '#/tele-realite',
     'divertissements-content': '#/divertissement',
-    'sports-content':        '#/sports',
-    'reportages-content':    '#/reportages',
-    'archives-content':      '#/archive',
+    'sports-content':          '#/sports',
+    'reportages-content':      '#/reportages',
+    'archives-content':        '#/archive',
   };
 
   Object.entries(sectionMap).forEach(([id, href]) => {

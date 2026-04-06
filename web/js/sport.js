@@ -55,7 +55,7 @@ export async function loadSportContent() {
     // Si pas de données, essayer getNews() comme fallback
     if (rawData.length === 0) {
       console.log('🔄 Tentative avec getNews()...');
-      const newsData = await api.getNews();
+      const newsData = await api.getNews(50);
       console.log('📦 News API brute:', newsData);
       
       if (Array.isArray(newsData)) {

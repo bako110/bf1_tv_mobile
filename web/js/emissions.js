@@ -145,9 +145,9 @@ async function loadAllEmissions() {
     
     const [sports, divertissement, reportages, jtandmag] = await Promise.all([
       api.getSports(),
-      api.getDivertissement(),
-      api.getReportages(),
-      api.getJTandMag()
+      api.getDivertissement(200),
+      api.getReportages(200),
+      api.getJTandMag(200)
     ]);
 
     const allData = [];

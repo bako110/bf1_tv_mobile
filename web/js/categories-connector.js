@@ -110,11 +110,11 @@ export async function loadCategoriesData() {
     // Charger toutes les catégories en parallèle
     const [sports, divertissement, reportages, archives, jtandmag, news] = await Promise.all([
       api.getSports().catch(e => { console.warn('⚠️ Sport API:', e); return null; }),
-      api.getDivertissement().catch(e => { console.warn('⚠️ Divertissement API:', e); return null; }),
-      api.getReportages().catch(e => { console.warn('⚠️ Reportages API:', e); return null; }),
-      api.getArchive().catch(e => { console.warn('⚠️ Archive API:', e); return null; }),
-      api.getJTandMag().catch(e => { console.warn('⚠️ JT&Mag API:', e); return null; }),
-      api.getNews().catch(e => { console.warn('⚠️ News API:', e); return null; })
+      api.getDivertissement(100).catch(e => { console.warn('⚠️ Divertissement API:', e); return null; }),
+      api.getReportages(100).catch(e => { console.warn('⚠️ Reportages API:', e); return null; }),
+      api.getArchive(100).catch(e => { console.warn('⚠️ Archive API:', e); return null; }),
+      api.getJTandMag(100).catch(e => { console.warn('⚠️ JT&Mag API:', e); return null; }),
+      api.getNews(100).catch(e => { console.warn('⚠️ News API:', e); return null; })
     ]);
 
     console.log('✅ Données des catégories reçues');

@@ -29,7 +29,7 @@ export async function loadFlashInfo() {
 
   try {
     // Charger TOUTES les news depuis l'API (comme le mobile)
-    const newsData = await api.getNews();
+    const newsData = await api.getNews(200);
     
     // Garder TOUTES les news, pas seulement les flash infos
     flashInfoData = Array.isArray(newsData) ? newsData : [];

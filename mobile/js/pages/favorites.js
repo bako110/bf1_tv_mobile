@@ -8,27 +8,31 @@ function esc(s) {
 
 // Config type → label + couleur + route
 const TYPE_CFG = {
-  breaking_news:  { label: 'Flash Info',     color: '#E23E3E', icon: 'bi-lightning-fill',   route: f => `#/news/${f.content_id}` },
-  sport:          { label: 'Sport',           color: '#1DA1F2', icon: 'bi-trophy-fill',       route: f => `#/show/sport/${f.content_id}` },
-  jtandmag:       { label: 'JT & Mag',        color: '#E23E3E', icon: 'bi-camera-video-fill', route: f => `#/show/jtandmag/${f.content_id}` },
-  divertissement: { label: 'Divertissement',  color: '#A855F7', icon: 'bi-music-note-beamed', route: f => `#/show/divertissement/${f.content_id}` },
-  reportage:      { label: 'Reportage',       color: '#F59E0B', icon: 'bi-film',              route: f => `#/show/reportage/${f.content_id}` },
-  archive:        { label: 'Archive',         color: '#6B7280', icon: 'bi-archive-fill',      route: f => `#/show/archive/${f.content_id}` },
-  show:           { label: 'Émission',        color: '#10B981', icon: 'bi-tv-fill',           route: f => `#/show/show/${f.content_id}` },
-  movie:          { label: 'Film',            color: '#F97316', icon: 'bi-camera-reels-fill', route: f => `#/show/movie/${f.content_id}` },
-  series:         { label: 'Série',           color: '#8B5CF6', icon: 'bi-collection-play-fill', route: f => `#/show/series/${f.content_id}` },
-  reel:           { label: 'Reel',            color: '#EC4899', icon: 'bi-play-circle-fill',  route: f => `#/show/reel/${f.content_id}` },
+  breaking_news:      { label: 'Flash Info',     color: '#E23E3E', icon: 'bi-lightning-fill',      route: f => `#/news/${f.content_id}` },
+  sport:              { label: 'Sport',           color: '#1DA1F2', icon: 'bi-trophy-fill',          route: f => `#/show/sport/${f.content_id}` },
+  jtandmag:           { label: 'JT & Mag',        color: '#E23E3E', icon: 'bi-camera-video-fill',    route: f => `#/show/jtandmag/${f.content_id}` },
+  divertissement:     { label: 'Divertissement',  color: '#A855F7', icon: 'bi-music-note-beamed',    route: f => `#/show/divertissement/${f.content_id}` },
+  reportage:          { label: 'Reportage',       color: '#F59E0B', icon: 'bi-film',                 route: f => `#/show/reportage/${f.content_id}` },
+  archive:            { label: 'Archive',         color: '#6B7280', icon: 'bi-archive-fill',         route: f => `#/show/archive/${f.content_id}` },
+  tele_realite:       { label: 'Télé Réalité',    color: '#EC4899', icon: 'bi-camera-video-fill',    route: f => `#/show/tele_realite/${f.content_id}` },
+  show:               { label: 'Émission',        color: '#10B981', icon: 'bi-tv-fill',              route: f => `#/show/show/${f.content_id}` },
+  movie:              { label: 'Film',            color: '#F97316', icon: 'bi-camera-reels-fill',    route: f => `#/show/movie/${f.content_id}` },
+  series:             { label: 'Série',           color: '#8B5CF6', icon: 'bi-collection-play-fill', route: f => `#/show/series/${f.content_id}` },
+  reel:               { label: 'Reel',            color: '#EC4899', icon: 'bi-play-circle-fill',     route: f => `#/show/reel/${f.content_id}` },
+  emission_category:  { label: 'Émissions',       color: '#E23E3E', icon: 'bi-grid-fill',            route: f => `#/emission-category/${encodeURIComponent(f.content_title || f.content_id)}` },
 };
 
 const FILTER_TABS = [
-  { key: 'all',           label: 'Tout' },
-  { key: 'breaking_news', label: 'News' },
-  { key: 'sport',         label: 'Sport' },
-  { key: 'jtandmag',      label: 'JT & Mag' },
-  { key: 'divertissement',label: 'Divertissement' },
-  { key: 'reportage',     label: 'Reportage' },
-  { key: 'archive',       label: 'Archive' },
-  { key: 'show',          label: 'Émission' },
+  { key: 'all',              label: 'Tout' },
+  { key: 'emission_category',label: 'Émissions' },
+  { key: 'breaking_news',    label: 'News' },
+  { key: 'sport',            label: 'Sport' },
+  { key: 'jtandmag',         label: 'JT & Mag' },
+  { key: 'divertissement',   label: 'Divertissement' },
+  { key: 'reportage',        label: 'Reportage' },
+  { key: 'archive',          label: 'Archive' },
+  { key: 'tele_realite',     label: 'Télé Réalité' },
+  { key: 'show',             label: 'Émission' },
 ];
 
 // ─── État local ───────────────────────────────────────────────────────────────
@@ -47,16 +51,16 @@ function renderCard(fav) {
 
   return `
   <div class="fav-card" data-id="${favId}"
-       style="position:relative;background:#111;border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s;"
+       style="position:relative;background:var(--surface,#111);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s;"
        onclick="window.location.hash='${esc(href)}'"
        onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
     <!-- Image -->
-    <div style="position:relative;width:100%;padding-top:56%;overflow:hidden;background:#1a1a1a;">
+    <div style="position:relative;width:100%;padding-top:56%;overflow:hidden;background:var(--bg,#1a1a1a);">
       ${img ? `<img src="${esc(img)}" alt="" loading="lazy"
                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
                onerror="this.style.display='none'">` : `
       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-        <i class="bi ${cfg.icon}" style="font-size:36px;color:#333;"></i>
+        <i class="bi ${cfg.icon}" style="font-size:36px;color:var(--text-3,#555);"></i>
       </div>`}
       <div style="position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(0,0,0,0.8) 100%);"></div>
       <!-- Badge type -->
@@ -102,9 +106,9 @@ function renderGrid(favs) {
   if (!sorted.length) {
     grid.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:60px 20px;">
-        <i class="bi bi-bookmark" style="font-size:52px;color:#333;display:block;margin-bottom:16px;"></i>
-        <p style="color:#666;font-size:15px;margin:0 0 8px;">Aucun favori${_activeFilter !== 'all' ? ' dans cette catégorie' : ''}</p>
-        <p style="color:#444;font-size:13px;margin:0;">Ajoutez du contenu depuis les pages de détail</p>
+        <i class="bi bi-bookmark" style="font-size:52px;color:var(--text-3,#555);display:block;margin-bottom:16px;"></i>
+        <p style="color:var(--text-2,#888);font-size:15px;margin:0 0 8px;">Aucun favori${_activeFilter !== 'all' ? ' dans cette catégorie' : ''}</p>
+        <p style="color:var(--text-3,#666);font-size:13px;margin:0;">Ajoutez du contenu depuis les pages de détail</p>
       </div>`;
     return;
   }
@@ -123,8 +127,10 @@ function renderFilters(favs) {
   bar.innerHTML = tabs.map(t => `
     <button onclick="setFavFilter('${t.key}')"
             id="fav-tab-${t.key}"
-            style="flex-shrink:0;background:${_activeFilter === t.key ? '#E23E3E' : '#1a1a1a'};
-                   border:none;border-radius:20px;padding:6px 16px;color:${_activeFilter === t.key ? '#fff' : '#888'};
+            style="flex-shrink:0;background:${_activeFilter === t.key ? '#E23E3E' : 'var(--surface,#1a1a1a)'};
+                   border:1px solid ${_activeFilter === t.key ? '#E23E3E' : 'var(--divider,#2a2a2a)'};
+                   border-radius:20px;padding:6px 16px;
+                   color:${_activeFilter === t.key ? '#fff' : 'var(--text-2,#888)'};
                    cursor:pointer;font-size:13px;white-space:nowrap;transition:background .2s;">
       ${esc(t.label)}
     </button>`).join('');

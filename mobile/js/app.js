@@ -1,7 +1,26 @@
-import { ROUTES, TAB_ROUTES } from './config/routes.js';
 import { isAuthenticated, getUser, login, register, logout, getUserSettings } from './services/api.js';
-import { createSnakeLoader } from './utils/snakeLoader.js';
+import { createPageSpinner } from './utils/snakeLoader.js';
 import { themeManager } from './utils/themeManager.js';
+import { attachPullToRefresh } from './utils/pullToRefresh.js';
+import { initAnimations, animateContainer } from './utils/animations.js';
+
+// ── Toast global (pages détail) ───────────────────────────────────────────────
+window._detailToast = function(msg) {
+  let t = document.getElementById('_global-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_global-toast';
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);' +
+      'background:#1e1e1e;color:#fff;padding:10px 20px;border-radius:20px;' +
+      'font-size:13px;z-index:99999;opacity:0;transition:opacity .2s;pointer-events:none;' +
+      'white-space:nowrap;border:1px solid #2a2a2a;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = '0'; }, 2200);
+};
 
 // ─── Skeleton shimmer sur toutes les images/vidéos ───────────────────────────
 (function _initSkeletonObserver() {
@@ -257,6 +276,7 @@ const routes = {
   '#/reportages': 'pages/reportages.html',
   '#/archive': 'pages/archive.html',
   '#/jtandmag': 'pages/jtandmag.html',
+  '#/tele-realite': 'pages/tele-realite.html',
   '#/favorites': 'pages/favorites.html',
   '#/notifications': 'pages/notifications.html',
   '#/settings': 'pages/settings.html',
@@ -271,6 +291,49 @@ const routes = {
 const PROTECTED_ROUTES = [
   '#/favorites', '#/notifications', '#/settings', '#/support'
 ];
+
+// ─── Keep-alive : pages dont le DOM est conservé entre les navigations ────────
+// Chaque entrée = { el: HTMLElement, loaded: bool, scrollTop: number }
+const _kaPages = new Map();
+
+// Invalider le cache keep-alive après login/logout pour forcer le rechargement
+window._invalidateKaCache = function(routes) {
+  const targets = routes || [..._kaPages.keys()];
+  targets.forEach(r => {
+    const p = _kaPages.get(r);
+    if (p) {
+      p.el.remove();
+      _kaPages.delete(r);
+    }
+  });
+  // Aussi vider la page détail si visible
+  const detailEl = document.getElementById('_detail-page');
+  if (detailEl) detailEl.innerHTML = '';
+};
+
+// Routes "détail" (ID dynamique) → jamais keep-alive, toujours reconstruites
+const _DETAIL_PREFIXES = ['#/news/', '#/show/', '#/movie/', '#/series-detail/', '#/emission-category/'];
+
+// Routes plein-écran : pas de keep-alive non plus (login, register)
+const _FULLSCREEN_ROUTES_KA = new Set(['#/login', '#/register', '#/forgot-password']);
+
+function _isKeepAlive(route) {
+  if (_FULLSCREEN_ROUTES_KA.has(route)) return false;
+  if (_DETAIL_PREFIXES.some(p => route.startsWith(p))) return false;
+  return true;
+}
+
+// Conteneur dédié aux pages keep-alive (inséré une fois dans le DOM)
+function _getKaContainer() {
+  let c = document.getElementById('_ka-container');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = '_ka-container';
+    c.style.cssText = 'position:relative;width:100%;height:100%;';
+    document.getElementById('app-content').appendChild(c);
+  }
+  return c;
+}
 
 async function renderRoute(route) {
   // #/premium → ouvrir la modal premium sur la page courante
@@ -293,7 +356,7 @@ async function renderRoute(route) {
     return;
   }
 
-  // Résoudre chemin HTML + params des routes paramétrées
+  // Résoudre chemin HTML + params
   let pagePath = routes[route];
   let detailParams = null;
 
@@ -321,62 +384,139 @@ async function renderRoute(route) {
   }
 
   const appContent = document.getElementById('app-content');
+  // Réinitialiser les overrides de style (ex: live)
+  appContent.style.overflow = '';
+  appContent.style.paddingBottom = '';
 
-  // Réinitialiser les styles que certaines pages (ex: live) peuvent avoir overridés
-  if (appContent) {
-    appContent.style.overflow = '';
-    appContent.style.paddingBottom = '';
+  updateBottomNav(route);
+  updateTopNav();
+  updateShell(route);
+  window._navRecord?.(route);
+
+  // ── Pages détail & fullscreen : pas de keep-alive ─────────────────────────
+  if (!_isKeepAlive(route)) {
+    // Cacher toutes les pages KA
+    _kaPages.forEach(p => { p.el.style.display = 'none'; });
+
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+      loader.innerHTML = '';
+      loader.appendChild(createPageSpinner());
+      loader.classList.remove('d-none');
+    }
+    try {
+      const res = await fetch(pagePath);
+      if (!res.ok) throw new Error('404');
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      // Zone hors KA : on écrit directement dans app-content
+      // (on retire le ka-container temporairement de la vue)
+      const kaCont = document.getElementById('_ka-container');
+      if (kaCont) kaCont.style.display = 'none';
+
+      // Injecter dans un div temporaire
+      let detailEl = document.getElementById('_detail-page');
+      if (!detailEl) {
+        detailEl = document.createElement('div');
+        detailEl.id = '_detail-page';
+        detailEl.style.cssText = 'width:100%;';
+        appContent.appendChild(detailEl);
+      }
+      detailEl.innerHTML = doc.body.innerHTML;
+      detailEl.style.display = '';
+
+      // Injecter les <link> et <style> du <head> de la sous-page qui manquent
+      doc.head.querySelectorAll('link[rel="stylesheet"], style').forEach(node => {
+        const href = node.href || '';
+        // Éviter les doublons
+        const alreadyLoaded = href
+          ? document.querySelector(`link[href="${href}"]`)
+          : false;
+        if (!alreadyLoaded) {
+          const clone = node.cloneNode(true);
+          document.head.appendChild(clone);
+        }
+      });
+
+      if (loader) { loader.innerHTML = ''; loader.classList.add('d-none'); }
+      await loadPageScript(route, detailParams);
+      animateContainer(detailEl);
+    } catch (err) {
+      const loader = document.getElementById('page-loader');
+      if (loader) { loader.innerHTML = ''; loader.classList.add('d-none'); }
+      if (!navigator.onLine || String(err).includes('fetch')) renderOffline();
+      else renderNotFound();
+    }
+    return;
   }
 
-  // Afficher le loader avec snakeLoader
+  // ── Pages keep-alive ──────────────────────────────────────────────────────
+
+  // Cacher la page détail si visible
+  const detailEl = document.getElementById('_detail-page');
+  if (detailEl) detailEl.style.display = 'none';
+
+  // S'assurer que le ka-container est visible
+  const kaCont = _getKaContainer();
+  kaCont.style.display = '';
+
+  // Sauvegarder le scroll de la page actuellement visible
+  _kaPages.forEach((p) => {
+    if (p.el.style.display !== 'none') {
+      p.scrollTop = p.el.scrollTop;
+    }
+  });
+
+  // Cacher toutes les pages KA
+  _kaPages.forEach(p => { p.el.style.display = 'none'; });
+
+  // ── Page déjà montée → juste réafficher (données intactes, scroll restauré) ─
+  if (_kaPages.has(route)) {
+    const page = _kaPages.get(route);
+    page.el.style.display = '';
+    requestAnimationFrame(() => { page.el.scrollTop = page.scrollTop || 0; });
+    return;
+  }
+
+  // ── Première visite : fetch HTML + monter la page ─────────────────────────
   const loader = document.getElementById('page-loader');
   if (loader) {
     loader.innerHTML = '';
-    loader.appendChild(createSnakeLoader(50));
+    loader.appendChild(createPageSpinner());
     loader.classList.remove('d-none');
   }
 
   try {
-    // Charger et parser le HTML
-    const response = await fetch(pagePath);
-    if (!response.ok) throw new Error('404');
+    const res = await fetch(pagePath);
+    if (!res.ok) throw new Error('404');
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
 
-    const html = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const pageEl = document.createElement('div');
+    pageEl.className = 'ka-page';
+    pageEl.style.cssText = 'width:100%;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;';
+    pageEl.innerHTML = doc.body.innerHTML;
+    kaCont.appendChild(pageEl);
 
-    // Extraire le contenu du body
-    const content = doc.body.innerHTML;
-    appContent.innerHTML = content;
+    const pageState = { el: pageEl, loaded: true, scrollTop: 0 };
+    _kaPages.set(route, pageState);
 
-    // Mettre à jour la nav inférieure
-    updateBottomNav(route);
-    updateTopNav();
-    updateShell(route);
+    if (loader) { loader.innerHTML = ''; loader.classList.add('d-none'); }
 
-    // Enregistrer dans la pile de navigation (gestion bouton retour)
-    window._navRecord?.(route);
-
-    // Charger le script spécifique de la page
     await loadPageScript(route, detailParams);
+    animateContainer(pageEl);
 
-    // Cacher le loader
-    if (loader) {
-      loader.innerHTML = '';
-      loader.classList.add('d-none');
-    }
+    // ── Pull-to-refresh : glisser vers le bas depuis le top pour rafraîchir ──
+    attachPullToRefresh(pageEl, async () => {
+      await loadPageScript(route, detailParams);
+      animateContainer(pageEl);
+    });
 
-  } catch (error) {
-    console.error('Erreur chargement page:', error);
-    if (loader) {
-      loader.innerHTML = '';
-      loader.classList.add('d-none');
-    }
-    if (!navigator.onLine || error?.message?.includes('Failed to fetch') || error?.message?.includes('NetworkError')) {
-      renderOffline();
-    } else {
-      renderNotFound();
-    }
+  } catch (err) {
+    if (loader) { loader.innerHTML = ''; loader.classList.add('d-none'); }
+    if (!navigator.onLine || String(err).includes('fetch')) renderOffline();
+    else renderNotFound();
   }
 }
 
@@ -389,6 +529,7 @@ async function loadPageScript(route, detailParams = null) {
     '#/reportages':     () => import('./pages/reportages.js').then(m => m.loadReportages()),
     '#/divertissement': () => import('./pages/divertissement.js').then(m => m.loadDivertissement()),
     '#/archive':        () => import('./pages/archive.js').then(m => m.loadArchive()),
+    '#/tele-realite':   () => import('./pages/tele-realite.js').then(m => m.loadTeleRealite()),
     '#/profile':        () => import('./pages/profile.js').then(m => m.loadProfile()),
     '#/live':           () => import('./pages/live.js').then(m => m.loadLive()),
     '#/emissions':      () => import('./pages/emissions.js').then(m => m.loadEmissions()),
@@ -511,8 +652,6 @@ function updateBottomNav(route) {
 
 }
 
-// Routes dont les pages ont leur propre header (retour + titre) → masquer le header principal
-const _DETAIL_PREFIXES = ['#/show/', '#/news/', '#/series-detail/', '#/movie/', '#/emission-category/'];
 // Routes plein écran : ni header ni footer
 const _FULLSCREEN_ROUTES = ['#/login', '#/register'];
 
@@ -597,11 +736,20 @@ function hideSplash() {
 }
 
 // Router
-window.addEventListener('hashchange', (e) => {
+window.addEventListener('hashchange', async (e) => {
   const route = window.location.hash || '#/home';
   // Mémoriser le hash précédent (utile pour #/premium)
   const prev = e.oldURL ? (e.oldURL.split('#')[1] ? '#' + e.oldURL.split('#')[1] : '#/home') : '#/home';
   if (prev !== '#/premium') window._prevHash = prev;
+
+  // Arrêter le flux HLS si on quitte la page live
+  if (prev === '#/live' && route !== '#/live') {
+    try {
+      const { destroyLive } = await import('./pages/live.js');
+      destroyLive();
+    } catch (e) {}
+  }
+
   renderRoute(route);
 });
 
@@ -618,45 +766,66 @@ window.addEventListener('hashchange', (e) => {
     else _lastRoute = route;
   });
 
+  // ── Overlay hors-ligne ────────────────────────────────────────────────────
+  function _showOfflineOverlay() {
+    let ol = document.getElementById('_bf1-offline-overlay');
+    if (ol) { ol.style.display = 'flex'; return; }
+    ol = document.createElement('div');
+    ol.id = '_bf1-offline-overlay';
+    ol.style.cssText =
+      'position:fixed;inset:0;z-index:999999;background:#000;' +
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'padding:32px 24px;text-align:center;';
+    ol.innerHTML = `
+      <div style="width:90px;height:90px;background:rgba(226,62,62,0.12);border-radius:50%;
+                  display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+        <i class="bi bi-wifi-off" style="font-size:42px;color:#E23E3E;"></i>
+      </div>
+      <h2 style="font-size:22px;font-weight:700;color:#fff;margin:0 0 10px;">Pas de connexion</h2>
+      <p style="font-size:14px;color:#888;margin:0 0 8px;line-height:1.65;">
+        Vérifie ta connexion internet<br>et réessaie.
+      </p>
+      <p id="_bf1-offline-status" style="font-size:12px;color:#555;margin:0 0 32px;">
+        Tentative de reconnexion…
+      </p>
+      <button onclick="window._bf1TryReconnectNow()"
+              style="display:inline-flex;align-items:center;gap:8px;background:#E23E3E;
+                     color:#fff;border-radius:12px;padding:13px 32px;font-size:15px;
+                     font-weight:600;border:none;cursor:pointer;">
+        <i class="bi bi-arrow-clockwise"></i> Réessayer
+      </button>`;
+    document.body.appendChild(ol);
+  }
+
+  function _hideOfflineOverlay() {
+    const ol = document.getElementById('_bf1-offline-overlay');
+    if (ol) ol.style.display = 'none';
+  }
+
+  window._bf1TryReconnectNow = function() {
+    const status = document.getElementById('_bf1-offline-status');
+    if (status) status.textContent = 'Vérification…';
+    _tryReconnect();
+  };
+
   // Event: Connexion perdue
   window.addEventListener('offline', () => {
-    if (_isOffline) return; // Déjà offline
+    if (_isOffline) return;
     _isOffline = true;
-    console.log('🔌 OFFLINE - Connexion perdue');
-    
-    // Afficher le message offline
-    renderOffline();
-    
-    // Afficher un toast d'information
-    _showConnectionToast('Pas de connexion internet', true);
-    
-    // Essayer de se reconnecter chaque 3 secondes
+    _showOfflineOverlay();
     if (!_reconnectTimer) {
-      _reconnectTimer = setInterval(() => {
-        _tryReconnect();
-      }, 3000);
+      _reconnectTimer = setInterval(_tryReconnect, 4000);
     }
   });
 
   // Event: Connexion rétablie
   window.addEventListener('online', () => {
-    if (!_isOffline) return; // Déjà online
+    if (!_isOffline) return;
     _isOffline = false;
-    console.log('✅ ONLINE - Connexion rétablie');
-    
-    // Arrêter les tentatives de reconnexion
-    if (_reconnectTimer) {
-      clearInterval(_reconnectTimer);
-      _reconnectTimer = null;
-    }
-    
-    // Afficher un toast de confirmation
+    if (_reconnectTimer) { clearInterval(_reconnectTimer); _reconnectTimer = null; }
+    _hideOfflineOverlay();
     _showConnectionToast('Connexion rétablie ✓', false);
-    
-    // Recharger la dernière page en attente
-    setTimeout(() => {
-      renderRoute(_lastRoute);
-    }, 600);
+    setTimeout(() => renderRoute(_lastRoute), 600);
   });
 
   // Vérifier la connexion en appelant une ressource minimale
@@ -679,6 +848,13 @@ window.addEventListener('hashchange', (e) => {
     } catch (err) {
       // Pas encore connecté
     }
+  }
+
+  // Vérifier dès le démarrage si déjà offline
+  if (!navigator.onLine) {
+    _isOffline = true;
+    _showOfflineOverlay();
+    _reconnectTimer = setInterval(_tryReconnect, 4000);
   }
 
   // Toast de notification de connexion
@@ -713,6 +889,7 @@ window.addEventListener('hashchange', (e) => {
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', async () => {
+  initAnimations();
   updateBottomNav('#/home');
 
   // Pré-charger le modal premium

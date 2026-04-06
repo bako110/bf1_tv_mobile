@@ -1,5 +1,5 @@
 import * as api from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
 
 function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -68,7 +68,7 @@ export async function loadMovies() {
   if (!container) return;
 
   container.innerHTML = '';
-  container.appendChild(createSnakeLoader(40));
+  container.appendChild(createPageSpinner());
 
   try {
     const raw = await api.getMovies().catch(() => []);

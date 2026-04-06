@@ -14,6 +14,7 @@ const TYPE_CFG = {
   divertissement:{ label: 'Divertissement', color: '#A855F7', icon: 'bi-music-note-beamed', route: item => `#/show/divertissement/${item.id}` },
   reportage:     { label: 'Reportage',      color: '#F59E0B', icon: 'bi-film',              route: item => `#/show/reportage/${item.id}` },
   archive:       { label: 'Archive',        color: '#6B7280', icon: 'bi-archive-fill',      route: item => `#/show/archive/${item.id}` },
+  tele_realite:  { label: 'Télé Réalité',  color: '#EC4899', icon: 'bi-camera-video-fill', route: item => `#/show/tele_realite/${item.id}` },
 };
 
 // ─── Rendu résultats ──────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ function renderResults(items) {
     grouped[t].push(item);
   });
 
-  const ORDER = ['news','sport','jtandmag','divertissement','reportage','show','archive'];
+  const ORDER = ['news','sport','jtandmag','divertissement','reportage','tele_realite','show','archive'];
   const sortedKeys = [...ORDER.filter(k => grouped[k]), ...Object.keys(grouped).filter(k => !ORDER.includes(k))];
 
   area.innerHTML = sortedKeys.map(type => {
@@ -139,6 +140,7 @@ export async function loadSearch() {
     { label: 'Reportages',     icon: 'bi-film',              color: '#F59E0B', href: '#/reportages' },
     { label: 'Flash Info',     icon: 'bi-lightning-fill',    color: '#E23E3E', href: '#/news' },
     { label: 'Archives',       icon: 'bi-archive-fill',      color: '#6B7280', href: '#/archive' },
+    { label: 'Télé Réalité',   icon: 'bi-camera-video-fill', color: '#EC4899', href: '#/tele-realite' },
   ];
 
   container.innerHTML = `

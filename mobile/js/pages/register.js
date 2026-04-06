@@ -1,5 +1,5 @@
 import * as api from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
 
 export async function loadRegister() {
   const container = document.getElementById('app-content');
@@ -44,8 +44,9 @@ export async function loadRegister() {
       const result = await api.register(username, email, password);
 
       if (msgEl) msgEl.innerHTML = `<div class="alert alert-success">Inscription réussie! Redirection...</div>`;
+      window._invalidateKaCache?.();
       setTimeout(() => {
-        window.location.hash = '#/profile';
+        window.location.hash = '#/home';
       }, 500);
     } catch (err) {
       console.error('Erreur register:', err);

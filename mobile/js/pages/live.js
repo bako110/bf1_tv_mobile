@@ -1,5 +1,31 @@
 import * as api from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+
+// Instance HLS globale — détruite quand on quitte la page live
+let _hlsInstance = null;
+
+export function destroyLive() {
+  if (_hlsInstance) {
+    try { _hlsInstance.destroy(); } catch (e) {}
+    _hlsInstance = null;
+  }
+  const video = document.getElementById('live-video');
+  if (video) {
+    video.pause();
+    video.src = '';
+    video.load();
+  }
+  // Quitter le plein écran CSS si actif
+  const wrapper = document.getElementById('live-player-wrapper');
+  if (wrapper?.classList.contains('live-fs')) {
+    wrapper.classList.remove('live-fs');
+    const appHeader = document.querySelector('.app-header');
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (appHeader) appHeader.style.display = '';
+    if (bottomNav) bottomNav.style.display = '';
+    document.body.style.overflow = '';
+  }
+  if (window.__emcatTimer) { clearInterval(window.__emcatTimer); window.__emcatTimer = null; }
+}
 
 function formatCount(n) {
   if (!n && n !== 0) return '0';
@@ -7,64 +33,95 @@ function formatCount(n) {
   return String(n);
 }
 
+const SECTION_ICONS = {
+  sports:        'bi-trophy-fill',
+  jtandmag:      'bi-collection-play-fill',
+  divertissement:'bi-emoji-smile-fill',
+  reportages:    'bi-camera-reels-fill',
+  'tele-realite':'bi-camera-video-fill',
+};
+
 function buildHorizontalCard(item, type) {
-  const image = item.thumbnail || item.image_url || item.image || '';
-  const title = item.title || item.name || 'Sans titre';
+  const image    = item.thumbnail || item.image_url || item.image || '';
+  const title    = item.title || item.name || 'Sans titre';
   const duration = item.duration;
+  const views    = item.views;
+  const likes    = item.likes;
+  const id       = item.id || item._id;
+
+  // Route de détail selon le type
+  const detailRoutes = {
+    sports:         `#/show/sport/${id}`,
+    jtandmag:       `#/show/jtandmag/${id}`,
+    divertissement: `#/show/divertissement/${id}`,
+    reportages:     `#/show/reportage/${id}`,
+    'tele-realite': `#/show/tele_realite/${id}`,
+  };
+  const href = detailRoutes[type] || `#/show/${type}/${id}`;
 
   return `
-    <div style="flex-shrink:0;width:138px;cursor:pointer;margin-right:12px;"
-         onclick="window.location.hash='#/${type}'">
-      <div style="position:relative;border-radius:12px;overflow:hidden;height:188px;
-                  background:#181818;box-shadow:0 4px 14px rgba(0,0,0,0.55);">
+    <div style="flex-shrink:0;width:130px;cursor:pointer;"
+         onclick="window.location.hash='${href}'">
+      <div style="position:relative;border-radius:10px;overflow:hidden;height:175px;
+                  background:#181818;box-shadow:0 3px 12px rgba(0,0,0,0.5);">
         ${image
-          ? `<img src="${image}" alt="${title}"
+          ? `<img src="${image}" alt=""
                   style="width:100%;height:100%;object-fit:cover;display:block;"
                   onerror="this.parentElement.style.background='#111'" />`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
                <i class="bi bi-play-circle" style="font-size:2rem;color:#333;"></i>
              </div>`
         }
-        <div style="position:absolute;inset:0;
-                    background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.25) 50%,transparent 72%);"
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.2) 55%,transparent 75%);"
              class="bf1-card-overlay"></div>
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:28px 9px 10px;">
-          <p class="bf1-card-title" style="margin:0;color:#fff;font-size:11.5px;font-weight:600;line-height:1.35;
+        <!-- Bouton play centré -->
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);
+                    width:30px;height:30px;background:rgba(226,62,62,0.85);border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;
+                    box-shadow:0 2px 10px rgba(226,62,62,0.5);">
+          <i class="bi bi-play-fill" style="color:#fff;font-size:13px;margin-left:2px;"></i>
+        </div>
+        ${duration ? `<div style="position:absolute;top:7px;right:7px;background:rgba(0,0,0,0.75);
+                                  border-radius:4px;padding:2px 5px;">
+          <span style="font-size:9px;color:#ccc;">${duration}min</span>
+        </div>` : ''}
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:6px 8px 8px;">
+          <p class="bf1-card-title" style="margin:0 0 4px;color:#fff;font-size:11px;font-weight:600;line-height:1.3;
                     overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;
-                    -webkit-box-orient:vertical;text-shadow:0 1px 3px rgba(0,0,0,0.7);">
-            ${title}
-          </p>
-          ${duration ? `<div style="display:flex;align-items:center;gap:3px;margin-top:4px;">
-            <i class="bi bi-clock bf1-card-time" style="font-size:9px;color:rgba(255,255,255,0.45);"></i>
-            <span class="bf1-card-time" style="font-size:10px;color:rgba(255,255,255,0.45);">${duration} min</span>
-          </div>` : ''}
+                    -webkit-box-orient:vertical;text-shadow:0 1px 3px rgba(0,0,0,0.8);">${title}</p>
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+            ${views != null ? `<span style="display:flex;align-items:center;gap:2px;">
+              <i class="bi bi-eye" style="font-size:8px;color:rgba(255,255,255,0.45);"></i>
+              <span style="font-size:9px;color:rgba(255,255,255,0.45);">${views >= 1000 ? (views/1000).toFixed(1)+'k' : views}</span>
+            </span>` : ''}
+            ${likes != null && likes > 0 ? `<span style="display:flex;align-items:center;gap:2px;">
+              <i class="bi bi-heart-fill" style="font-size:8px;color:#E23E3E;"></i>
+              <span style="font-size:9px;color:rgba(255,255,255,0.45);">${likes >= 1000 ? (likes/1000).toFixed(1)+'k' : likes}</span>
+            </span>` : ''}
+          </div>
         </div>
       </div>
     </div>`;
 }
 
 function buildSection(title, items, route) {
+  if (!items.length) return '';
+  const icon = SECTION_ICONS[route] || 'bi-play-circle-fill';
   const cards = items.map(item => buildHorizontalCard(item, route)).join('');
   return `
-    <div style="margin-bottom:24px;margin-left:16px;margin-right:16px;
-                background:rgba(255,255,255,0.02);border-radius:14px;padding:16px;
-                border:1px solid rgba(255,255,255,0.05);">
-      <div style="display:flex;justify-content:space-between;align-items:center;
-                  margin-bottom:12px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:3px;height:18px;background:#E23E3E;border-radius:2px;flex-shrink:0;"></div>
-          <h6 class="bf1-section-title" style="margin:0;font-weight:700;color:#fff;font-size:15px;">${title}</h6>
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <i class="bi ${icon}" style="font-size:14px;color:#E23E3E;"></i>
+          <h6 class="bf1-section-title" style="margin:0;font-weight:700;font-size:14px;">${title}</h6>
         </div>
-        <a href="#/${route}" style="color:#E23E3E;text-decoration:none;display:flex;
-                                    align-items:center;gap:4px;font-size:12px;font-weight:600;">
-          Tout voir <i class="bi bi-arrow-right-circle-fill" style="font-size:15px;"></i>
+        <a href="#/${route}" style="color:#E23E3E;text-decoration:none;
+                                    display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;">
+          Tout voir <i class="bi bi-chevron-right" style="font-size:11px;"></i>
         </a>
       </div>
-      ${items.length === 0
-        ? `<p style="color:#444;font-size:13px;margin:0;">Aucun contenu disponible</p>`
-        : `<div style="display:flex;overflow-x:auto;overflow-y:hidden;gap:0;scrollbar-width:none;-ms-overflow-style:none;
-                       -webkit-overflow-scrolling:touch;margin:-16px -16px 0 -16px;padding:0 16px 8px;">${cards}</div>`
-      }
+      <div style="display:flex;overflow-x:auto;overflow-y:hidden;gap:10px;scrollbar-width:none;
+                  -webkit-overflow-scrolling:touch;padding:0 16px 4px;">${cards}</div>
     </div>`;
 }
 
@@ -95,13 +152,14 @@ export async function loadLive() {
 
   try {
     // Charger live + toutes les sections en parallèle
-    const [liveData, streamUrl, sports, jtandmag, divertissement, reportages] = await Promise.all([
+    const [liveData, streamUrl, sports, jtandmag, divertissement, reportages, teleRealite] = await Promise.all([
       api.getLive().catch(() => null),
       api.getLiveStreamUrl(),
-      api.getSports().catch(() => []),
-      api.getJTandMag().catch(() => []),
-      api.getDivertissement().catch(() => []),
-      api.getReportages().catch(() => []),
+      api.getSports(0, 20).catch(() => ({ items: [] })),
+      api.getJTandMag(0, 20).catch(() => ({ items: [] })),
+      api.getDivertissement(0, 20).catch(() => ({ items: [] })),
+      api.getReportages(0, 20).catch(() => ({ items: [] })),
+      api.getTeleRealite(0, 20).catch(() => ({ items: [] })),
     ]);
     const viewers = liveData?.viewers || 0;
     const isLive = liveData?.is_live !== false;
@@ -110,137 +168,225 @@ export async function loadLive() {
     if (videoContainer) {
       if (isLive && streamUrl) {
         videoContainer.innerHTML = `
-          <div id="live-player-wrapper" style="position:relative;width:100%;background:#000;border-radius:12px;overflow:hidden;">
+          <div id="live-player-wrapper" style="position:relative;width:100%;background:#000;overflow:hidden;">
             <div class="live-ratio" style="position:relative;width:100%;aspect-ratio:16/9;">
               <video id="live-video" autoplay playsinline
-                     style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"
-                     onerror="document.getElementById('live-error')?.style.setProperty('display','flex')">
+                     style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;">
               </video>
             </div>
+
+            <!-- Erreur flux -->
             <div id="live-error"
                  style="display:none;flex-direction:column;align-items:center;justify-content:center;
-                        position:absolute;inset:0;background:#000;gap:8px;">
+                        position:absolute;inset:0;background:#000;gap:8px;z-index:5;">
               <i class="bi bi-wifi-off" style="font-size:32px;color:#555;"></i>
               <p style="color:#555;font-size:13px;margin:0;">Impossible de charger le flux</p>
             </div>
-            <!-- Bouton son (muet au démarrage pour respecter l'autoplay Android) -->
-            <button id="live-mute-btn" onclick="window.toggleLiveMute()"
-                    style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.65);
-                           border:1px solid rgba(255,255,255,0.12);border-radius:8px;
-                           padding:7px 9px;color:#fff;z-index:20;cursor:pointer;
-                           display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;">
-              <i class="bi bi-volume-mute-fill" id="live-mute-icon"></i>
-              <span id="live-mute-label">Son coupé</span>
-            </button>
-            <!-- Bouton plein écran -->
-            <button id="live-fs-btn" onclick="window.toggleLiveFullscreen()"
-                    style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);
-                           border:none;border-radius:8px;padding:7px 9px;color:#fff;z-index:20;cursor:pointer;">
-              <i class="bi bi-fullscreen" id="live-fs-icon"></i>
-            </button>
+
+            <!-- Overlay tap (toujours là, intercepte les taps pour afficher/cacher les contrôles) -->
+            <div id="live-tap-overlay" style="position:absolute;inset:0;z-index:8;"></div>
+
+            <!-- Badge EN DIRECT + spectateurs — toujours visibles, au-dessus de l'overlay -->
+            <div style="position:absolute;top:10px;left:0;right:0;
+                        display:flex;align-items:center;justify-content:space-between;
+                        padding:0 12px;z-index:15;pointer-events:none;">
+              <div style="display:flex;align-items:center;gap:5px;
+                          background:rgba(0,0,0,0.5);border-radius:20px;padding:3px 9px;">
+                <span style="width:7px;height:7px;background:#E23E3E;border-radius:50%;
+                             animation:livePulse 1.4s ease-in-out infinite;display:inline-block;"></span>
+                <span style="color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;">EN DIRECT</span>
+              </div>
+              ${viewers > 0 ? `<div style="background:rgba(0,0,0,0.5);border-radius:20px;
+                          padding:3px 9px;display:flex;align-items:center;gap:4px;">
+                <i class="bi bi-eye-fill" style="font-size:9px;color:#E23E3E;"></i>
+                <span style="color:#fff;font-size:10px;">${formatCount(viewers)}</span>
+              </div>` : ''}
+            </div>
+
+            <!-- Contrôles centrés — cachés par défaut, apparaissent au tap -->
+            <div class="live-controls" id="live-controls-bar"
+                 style="opacity:0;pointer-events:none;transition:opacity .25s;">
+              <button class="live-ctrl-btn" id="live-mute-btn" onclick="window.toggleLiveMute()">
+                <div class="live-ctrl-icon">
+                  <i class="bi bi-volume-mute-fill" id="live-mute-icon"></i>
+                </div>
+                <span class="live-ctrl-label" id="live-mute-label">Son coupé</span>
+              </button>
+              <button class="live-ctrl-btn live-ctrl-primary" id="live-stop-btn" onclick="window.toggleLiveStop()">
+                <div class="live-ctrl-icon">
+                  <i class="bi bi-stop-fill" id="live-stop-icon"></i>
+                </div>
+                <span class="live-ctrl-label" id="live-stop-label">Stop</span>
+              </button>
+              <button class="live-ctrl-btn" id="live-fs-btn" onclick="window.toggleLiveFullscreen()">
+                <div class="live-ctrl-icon">
+                  <i class="bi bi-fullscreen" id="live-fs-icon"></i>
+                </div>
+                <span class="live-ctrl-label">Plein écran</span>
+              </button>
+            </div>
           </div>`;
 
-        // Afficher le compteur de spectateurs
+        // Afficher le compteur de spectateurs dans le header si présent
         const viewersHeader = document.getElementById('live-viewers-header');
-        const viewersCount = document.getElementById('live-viewers-count');
+        const viewersCount  = document.getElementById('live-viewers-count');
         if (viewersHeader && viewersCount && viewers > 0) {
           viewersCount.textContent = formatCount(viewers);
           viewersHeader.style.display = 'inline-flex';
         }
 
-        // Plein écran paysage
-        function enterCssFallback() {
-          const container = document.getElementById('live-video-container');
-          const icon = document.getElementById('live-fs-icon');
+        // ── Afficher/cacher les contrôles au tap ──────────────────────────────
+        let _hideTimer = null;
+        function _showControls() {
+          const bar = document.getElementById('live-controls-bar');
+          if (!bar) return;
+          bar.style.opacity = '1';
+          bar.style.pointerEvents = 'auto';
+          clearTimeout(_hideTimer);
+          _hideTimer = setTimeout(_hideControls, 3000);
+        }
+        function _hideControls() {
+          const bar = document.getElementById('live-controls-bar');
+          if (!bar) return;
+          bar.style.opacity = '0';
+          bar.style.pointerEvents = 'none';
+        }
+        // Tap sur l'overlay → afficher/cacher
+        requestAnimationFrame(() => {
+          const tapOverlay = document.getElementById('live-tap-overlay');
+          if (tapOverlay) {
+            tapOverlay.addEventListener('click', () => {
+              const bar = document.getElementById('live-controls-bar');
+              if (bar?.style.opacity === '1') _hideControls();
+              else _showControls();
+            });
+          }
+          // Tap sur les boutons → reset timer sans cacher
+          const bar = document.getElementById('live-controls-bar');
+          if (bar) {
+            bar.addEventListener('click', (e) => {
+              e.stopPropagation();
+              clearTimeout(_hideTimer);
+              _hideTimer = setTimeout(_hideControls, 3000);
+            });
+          }
+        });
+
+        // ── Plein écran paysage — rotation native Android ─────────────────────
+        function enterFullscreen() {
+          const wrapper   = document.getElementById('live-player-wrapper');
+          const icon      = document.getElementById('live-fs-icon');
           const appHeader = document.querySelector('.app-header');
           const bottomNav = document.querySelector('.bottom-nav');
-          container.classList.add('live-fullscreen');
-          if (icon) icon.className = 'bi bi-fullscreen-exit';
+          if (!wrapper) return;
+
+          // 1. Rotation via bridge Android natif (méthode fiable sur Capacitor)
+          if (window.AndroidBridge?.setLandscape) {
+            window.AndroidBridge.setLandscape();
+          } else {
+            // 2. Fallback : Screen Orientation API Web
+            screen.orientation?.lock?.('landscape').catch(() => {});
+          }
+
+          // Masquer header/nav + passer le wrapper en plein écran CSS
+          wrapper.classList.add('live-fs');
+          if (icon)      icon.className = 'bi bi-fullscreen-exit';
           if (appHeader) appHeader.style.display = 'none';
           if (bottomNav) bottomNav.style.display = 'none';
+          document.body.style.overflow = 'hidden';
         }
-        function exitCssFallback() {
-          const container = document.getElementById('live-video-container');
-          const icon = document.getElementById('live-fs-icon');
+
+        function exitFullscreen() {
+          const wrapper   = document.getElementById('live-player-wrapper');
+          const icon      = document.getElementById('live-fs-icon');
           const appHeader = document.querySelector('.app-header');
           const bottomNav = document.querySelector('.bottom-nav');
-          container.classList.remove('live-fullscreen');
-          if (icon) icon.className = 'bi bi-fullscreen';
+
+          // Revenir en portrait via bridge Android
+          if (window.AndroidBridge?.setPortrait) {
+            window.AndroidBridge.setPortrait();
+          } else {
+            screen.orientation?.unlock?.();
+          }
+
+          wrapper?.classList.remove('live-fs');
+          if (icon)      icon.className = 'bi bi-fullscreen';
           if (appHeader) appHeader.style.display = '';
           if (bottomNav) bottomNav.style.display = '';
+          document.body.style.overflow = '';
         }
 
-        document.addEventListener('fullscreenchange', () => {
-          if (!document.fullscreenElement) { screen.orientation?.unlock?.(); exitCssFallback(); }
-        });
-        document.addEventListener('webkitfullscreenchange', () => {
-          if (!document.webkitFullscreenElement) exitCssFallback();
+        // Bouton retour Android → quitter le plein écran si actif
+        document.addEventListener('bf1BackButton', () => {
+          const wrapper = document.getElementById('live-player-wrapper');
+          if (wrapper?.classList.contains('live-fs')) exitFullscreen();
         });
 
+        window.toggleLiveFullscreen = function () {
+          const wrapper = document.getElementById('live-player-wrapper');
+          if (!wrapper) return;
+          wrapper.classList.contains('live-fs') ? exitFullscreen() : enterFullscreen();
+        };
+
+        // ── Stop / Reprendre ─────────────────────────────────────────────────
+        let _stopped = false;
+        window.toggleLiveStop = function () {
+          const video = document.getElementById('live-video');
+          const icon  = document.getElementById('live-stop-icon');
+          const label = document.getElementById('live-stop-label');
+          if (!video) return;
+          if (!_stopped) {
+            if (_hlsInstance) { try { _hlsInstance.stopLoad(); } catch(e) {} }
+            video.pause();
+            _stopped = true;
+            if (icon)  icon.className = 'bi bi-play-fill';
+            if (label) label.textContent = 'Reprendre';
+          } else {
+            _stopped = false;
+            if (icon)  icon.className = 'bi bi-stop-fill';
+            if (label) label.textContent = 'Stop';
+            if (_hlsInstance) {
+              _hlsInstance.startLoad(-1);
+              video.play().catch(() => {});
+            } else {
+              _initHls(video, streamUrl);
+            }
+          }
+        };
+
+        // ── Son ──────────────────────────────────────────────────────────────
         window.toggleLiveMute = function () {
           const video = document.getElementById('live-video');
           const icon  = document.getElementById('live-mute-icon');
           const label = document.getElementById('live-mute-label');
-          const btn   = document.getElementById('live-mute-btn');
           if (!video) return;
           video.muted = !video.muted;
           if (video.muted) {
             if (icon)  icon.className = 'bi bi-volume-mute-fill';
             if (label) label.textContent = 'Son coupé';
-            if (btn)   btn.style.borderColor = 'rgba(255,255,255,0.12)';
           } else {
             if (icon)  icon.className = 'bi bi-volume-up-fill';
             if (label) label.textContent = 'Son activé';
-            if (btn)   btn.style.borderColor = '#E23E3E';
-            // S'assurer que le volume est audible
             video.volume = video.volume === 0 ? 1 : video.volume;
-          }
-        };
-
-        window.toggleLiveFullscreen = function () {
-          const container = document.getElementById('live-video-container');
-          const video = document.getElementById('live-video');
-          const isFs = !!document.fullscreenElement || !!document.webkitFullscreenElement
-                       || container.classList.contains('live-fullscreen');
-          if (!isFs) {
-            const fsPromise = container.requestFullscreen
-              ? container.requestFullscreen()
-              : container.webkitRequestFullscreen
-                ? (container.webkitRequestFullscreen(), Promise.resolve())
-                : video?.webkitEnterFullscreen
-                  ? (video.webkitEnterFullscreen(), Promise.resolve())
-                  : Promise.reject();
-            fsPromise
-              .then(() => { screen.orientation?.lock?.('landscape').catch(() => {}); enterCssFallback(); })
-              .catch(() => enterCssFallback());
-          } else {
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-            screen.orientation?.unlock?.();
-            exitCssFallback();
           }
         };
 
         requestAnimationFrame(() => {
           const video = document.getElementById('live-video');
           if (!video) return;
-          // Démarrer en muet pour respecter la politique d'autoplay Android
-          // L'utilisateur peut activer le son avec le bouton dédié
           video.muted = true;
           video.volume = 1;
-          
-          // Toujours utiliser HLS.js : le proxy retourne du contenu M3U8
-          // même si l'URL ne se termine pas par .m3u8
           _initHls(video, streamUrl);
         });
 
         function _initHls(video, url) {
           if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-            const hls = new Hls({ autoStartLoad: true, lowLatencyMode: false });
-            hls.loadSource(url);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
-            hls.on(Hls.Events.ERROR, (_e, data) => {
+            if (_hlsInstance) { try { _hlsInstance.destroy(); } catch (e) {} }
+            _hlsInstance = new Hls({ autoStartLoad: true, lowLatencyMode: false });
+            _hlsInstance.loadSource(url);
+            _hlsInstance.attachMedia(video);
+            _hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+            _hlsInstance.on(Hls.Events.ERROR, (_e, data) => {
               if (data.fatal) document.getElementById('live-error')?.style.setProperty('display', 'flex');
             });
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -273,10 +419,11 @@ export async function loadLive() {
         </div>
         <div style="padding:10px 0 20px;">
           ${[
-            buildSection('Sports',         sortByDate(Array.isArray(sports) ? sports : []).slice(0, 10),         'sports'),
-            buildSection('JT & Mag',       sortByDate(Array.isArray(jtandmag) ? jtandmag : []).slice(0, 10),     'jtandmag'),
-            buildSection('Divertissement', sortByDate(Array.isArray(divertissement) ? divertissement : []).slice(0, 10), 'divertissement'),
-            buildSection('Reportages',     sortByDate(Array.isArray(reportages) ? reportages : []).slice(0, 10), 'reportages'),
+            buildSection('Sports',                    sortByDate(sports.items || []).slice(0, 10),        'sports'),
+            buildSection('JT & Mag',                  sortByDate(jtandmag.items || []).slice(0, 10),      'jtandmag'),
+            buildSection('Divertissement',             sortByDate(divertissement.items || []).slice(0, 10),'divertissement'),
+            buildSection('Reportages',                 sortByDate(reportages.items || []).slice(0, 10),    'reportages'),
+            buildSection('Télé Réalité & Événements', sortByDate(teleRealite.items || []).slice(0, 10),   'tele-realite'),
           ].join('')}
         </div>`;
     }

@@ -32,9 +32,7 @@ export async function loadArchiveContent() {
   `;
 
   try {
-    console.log('📡 Appel API getArchive()...');
-    const response = await api.getArchive();
-    console.log('📦 Réponse API brute:', response);
+    const response = await api.getArchive(0, 200);
     
     // Traiter les données - différents formats possibles
     let rawData = [];
@@ -72,7 +70,7 @@ export async function loadArchiveContent() {
     // Si toujours vide, essayer getNews() comme fallback
     if (rawData.length === 0) {
       console.log('🔄 Tentative avec getNews()...');
-      const newsData = await api.getNews();
+      const newsData = await api.getNews(20);
       if (Array.isArray(newsData)) {
         rawData = newsData.filter(item => 
           (item.category === 'Archive' || 

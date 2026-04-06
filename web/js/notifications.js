@@ -43,6 +43,8 @@ function updateBadge() {
   }
 }
 
+
+
 // ─── Rendu liste ─────────────────────────────────────────────────────────────
 
 function renderList() {

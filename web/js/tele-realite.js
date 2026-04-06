@@ -1,7 +1,7 @@
 import * as api from '../../shared/services/api.js';
 import { slugify } from '/js/slugUtils.js';
 
-let divertissementData = [];
+let teleRealiteData = [];
 let currentFilter = 'Tous';
 let isLoading = false;
 let currentPage = 1;
@@ -9,10 +9,9 @@ const itemsPerPage = 9;
 let totalItems = 0;
 let totalPages = 1;
 
-// Charge une page depuis le backend et affiche
 async function fetchAndRender(page) {
   if (isLoading) return;
-  const container = document.getElementById('divertissementArticles');
+  const container = document.getElementById('teleRealiteArticles');
   if (!container) return;
 
   isLoading = true;
@@ -27,46 +26,45 @@ async function fetchAndRender(page) {
   `;
 
   try {
-    const res = await api.getDivertissement(skip, itemsPerPage);
+    const res = await api.getTeleRealite(skip, itemsPerPage);
     const items = res.items || (Array.isArray(res) ? res : []);
     totalItems = res.total ?? items.length;
     totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
     currentPage = page;
 
-    divertissementData = items.map(item => ({
+    teleRealiteData = items.map(item => ({
       ...item,
       _id: item._id || item.id,
       title: item.title || 'Sans titre',
       description: item.description || '',
       image: getImageUrl(item.image_url || item.image || item.thumbnail || item.poster),
-      category: item.subcategory || item.type || item.category || 'Divertissement',
-      author: item.author || item.created_by || 'BF1 Divertissement',
+      category: item.subcategory || item.type || item.category || 'Télé Réalité',
+      author: item.author || item.host || item.created_by || 'BF1 TV',
       views: item.views || 0,
       likes: item.likes || 0,
       date: item.created_at || item.published_at || item.date || new Date(),
-      live: item.live || false,
       tags: item.tags || [],
     }));
 
-    if (divertissementData.length > 0) {
-      const articlesHTML = divertissementData.map((item, i) => buildDivertissementCard(item, i)).join('');
+    if (teleRealiteData.length > 0) {
+      const articlesHTML = teleRealiteData.map((item, i) => buildCard(item, i)).join('');
       const paginationHTML = renderPagination();
-      container.innerHTML = `<div class="divertissement-grid">${articlesHTML}</div>${paginationHTML}
-        <div class="divertissement-stats"><i class="bi bi-emoji-smile-fill"></i> ${totalItems} article${totalItems > 1 ? 's' : ''} au total</div>`;
-      updateTrendsSection(divertissementData);
+      container.innerHTML = `<div class="tele-realite-grid">${articlesHTML}</div>${paginationHTML}
+        <div class="tele-realite-stats"><i class="bi bi-camera-video-fill"></i> ${totalItems} émission${totalItems > 1 ? 's' : ''} au total</div>`;
+      updateTrendsSection(teleRealiteData);
     } else {
       container.innerHTML = `
         <div class="text-center py-5">
-          <i class="bi bi-emoji-smile-fill" style="font-size:3rem;color:#666;"></i>
-          <p class="mt-3 text-secondary">Aucun contenu divertissement disponible</p>
+          <i class="bi bi-camera-video-fill" style="font-size:3rem;color:#666;"></i>
+          <p class="mt-3 text-secondary">Aucun contenu Télé Réalité disponible</p>
         </div>`;
     }
   } catch (error) {
-    console.error('❌ Erreur chargement divertissement:', error);
+    console.error('❌ Erreur chargement Télé Réalité:', error);
     container.innerHTML = `
       <div class="text-center py-5">
-        <p class="mt-3 text-secondary">Erreur: ${error.message || 'Impossible de charger le divertissement'}</p>
-        <button class="btn btn-outline-danger btn-sm mt-2" onclick="window.loadDivertissementContent()">
+        <p class="mt-3 text-secondary">Erreur: ${error.message || 'Impossible de charger le contenu'}</p>
+        <button class="btn btn-outline-danger btn-sm mt-2" onclick="window.loadTeleRealiteContent()">
           <i class="bi bi-arrow-clockwise"></i> Réessayer
         </button>
       </div>`;
@@ -75,12 +73,11 @@ async function fetchAndRender(page) {
   }
 }
 
-export async function loadDivertissementContent() {
+export async function loadTeleRealiteContent() {
   const filterContainer = document.querySelector('.filter-pills');
   if (filterContainer) renderFilters(filterContainer);
   await fetchAndRender(1);
 }
-
 
 function getImageUrl(imagePath) {
   if (!imagePath) return '';
@@ -89,91 +86,66 @@ function getImageUrl(imagePath) {
 }
 
 function renderFilters(container) {
-  // Extraire les sous-catégories uniques des données
   const subcategories = new Set(['Tous']);
-  
-  divertissementData.forEach(item => {
+  teleRealiteData.forEach(item => {
     const subcat = item.subcategory || item.type || item.category;
-    if (subcat && subcat !== 'Divertissement' && subcat !== 'divertissement') {
+    if (subcat && subcat !== 'Télé Réalité' && subcat !== 'tele_realite') {
       subcategories.add(subcat);
     }
-    // Ajouter aussi les tags comme filtres
     if (item.tags && Array.isArray(item.tags)) {
-      item.tags.forEach(tag => {
-        if (tag && tag !== 'Divertissement') {
-          subcategories.add(tag);
-        }
-      });
+      item.tags.forEach(tag => { if (tag) subcategories.add(tag); });
     }
   });
-  
-  // Si pas assez de sous-catégories, utiliser les catégories par défaut
+
   let categories = Array.from(subcategories);
   if (categories.length <= 1) {
-    categories = ['Tous', 'Émissions', 'Spectacles', 'Humour', 'Variétés', 'Talk-show'];
+    categories = ['Tous', 'Reality Show', 'Télé-crochet', 'Événement', 'Compétition', 'Documentaire'];
   }
-  
-  console.log('📋 Filtres disponibles:', categories);
-  
+
   container.innerHTML = '';
-  
   categories.forEach(category => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'filter-pill';
-    if (category === currentFilter) {
-      btn.classList.add('active');
-    }
-    btn.innerHTML = `<i class="bi bi-emoji-smile-fill"></i>${category}`;
-    
+    btn.className = 'filter-pill' + (category === currentFilter ? ' active' : '');
+    btn.innerHTML = `<i class="bi bi-camera-video-fill"></i>${category}`;
     btn.addEventListener('click', () => {
       currentFilter = category;
       currentPage = 1;
       container.querySelectorAll('.filter-pill').forEach(b => {
-        if (b.textContent.includes(category)) {
-          b.classList.add('active');
-        } else {
-          b.classList.remove('active');
-        }
+        b.classList.toggle('active', b.textContent.trim().includes(category));
       });
       fetchAndRender(1);
     });
-
     container.appendChild(btn);
   });
 }
 
-
-function buildDivertissementCard(item, index) {
+function buildCard(item, index) {
   const imageUrl = item.image || '';
-  const category = item.category || 'Divertissement';
+  const category = item.category || 'Télé Réalité';
   const title = item.title || 'Sans titre';
   const description = item.description || '';
-  const author = item.author || 'BF1 Divertissement';
+  const author = item.author || 'BF1 TV';
   const time = formatTime(item.date);
   const views = item.views || 0;
   const likes = item.likes || 0;
-  const isUrgent = item.urgent || false;
 
   return `
-    <div class="divertissement-card anim-up d${(index % 9) + 1} ${isUrgent ? 'urgent-flash' : ''}" 
-         onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=divertissement'">
-      <div class="divertissement-card-image">
-        <img src="${imageUrl || '/logo.png'}" 
-             alt="${escapeHtml(title)}" 
-             onerror="this.src='/logo.png'"/>
-        ${isUrgent ? '<span class="urgent-badge">🔥 NOUVEAU</span>' : ''}
-        <div class="divertissement-card-overlay">
+    <div class="tele-realite-card anim-up d${(index % 9) + 1}"
+         onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=tele_realite'">
+      <div class="tele-realite-card-image">
+        <img src="${imageUrl || '/logo.png'}" alt="${escapeHtml(title)}" onerror="this.src='/logo.png'"/>
+        <div class="tele-realite-card-overlay">
           <div class="card-play"><i class="bi bi-play-fill"></i></div>
         </div>
       </div>
-      <div class="divertissement-card-content">
-        <div class="divertissement-card-category">
-          <i class="bi bi-emoji-smile-fill"></i> ${escapeHtml(category)}
+      <div class="tele-realite-card-content">
+        <div class="tele-realite-card-category">
+          <i class="bi bi-camera-video-fill"></i> ${escapeHtml(category)}
         </div>
-        <h3 class="divertissement-card-title">${escapeHtml(title)}</h3>
-        <p class="divertissement-card-description">${escapeHtml(description.substring(0, 120))}${description.length > 120 ? '...' : ''}</p>
-        <div class="divertissement-card-meta">
+        <h3 class="tele-realite-card-title">${escapeHtml(title)}</h3>
+        <p class="tele-realite-card-description">${escapeHtml(description.substring(0, 120))}${description.length > 120 ? '...' : ''}</p>
+        <div class="tele-realite-card-meta">
           <span><i class="bi bi-person-fill"></i> ${escapeHtml(author)}</span>
           <span><i class="bi bi-clock-fill"></i> ${time}</span>
           <span><i class="bi bi-heart-fill"></i> ${formatNumber(likes)}</span>
@@ -197,15 +169,15 @@ function renderPagination() {
 
   let nums = '';
   if (startPage > 1) {
-    nums += `<button class="pagination-number" onclick="window.changeDivertissementPage(1)">1</button>`;
+    nums += `<button class="pagination-number" onclick="window.changeTeleRealitenPage(1)">1</button>`;
     if (startPage > 2) nums += '<span class="pagination-dots">...</span>';
   }
   for (let i = startPage; i <= endPage; i++) {
-    nums += `<button class="pagination-number ${i === currentPage ? 'active' : ''}" onclick="window.changeDivertissementPage(${i})">${i}</button>`;
+    nums += `<button class="pagination-number ${i === currentPage ? 'active' : ''}" onclick="window.changeTeleRealitenPage(${i})">${i}</button>`;
   }
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) nums += '<span class="pagination-dots">...</span>';
-    nums += `<button class="pagination-number" onclick="window.changeDivertissementPage(${totalPages})">${totalPages}</button>`;
+    nums += `<button class="pagination-number" onclick="window.changeTeleRealitenPage(${totalPages})">${totalPages}</button>`;
   }
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
@@ -213,43 +185,35 @@ function renderPagination() {
 
   return `
     <div class="pagination-container">
-      <button class="pagination-btn ${prevDisabled}" onclick="window.changeDivertissementPage(${currentPage - 1})" ${prevDisabled}>
+      <button class="pagination-btn ${prevDisabled}" onclick="window.changeTeleRealitenPage(${currentPage - 1})" ${prevDisabled}>
         <i class="bi bi-chevron-left"></i> Précédent
       </button>
       <div class="pagination-numbers">${nums}</div>
-      <button class="pagination-btn ${nextDisabled}" onclick="window.changeDivertissementPage(${currentPage + 1})" ${nextDisabled}>
+      <button class="pagination-btn ${nextDisabled}" onclick="window.changeTeleRealitenPage(${currentPage + 1})" ${nextDisabled}>
         Suivant <i class="bi bi-chevron-right"></i>
       </button>
     </div>
-    <div class="pagination-info">Affichage de ${startItem} à ${endItem} sur ${totalItems} articles</div>
+    <div class="pagination-info">Affichage de ${startItem} à ${endItem} sur ${totalItems} émissions</div>
   `;
 }
 
 function updateTrendsSection(allData) {
   const trendsContainer = document.querySelector('.flash-layout > div:last-child div[style*="flex-direction"]');
-  
-  if (!trendsContainer) {
-    console.log('⚠️ Conteneur des tendances non trouvé');
-    return;
-  }
-  
-  const trends = [...allData]
-    .sort((a, b) => (b.views || 0) - (a.views || 0))
-    .slice(0, 5);
+  if (!trendsContainer) return;
+
+  const trends = [...allData].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
 
   if (trends.length > 0) {
-    trendsContainer.innerHTML = trends.map((item, idx) => {
+    trendsContainer.innerHTML = trends.map(item => {
       const img = item.image_url || item.image || item.thumbnail || '';
       const title = item.title || 'Sans titre';
       const views = item.views || 0;
-      
       return `
         <div class="news-item" style="padding:10px;border-radius:var(--radius-md);background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all var(--transition)"
-             onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=divertissement'">
-          <img class="news-thumb" src="${img || 'https://images.unsplash.com/photo-1516979187457-635ffe35ff85?w=120&q=60'}" 
-               alt="${escapeHtml(title)}" 
+             onclick="window.location.href='detail-contenu.html?slug=${slugify(title)}&type=tele_realite'">
+          <img class="news-thumb" src="${img || '/logo.png'}" alt="${escapeHtml(title)}"
                style="width:70px;height:50px;border-radius:var(--radius-sm);object-fit:cover"
-               onerror="this.src='https://images.unsplash.com/photo-1516979187457-635ffe35ff85?w=120&q=60'"/>
+               onerror="this.src='/logo.png'"/>
           <div>
             <span class="news-cat" style="font-size:0.6rem;padding:2px 6px">
               <i class="bi bi-eye-fill"></i> ${formatNumber(views)} vues
@@ -264,14 +228,13 @@ function updateTrendsSection(allData) {
       <div class="text-center text-secondary py-3">
         <i class="bi bi-bar-chart-line" style="font-size:1.5rem;"></i>
         <p class="mt-2 small">Pas assez de données</p>
-      </div>
-    `;
+      </div>`;
   }
 }
 
-window.changeDivertissementPage = function(page) {
+window.changeTeleRealitenPage = function(page) {
   if (page < 1 || page > totalPages) return;
-  fetchAndRender(page, currentSearch);
+  fetchAndRender(page);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -291,25 +254,17 @@ function formatTime(dateString) {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
     if (diffMins < 1) return 'À l\'instant';
     if (diffMins < 60) return `il y a ${diffMins} min`;
     if (diffHours < 24) return `il y a ${diffHours}h`;
     if (diffDays < 7) return `il y a ${diffDays}j`;
-    
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-  } catch {
-    return 'Récemment';
-  }
+  } catch { return 'Récemment'; }
 }
 
 function escapeHtml(str) {
   if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-window.loadDivertissementContent = loadDivertissementContent;
+window.loadTeleRealiteContent = loadTeleRealiteContent;

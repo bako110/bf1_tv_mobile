@@ -1,26 +1,32 @@
 import * as api from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
+import { setupInfiniteScroll } from '../utils/infiniteScroll.js';
 
+const LIMIT = 20;
 let allVideos = [];
 let currentMode = 'grid';
+let currentSkip = 0;
+let currentTotal = 0;
 
 export async function loadReportages() {
   const listEl = document.getElementById('reportages-list');
   const toggleBtn = document.getElementById('reportages-toggle-btn');
   if (!listEl) return;
 
+  allVideos = []; currentSkip = 0; currentTotal = 0;
   listEl.innerHTML = '';
-  listEl.appendChild(createSnakeLoader(40));
+  listEl.appendChild(createPageSpinner());
 
   try {
-    const data = await api.getReportages().catch(() => []);
-    allVideos = (Array.isArray(data) ? data : [])
+    const data = await api.getReportages(0, LIMIT).catch(() => ({ items: [], total: 0 }));
+    allVideos = (data.items || [])
       .map(v => ({ ...v, image_url: v.thumbnail || v.image_url || v.image }))
-      .sort((a, b) =>
-        new Date(b.created_at || b.aired_at || 0) - new Date(a.created_at || a.aired_at || 0)
-      );
+      .sort((a, b) => new Date(b.created_at || b.aired_at || 0) - new Date(a.created_at || a.aired_at || 0));
+    currentSkip = allVideos.length;
+    currentTotal = data.total || 0;
 
     renderList(listEl);
+    attachInfiniteScroll(listEl);
 
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
@@ -28,6 +34,7 @@ export async function loadReportages() {
         const icon = document.getElementById('reportages-toggle-icon');
         if (icon) icon.className = currentMode === 'grid' ? 'bi bi-list' : 'bi bi-grid';
         renderList(listEl);
+        attachInfiniteScroll(listEl);
       });
     }
   } catch (err) {
@@ -36,40 +43,43 @@ export async function loadReportages() {
   }
 }
 
+function attachInfiniteScroll(listEl) {
+  setupInfiniteScroll({
+    listEl, sentinelId: 'reportages-sentinel',
+    fetchFn: async (skip, limit) => {
+      const data = await api.getReportages(skip, limit);
+      return { ...data, items: (data.items || []).map(v => ({ ...v, image_url: v.thumbnail || v.image_url || v.image })) };
+    },
+    renderCard: (item) => currentMode === 'grid' ? buildGridCard(item) : buildListCard(item),
+    getSkip: () => currentSkip, getTotal: () => currentTotal,
+    onNewItems: (items, total) => { allVideos = [...allVideos, ...items]; currentSkip += items.length; if (total) currentTotal = total; },
+    getMode: () => currentMode, gridCols: 1, limit: LIMIT
+  });
+}
+
 function renderList(container) {
-  if (!allVideos.length) {
-    container.innerHTML = emptyState('bi-camera-video', 'Aucun reportage disponible');
-    return;
-  }
-  if (currentMode === 'grid') {
-    container.innerHTML = `<div class="px-3 pt-2 pb-3">${allVideos.map(buildGridCard).join('')}</div>`;
-  } else {
-    container.innerHTML = `<div class="px-3 pt-2 pb-3">${allVideos.map(buildListCard).join('')}</div>`;
-  }
+  if (!allVideos.length) { container.innerHTML = emptyState('bi-camera-video', 'Aucun reportage disponible'); return; }
+  container.innerHTML = `<div class="bf1-cards-wrapper px-3 pt-2 pb-3">${allVideos.map(currentMode === 'grid' ? buildGridCard : buildListCard).join('')}</div>`;
 }
 
 function buildGridCard(item) {
   const img = item.image_url || '';
   const title = item.title || 'Sans titre';
-  const views = formatViews(item.views_count || item.views || item.view_count || 0);
+  const views = formatViews(item.views_count || item.views || 0);
+  const likes = formatViews(item.likes || 0);
   const dur = formatDuration(item.duration || item.duration_minutes);
   const date = formatTime(item.aired_at || item.created_at);
-
   return `
-    <div class="mb-3" style="background: var(--card-bg, #1a1a1a); border-radius: 10px; overflow: hidden; cursor: pointer; position: relative;" onclick="window.location.hash='#/show/reportage/${item.id||item._id}'">
+    <div class="mb-3" style="background:var(--card-bg,#1a1a1a);border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.location.hash='#/show/reportage/${item.id||item._id}'">
       <div style="position:relative;">
-        ${img
-          ? `<img src="${esc(img)}" alt="" style="width:100%;height:200px;object-fit:cover;display:block;">`
-          : placeholder('200px')}
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,transparent 30%,transparent 60%,rgba(0,0,0,0.85) 100%);"></div>
+        ${img ? `<img src="${esc(img)}" alt="" style="width:100%;height:200px;object-fit:cover;display:block;">` : placeholder('200px')}
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.3) 0%,transparent 30%,transparent 60%,rgba(0,0,0,.85) 100%);"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:12px;">
-          <p class="mb-1 fw-semibold" style="font-size:14px;color: var(--description-grid-color, #fff); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${esc(title)}</p>
-          <div class="d-flex align-items-center gap-1" style="font-size:11px;">
-            <i class="bi bi-eye" style="color:var(--text-4,#B0B0B0);"></i>
-            <span style="color:var(--text-4,#B0B0B0);">${views}</span>
-            <span style="color:var(--text-4,#B0B0B0);">•</span>
-            <i class="bi bi-calendar3" style="color:var(--text-4,#B0B0B0);"></i>
-            <span style="color:var(--text-4,#B0B0B0);">${date}</span>
+          <p class="mb-1 fw-semibold" style="font-size:14px;color:var(--description-grid-color,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
+          <div class="d-flex align-items-center gap-1" style="font-size:11px;color:var(--text-4,#B0B0B0);">
+            <i class="bi bi-eye"></i><span>${views}</span><span>•</span>
+            <i class="bi bi-heart-fill" style="color:#E23E3E;font-size:9px;"></i><span>${likes}</span><span>•</span>
+            <i class="bi bi-calendar3"></i><span>${date}</span>
           </div>
         </div>
       </div>
@@ -79,28 +89,24 @@ function buildGridCard(item) {
 function buildListCard(item) {
   const img = item.image_url || '';
   const title = item.title || 'Sans titre';
-  const views = formatViews(item.views_count || item.views || item.view_count || 0);
+  const views = formatViews(item.views_count || item.views || 0);
+  const likes = formatViews(item.likes || 0);
   const dur = formatDuration(item.duration || item.duration_minutes);
   const date = formatTime(item.aired_at || item.created_at);
-
   return `
-    <div class="d-flex mb-3" style="background: var(--card-bg, #1a1a1a); border-radius: 10px; overflow: hidden; cursor: pointer; position: relative;" onclick="window.location.hash='#/show/reportage/${item.id||item._id}'">
+    <div class="d-flex mb-3" style="background:var(--card-bg,#1a1a1a);border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.location.hash='#/show/reportage/${item.id||item._id}'">
       <div style="flex-shrink:0;position:relative;">
-        ${img
-          ? `<img src="${esc(img)}" alt="" style="width:120px;height:90px;object-fit:cover;">`
-          : placeholder('90px', '120px')}
-        <span style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.8);color:#fff;border-radius:3px;padding:1px 5px;font-size:9px;">
+        ${img ? `<img src="${esc(img)}" alt="" style="width:120px;height:90px;object-fit:cover;">` : placeholder('90px','120px')}
+        <span style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.8);color:#fff;border-radius:3px;padding:1px 5px;font-size:9px;">
           <i class="bi bi-clock"></i> ${esc(dur)}
         </span>
       </div>
       <div class="d-flex flex-column justify-content-between p-2" style="flex:1;overflow:hidden;">
-        <p class="mb-1 fw-semibold" style="font-size:13px;color: var(--description-list-color, #fff); overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;">${esc(title)}</p>
-        <div class="d-flex align-items-center gap-1" style="font-size:11px;">
-          <i class="bi bi-eye" style="color:var(--text-3,#888);"></i>
-          <span style="color:var(--text-3,#888);">${views}</span>
-          <span style="color:var(--text-3,#888);">•</span>
-          <i class="bi bi-calendar3" style="color:var(--text-3,#888);"></i>
-          <span style="color:var(--text-3,#888);">${date}</span>
+        <p class="mb-1 fw-semibold" style="font-size:13px;color:var(--description-list-color,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${esc(title)}</p>
+        <div class="d-flex align-items-center gap-1" style="font-size:11px;color:var(--text-3,#888);">
+          <i class="bi bi-eye"></i><span>${views}</span><span>•</span>
+          <i class="bi bi-heart-fill" style="color:#E23E3E;font-size:9px;"></i><span>${likes}</span><span>•</span>
+          <i class="bi bi-calendar3"></i><span>${date}</span>
         </div>
       </div>
     </div>`;
@@ -111,41 +117,21 @@ function formatDuration(d) {
   const m = parseInt(d);
   if (isNaN(m)) return 'N/A';
   if (m < 60) return `${m} min`;
-  const h = Math.floor(m / 60), r = m % 60;
+  const h = Math.floor(m/60), r = m%60;
   return r ? `${h}h ${r}min` : `${h}h`;
 }
-
-function emptyState(icon, msg) {
-  return `<div class="text-center py-5"><i class="bi ${icon}" style="font-size:3rem; color: var(--text-secondary, #444);"></i><p class="mt-3" style="color: var(--text-secondary, #999);">${msg}</p></div>`;
-}
-
-function placeholder(h, w = '100%') {
-  return `<div style="width:${w};height:${h};background: var(--border, #2a2a2a); display:flex; align-items:center; justify-content:center;"><i class="bi bi-image" style="color: var(--text-secondary, #888);"></i></div>`;
-}
-
-function formatViews(n) {
-  if (!n) return '0';
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-  return String(n);
-}
-
+function emptyState(icon, msg) { return `<div class="text-center py-5"><i class="bi ${icon}" style="font-size:3rem;color:#444;"></i><p class="mt-3" style="color:#999;">${msg}</p></div>`; }
+function placeholder(h, w='100%') { return `<div style="width:${w};height:${h};background:#2a2a2a;display:flex;align-items:center;justify-content:center;"><i class="bi bi-image text-secondary"></i></div>`; }
+function formatViews(n) { if (!n) return '0'; if (n>=1e6) return (n/1e6).toFixed(1)+'M'; if (n>=1e3) return (n/1e3).toFixed(1)+'K'; return String(n); }
 function formatTime(d) {
   if (!d) return 'Récemment';
   try {
     const diff = Date.now() - new Date(d).getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 1) return 'À l\'instant';
-    if (m < 60) return `${m}m`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h`;
-    const j = Math.floor(h / 24);
-    if (j < 7) return `${j}j`;
-    return new Date(d).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' });
+    const m = Math.floor(diff/60000);
+    if (m<1) return 'À l\'instant'; if (m<60) return `${m}m`;
+    const h = Math.floor(m/60); if (h<24) return `${h}h`;
+    const j = Math.floor(h/24); if (j<7) return `${j}j`;
+    return new Date(d).toLocaleDateString('fr-FR',{month:'short',day:'numeric'});
   } catch { return 'Récemment'; }
 }
-
-function esc(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

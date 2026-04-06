@@ -2,24 +2,26 @@
     :root {
       --primary: #E23E3E;
       --bg: #070707;
-      --surface: #0a0a0a;
+      --surface: #141414;
       --text: #FFFFFF;
       --text-secondary: #A0A0A0;
       --text-1: #FFFFFF;
       --text-2: #B0B0B0;
       --text-3: #888888;
+      --divider: #1e1e1e;
     }
 
     /* ===== LIGHT THEME ===== */
     [data-theme="light"] {
       --primary: #E23E3E;
-      --bg: #FFFFFF;
-      --surface: #F5F5F5;
-      --text: #1a1a1a;
-      --text-secondary: #666666;
-      --text-1: #FFFFFF;
-      --text-2: #B0B0B0;
-      --text-3: #888888;
+      --bg: #F2F2F2;
+      --surface: #FFFFFF;
+      --text: #111111;
+      --text-secondary: #555555;
+      --text-1: #111111;
+      --text-2: #444444;
+      --text-3: #777777;
+      --divider: #E0E0E0;
     }
 
     /* Overrides CSS général pour le mode clair */

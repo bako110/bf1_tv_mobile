@@ -73,27 +73,30 @@ export function isAuthenticated() {
 }
 
 // ===== SERVICES DE CONTENU =====
-export async function getNews() {
-  return http.get('/news') || [];
+export async function getNews(skip = 0, limit = 20) {
+  const res = await http.get(`/news?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0 };
 }
 
 export async function getCategories() {
-  return http.get('/categories') || [];
+  return http.get('/section-categories').catch(() => []);
 }
 
 export async function getEmissions() {
-  const categories = await http.get('/emission-categories');
-  return (categories || [])
+  const categories = await http.get('/emission-categories').catch(() => []);
+  return (Array.isArray(categories) ? categories : [])
     .filter(item => item.is_active !== false)
     .sort((a, b) => (a.order || 0) - (b.order || 0));
 }
 
-export async function getMovies() {
-  return http.get('/movies') || [];
+export async function getMovies(skip = 0, limit = 20) {
+  const res = await http.get(`/movies?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || res.movies || (Array.isArray(res) ? res : []), total: res.total || 0 };
 }
 
-export async function getSeries() {
-  return http.get('/series') || [];
+export async function getSeries(skip = 0, limit = 20) {
+  const res = await http.get(`/series?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0 };
 }
 
 export async function getPrograms() {
@@ -115,29 +118,38 @@ export async function getProgramGrid(startDate = null, endDate = null, type = nu
   return http.get(`/programs/grid/daily?${params.toString()}`).catch(() => ({ days: [] }));
 }
 
-export async function getSports() {
-  const res = await http.get('/sports');
-  return (res && res.sports) ? res.sports : (Array.isArray(res) ? res : []);
+export async function getSports(skip = 0, limit = 20) {
+  const res = await http.get(`/sports?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
-export async function getDivertissement() {
-  return http.get('/divertissement') || [];
+export async function getDivertissement(skip = 0, limit = 20) {
+  const res = await http.get(`/divertissement?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
-export async function getReportages() {
-  return http.get('/reportage') || [];
+export async function getTeleRealite(skip = 0, limit = 20) {
+  const res = await http.get(`/tele-realite?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
-export async function getArchive() {
-  return http.get('/archives') || [];
+export async function getReportages(skip = 0, limit = 20) {
+  const res = await http.get(`/reportage?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
+}
+
+export async function getArchive(skip = 0, limit = 20) {
+  const res = await http.get(`/archives?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
 export async function checkArchiveAccess(id) {
   return http.get(`/archives/${id}/check-access`);
 }
 
-export async function getJTandMag() {
-  return http.get('/jtandmag') || [];
+export async function getJTandMag(skip = 0, limit = 20) {
+  const res = await http.get(`/jtandmag?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
 // ===== DÉTAILS PAR ID =====
@@ -152,6 +164,7 @@ export async function getShowById(id, type) {
     case 'divertissement':return http.get(`/divertissement/${id}`);
     case 'reportage':     return http.get(`/reportage/${id}`);
     case 'archive':       return http.get(`/archives/${id}`);
+    case 'tele_realite':  return http.get(`/tele-realite/${id}`);
     case 'movie':         return http.get(`/movies/${id}`);
     default:              return http.get(`/shows/${id}`);
   }
@@ -179,46 +192,44 @@ export async function getSeasonEpisodes(seasonId) {
   return http.get(`/seasons/${seasonId}/episodes`).catch(() => []);
 }
 
-export async function getShowsByCategory(category) {
+export function getCategoryEndpoint(category) {
   const name = (category || '').toLowerCase();
-  let items, contentType;
-  if (name.includes('sport')) {
-    const r = await http.get('/sports').catch(() => ({}));
-    items = r?.sports || (Array.isArray(r) ? r : []);
-    contentType = 'sport';
-  } else if (name.includes('jt') || name.includes('mag')) {
-    items = await http.get('/jtandmag').catch(() => []);
-    contentType = 'jtandmag';
-  } else if (name.includes('divertissement')) {
-    items = await http.get('/divertissement').catch(() => []);
-    contentType = 'divertissement';
-  } else if (name.includes('reportage')) {
-    items = await http.get('/reportage').catch(() => []);
-    contentType = 'reportage';
-  } else {
-    items = [];
-    contentType = 'show';
-  }
-  return (Array.isArray(items) ? items : []).map(item => ({
-    ...item,
-    id: item._id || item.id,
-    _contentType: contentType
-  }));
+  if (name.includes('sport')) return { endpoint: '/sports', contentType: 'sport' };
+  if (name.includes('jt') || name.includes('mag')) return { endpoint: '/jtandmag', contentType: 'jtandmag' };
+  if (name.includes('divertissement')) return { endpoint: '/divertissement', contentType: 'divertissement' };
+  if (name.includes('reportage')) return { endpoint: '/reportage', contentType: 'reportage' };
+  if (
+    name.includes('tele') || name.includes('télé') ||
+    name.includes('realite') || name.includes('réalité') ||
+    name.includes('evenement') || name.includes('événement') || name.includes('event')
+  ) return { endpoint: '/tele-realite', contentType: 'tele_realite' };
+  return { endpoint: null, contentType: 'show' };
+}
+
+export async function getShowsByCategory(category, skip = 0, limit = 20) {
+  const { endpoint, contentType } = getCategoryEndpoint(category);
+  if (!endpoint) return { items: [], total: 0, contentType };
+  const extract = (res) => res?.items || (Array.isArray(res) ? res : []);
+  const res = await http.get(`${endpoint}?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  const items = extract(res).map(item => ({ ...item, id: item._id || item.id, _contentType: contentType }));
+  return { items, total: res.total || 0, contentType };
 }
 
 export async function getRelatedByType(type, excludeId) {
+  const extract = (res) => res?.items || (Array.isArray(res) ? res : []);
   let items = [];
   switch (type) {
-    case 'news':          items = await http.get('/news') || []; break;
-    case 'sport':         const r = await http.get('/sports'); items = r?.sports || (Array.isArray(r) ? r : []); break;
-    case 'jtandmag':      items = await http.get('/jtandmag') || []; break;
-    case 'divertissement':items = await http.get('/divertissement') || []; break;
-    case 'reportage':     items = await http.get('/reportage') || []; break;
-    case 'archive':       items = await http.get('/archives') || []; break;
-    case 'movie':         const mv = await http.get('/movies'); items = Array.isArray(mv) ? mv : (mv?.items || mv?.movies || []); break;
-    default:              items = await http.get('/shows') || []; break;
+    case 'news':           items = extract(await http.get('/news?skip=0&limit=20').catch(() => ({}))); break;
+    case 'sport':          items = extract(await http.get('/sports?skip=0&limit=20').catch(() => ({}))); break;
+    case 'jtandmag':       items = extract(await http.get('/jtandmag?skip=0&limit=20').catch(() => ({}))); break;
+    case 'divertissement': items = extract(await http.get('/divertissement?skip=0&limit=20').catch(() => ({}))); break;
+    case 'reportage':      items = extract(await http.get('/reportage?skip=0&limit=20').catch(() => ({}))); break;
+    case 'archive':        items = extract(await http.get('/archives?skip=0&limit=20').catch(() => ({}))); break;
+    case 'tele_realite':   items = extract(await http.get('/tele-realite?skip=0&limit=20').catch(() => ({}))); break;
+    case 'movie':          items = extract(await http.get('/movies?skip=0&limit=20').catch(() => ({}))); break;
+    default:               items = []; break;
   }
-  return (Array.isArray(items) ? items : [])
+  return items
     .filter(i => String(i.id || i._id) !== String(excludeId))
     .sort((a, b) => new Date(b.created_at || b.published_at || 0) - new Date(a.created_at || a.published_at || 0))
     .slice(0, 20);
@@ -237,8 +248,9 @@ export async function getLiveStreamUrl() {
   return `${API_CONFIG.API_BASE_URL}/livestream/stream-proxy`;
 }
 
-export async function getReels() {
-  return http.get('/reels') || [];
+export async function getReels(skip = 0, limit = 20) {
+  const res = await http.get(`/reels?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
 export async function getCurrentUser() {

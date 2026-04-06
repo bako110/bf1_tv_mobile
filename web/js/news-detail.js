@@ -229,7 +229,7 @@ async function loadRelatedNews(category, excludeId) {
   const container = document.getElementById('relatedNewsContainer');
   
   try {
-    const allNews = await api.getNews();
+    const allNews = await api.getNews(20);
     
     if (!allNews || allNews.length === 0) {
       container.innerHTML = '<p class="text-secondary">Aucun article disponible</p>';

@@ -25,7 +25,7 @@ export async function loadCultureContent() {
   `;
 
   try {
-    const newsData = await api.getNews();
+    const newsData = await api.getNews(200);
     cultureData = Array.isArray(newsData) ? newsData.filter(item => 
       (item.category === 'Culture' || item.edition === 'Culture')
     ) : [];

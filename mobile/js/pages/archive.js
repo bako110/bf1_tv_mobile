@@ -1,5 +1,10 @@
 ﻿import * as api from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
+import { setupInfiniteScroll } from '../utils/infiniteScroll.js';
+
+const LIMIT = 20;
+let currentSkip = 0;
+let currentTotal = 0;
 
 // --- Subscription utils ---
 const SUBSCRIPTION_HIERARCHY = { basic: 1, standard: 2, premium: 3 };
@@ -74,28 +79,49 @@ export async function loadArchive() {
   const toggleBtn = document.getElementById('archive-toggle-btn');
   if (!listEl) return;
 
+  allItems = []; currentSkip = 0; currentTotal = 0;
   listEl.innerHTML = '';
-  listEl.appendChild(createSnakeLoader(40));
+  listEl.appendChild(createPageSpinner());
 
   try {
-    const data = await api.getArchive().catch(() => []);
-    allItems = (Array.isArray(data) ? data : []).sort((a, b) =>
+    const data = await api.getArchive(0, LIMIT).catch(() => ({ items: [], total: 0 }));
+    allItems = (data.items || []).sort((a, b) =>
       new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0)
     );
+    currentSkip = allItems.length;
+    currentTotal = data.total || 0;
 
     renderList(listEl);
+    attachInfiniteScroll(listEl);
+
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
         currentMode = currentMode === 'grid' ? 'list' : 'grid';
         const icon = document.getElementById('archive-toggle-icon');
         if (icon) icon.className = currentMode === 'grid' ? 'bi bi-list' : 'bi bi-grid';
         renderList(listEl);
+        attachInfiniteScroll(listEl);
       });
     }
   } catch (err) {
     console.error('Erreur Archives:', err);
     listEl.innerHTML = emptyState('bi-collection-play', 'Impossible de charger les archives');
   }
+}
+
+function attachInfiniteScroll(listEl) {
+  setupInfiniteScroll({
+    listEl, sentinelId: 'archive-sentinel',
+    fetchFn: (skip, limit) => api.getArchive(skip, limit),
+    renderCard: (item) => currentMode === 'grid' ? buildGridCard(item) : buildListCard(item),
+    getSkip: () => currentSkip, getTotal: () => currentTotal,
+    onNewItems: (items, total) => {
+      allItems = [...allItems, ...items];
+      currentSkip += items.length;
+      if (total) currentTotal = total;
+    },
+    getMode: () => currentMode, gridCols: 2, limit: LIMIT
+  });
 }
 
 // Resolve effective required category for an item
@@ -121,7 +147,7 @@ function _buildAccessBanner() {
   // Not logged in
   if (!isLoggedIn) {
     return `
-    <div style="background:linear-gradient(135deg,#0d0d1a,#1a0a0a);border:1px solid rgba(226,62,62,0.3);
+    <div style="background:var(--surface,#111);border:1px solid rgba(226,62,62,0.3);
                 border-radius:12px;padding:16px;margin:12px 12px 4px;
                 display:flex;align-items:flex-start;gap:12px;">
       <div style="width:44px;height:44px;background:rgba(226,62,62,.15);border-radius:50%;flex-shrink:0;
@@ -129,8 +155,8 @@ function _buildAccessBanner() {
         <i class="bi bi-lock-fill" style="font-size:20px;color:#E23E3E;"></i>
       </div>
       <div style="flex:1;min-width:0;">
-        <p style="color:#fff;font-size:14px;font-weight:700;margin:0 0 4px;">Certaines archives sont reservees aux abonnes</p>
-        <p style="color:#aaa;font-size:12px;margin:0 0 10px;line-height:1.5;">
+        <p style="color:var(--text,#fff);font-size:14px;font-weight:700;margin:0 0 4px;">Certaines archives sont reservees aux abonnes</p>
+        <p style="color:var(--text-2,#aaa);font-size:12px;margin:0 0 10px;line-height:1.5;">
           Connectez-vous pour acceder aux archives Basic, Standard et Premium.
         </p>
         <button onclick="window.location.hash='#/login'"
@@ -164,7 +190,7 @@ function _buildAccessBanner() {
     : `Vous n'avez pas encore d'abonnement &mdash; `;
 
   return `
-  <div style="background:linear-gradient(135deg,#0d0d1a,#110a1f);
+  <div style="background:var(--surface,#111);
               border:1px solid rgba(${neededBadge.rgb},.3);
               border-radius:12px;padding:16px;margin:12px 12px 4px;
               display:flex;align-items:flex-start;gap:12px;">
@@ -173,10 +199,10 @@ function _buildAccessBanner() {
       <i class="bi ${neededBadge.icon}" style="font-size:20px;color:${neededBadge.color};"></i>
     </div>
     <div style="flex:1;min-width:0;">
-      <p style="color:#fff;font-size:14px;font-weight:700;margin:0 0 4px;">
+      <p style="color:var(--text,#fff);font-size:14px;font-weight:700;margin:0 0 4px;">
         Des archives ${neededBadge.label} sont disponibles
       </p>
-      <p style="color:#aaa;font-size:12px;margin:0 0 10px;line-height:1.5;">
+      <p style="color:var(--text-2,#aaa);font-size:12px;margin:0 0 10px;line-height:1.5;">
         ${currentLine}souscrivez a un abonnement <strong style="color:${neededBadge.color};">${neededBadge.label}</strong> pour y acceder.
       </p>
       <button onclick="window._archiveBannerUpgrade('${neededCat}')"
@@ -199,17 +225,16 @@ function renderList(container) {
     return;
   }
   const banner = _buildAccessBanner();
-  if (currentMode === 'grid') {
-    container.innerHTML = `${banner}<div class="px-3 pt-2 pb-3" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${allItems.map(buildGridCard).join('')}</div>`;
-  } else {
-    container.innerHTML = `${banner}<div class="px-3 pt-2 pb-3">${allItems.map(buildListCard).join('')}</div>`;
-  }
+  const isGrid = currentMode === 'grid';
+  const wrapStyle = isGrid ? 'display:grid;grid-template-columns:1fr 1fr;gap:12px;' : '';
+  container.innerHTML = `${banner}<div class="bf1-cards-wrapper px-3 pt-2 pb-3" style="${wrapStyle}">${allItems.map(isGrid ? buildGridCard : buildListCard).join('')}</div>`;
 }
 
 function buildGridCard(item) {
   const img   = item.thumbnail || item.image_url || item.image || '';
   const title = item.title || 'Sans titre';
   const views = formatViews(item.views || item.view_count || item.views_count || 0);
+  const likes = formatViews(item.likes || 0);
   const dur   = item.duration ? formatDuration(item.duration) : null;
   const time  = formatTime(item.created_at || item.date);
   const id    = item.id || item._id;
@@ -225,7 +250,7 @@ function buildGridCard(item) {
   const locked = effCat && !canAccessContent(isLoggedIn ? userCat : null, effCat);
 
   return `
-    <div style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;"
+    <div style="background:var(--surface,#1a1a1a);border-radius:10px;overflow:hidden;cursor:pointer;position:relative;"
          onclick="window._archiveClick('${esc(String(id))}','${esc(String(reqCat||''))}',${isPremium})">
       <div style="position:relative;">
         ${img
@@ -251,8 +276,9 @@ function buildGridCard(item) {
         ${dur ? `<div style="position:absolute;top:6px;right:6px;z-index:1;"><span style="background:rgba(0,0,0,0.75);color:#fff;border-radius:4px;padding:2px 6px;font-size:10px;"><i class="bi bi-clock"></i> ${esc(dur)}</span></div>` : ''}
         <div style="position:absolute;bottom:0;left:0;right:0;padding:8px;z-index:1;">
           <p class="mb-1 fw-semibold" style="font-size:12px;color:var(--text-1,#fff);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(title)}</p>
-          <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--text-3,#aaa);"
+          <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--text-3,#aaa);">
             <i class="bi bi-eye"></i><span>${views}</span>
+            <span>&bull;</span><i class="bi bi-heart-fill" style="color:#E23E3E;font-size:9px;"></i><span>${likes}</span>
             <span>&bull;</span><i class="bi bi-clock"></i><span>${time}</span>
           </div>
         </div>
@@ -264,6 +290,7 @@ function buildListCard(item) {
   const img   = item.thumbnail || item.image_url || item.image || '';
   const title = item.title || 'Sans titre';
   const views = formatViews(item.views || item.view_count || item.views_count || 0);
+  const likes = formatViews(item.likes || 0);
   const dur   = item.duration ? formatDuration(item.duration) : null;
   const time  = formatTime(item.created_at || item.date);
   const id    = item.id || item._id;
@@ -278,7 +305,7 @@ function buildListCard(item) {
   const locked     = effCat && !canAccessContent(isLoggedIn ? userCat : null, effCat);
 
   return `
-    <div class="d-flex mb-3" style="background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;"
+    <div class="d-flex mb-3" style="background:var(--surface,#1a1a1a);border-radius:10px;overflow:hidden;cursor:pointer;"
          onclick="window._archiveClick('${esc(String(id))}','${esc(String(reqCat||''))}',${isPremium})">
       <div style="flex-shrink:0;position:relative;">
         ${img
@@ -300,6 +327,7 @@ function buildListCard(item) {
         </div>
         <div class="d-flex align-items-center gap-1" style="font-size:11px;color:var(--text-3,#888);">
           <i class="bi bi-eye"></i><span>${views}</span>
+          <span>&bull;</span><i class="bi bi-heart-fill" style="color:#E23E3E;font-size:9px;"></i><span>${likes}</span>
           <span>&bull;</span><i class="bi bi-clock"></i><span>${time}</span>
         </div>
       </div>
@@ -314,10 +342,10 @@ function formatDuration(d) {
   return r ? `${h}h${r}` : `${h}h`;
 }
 function emptyState(icon, msg) {
-  return `<div class="text-center py-5"><i class="bi ${icon}" style="font-size:3rem;color:#444;"></i><p class="mt-3" style="color:#999;">${msg}</p></div>`;
+  return `<div class="text-center py-5"><i class="bi ${icon}" style="font-size:3rem;color:var(--text-3,#555);"></i><p class="mt-3" style="color:var(--text-2,#888);">${msg}</p></div>`;
 }
 function placeholder(h, w = '100%') {
-  return `<div style="width:${w};height:${h};background:#2a2a2a;display:flex;align-items:center;justify-content:center;"><i class="bi bi-image text-secondary"></i></div>`;
+  return `<div style="width:${w};height:${h};background:var(--divider,#2a2a2a);display:flex;align-items:center;justify-content:center;"><i class="bi bi-image" style="color:var(--text-3,#666);"></i></div>`;
 }
 function formatViews(n) {
   if (!n) return '0';

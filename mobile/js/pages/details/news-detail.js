@@ -133,9 +133,11 @@ export async function loadNewsDetail(id) {
             <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
             <span id="nd-like-count">${likesCount}</span>
           </button>
-          <button onclick="openNdComments()"
-                  style="display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;border:none;border-radius:20px;padding:7px 14px;color:#888;cursor:pointer;font-size:13px;">
-            <i class="bi bi-chat-dots"></i>
+          <button onclick="${news.allow_comments === false ? `window._detailToast('Les commentaires sont désactivés sur ce contenu')` : 'openNdComments()'}"
+                  style="display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;border:none;border-radius:20px;padding:7px 14px;
+                         color:${news.allow_comments === false ? 'rgba(136,136,136,0.5)' : '#888'};
+                         cursor:pointer;font-size:13px;">
+            <i class="bi ${news.allow_comments === false ? 'bi-chat-slash-fill' : 'bi-chat-dots'}"></i>
             <span id="nd-cm-count-btn">${comments.length} commentaire${comments.length !== 1 ? 's' : ''}</span>
           </button>
           <button id="nd-fav-btn" onclick="toggleNdFavorite()"

@@ -213,13 +213,14 @@ function buildVideoPlayer(videoUrl, posterImg) {
 // ─── Config par type ──────────────────────────────────────────────────────────
 
 const TYPE_CONFIG = {
-  sport:         { label: 'Sport',         icon: 'bi-trophy-fill',        color: '#1DA1F2', apiType: 'sport' },
-  jtandmag:      { label: 'JT & Magazine', icon: 'bi-camera-video-fill',  color: '#E23E3E', apiType: 'jtandmag' },
-  divertissement:{ label: 'Divertissement',icon: 'bi-music-note-beamed',  color: '#A855F7', apiType: 'divertissement' },
-  reportage:     { label: 'Reportage',     icon: 'bi-film',               color: '#F59E0B', apiType: 'reportage' },
-  archive:       { label: 'Archive',       icon: 'bi-archive-fill',       color: '#6B7280', apiType: 'archive' },
-  show:          { label: 'Émission',      icon: 'bi-tv-fill',            color: '#10B981', apiType: 'show' },
-  movie:         { label: 'Film',          icon: 'bi-film',               color: '#E23E3E', apiType: 'movie' },
+  sport:         { label: 'Sport',                  icon: 'bi-trophy-fill',        color: '#1DA1F2', apiType: 'sport' },
+  jtandmag:      { label: 'JT & Magazine',          icon: 'bi-camera-video-fill',  color: '#E23E3E', apiType: 'jtandmag' },
+  divertissement:{ label: 'Divertissement',         icon: 'bi-music-note-beamed',  color: '#A855F7', apiType: 'divertissement' },
+  reportage:     { label: 'Reportage',              icon: 'bi-film',               color: '#F59E0B', apiType: 'reportage' },
+  archive:       { label: 'Archive',                icon: 'bi-archive-fill',       color: '#6B7280', apiType: 'archive' },
+  tele_realite:  { label: 'Télé Réalité',           icon: 'bi-camera-video-fill',  color: '#EC4899', apiType: 'tele_realite' },
+  show:          { label: 'Émission',               icon: 'bi-tv-fill',            color: '#10B981', apiType: 'show' },
+  movie:         { label: 'Film',                   icon: 'bi-film',               color: '#E23E3E', apiType: 'movie' },
 };
 
 // ─── Export principal ─────────────────────────────────────────────────────────
@@ -412,17 +413,16 @@ export async function loadShowDetail(id, type) {
             <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
             <span id="sd-like-count">${likesCount}</span>
           </button>
-          ${(show.allow_comments === false) ? '' : `
-          <button onclick="openSdComments()"
+          <button onclick="${show.allow_comments === false ? `window._detailToast('Les commentaires sont désactivés sur ce contenu')` : 'openSdComments()'}"
                   style="display:inline-flex;align-items:center;gap:6px;
                          background:var(--bg-3,#1a1a1a);
                          border:1px solid var(--divider,#2a2a2a);
                          border-radius:20px;padding:7px 14px;
-                         color:var(--body-muted,#888);cursor:pointer;font-size:13px;">
-            <i class="bi bi-chat-dots"></i>
+                         color:${show.allow_comments === false ? 'rgba(136,136,136,0.5)' : 'var(--body-muted,#888)'};
+                         cursor:pointer;font-size:13px;">
+            <i class="bi ${show.allow_comments === false ? 'bi-chat-slash-fill' : 'bi-chat-dots'}"></i>
             <span id="sd-cm-count-btn">${comments.length} commentaire${comments.length !== 1 ? 's' : ''}</span>
           </button>
-          `}
           <button id="sd-fav-btn" onclick="toggleSdFavorite()"
                   style="display:inline-flex;align-items:center;gap:6px;
                          background:${userFavorited ? '#F59E0B' : 'var(--bg-3,#1a1a1a)'};

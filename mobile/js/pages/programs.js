@@ -1,5 +1,5 @@
 import * as api from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
 
 // ── État global ────────────────────────────────────────────────────────────────
 let _allGroupedDays = [];     // TOUS les jours chargés: [{date, day_name, programs}, ...]
@@ -20,18 +20,18 @@ async function loadMyReminders_() {
   }
   try {
     const reminders = await api.getMyReminders('scheduled', true);
-    console.log('🔔 Rappels chargés:', reminders);
-    console.log('🔔 Nombre de rappels:', reminders?.length);
+    console.log(' Rappels chargés:', reminders);
+    console.log(' Nombre de rappels:', reminders?.length);
     if (reminders && reminders.length > 0) {
-      console.log('🔔 Premier rappel:', reminders[0]);
-      console.log('🔔 program_id du premier:', reminders[0]?.program_id);
+      console.log(' Premier rappel:', reminders[0]);
+      console.log('program_id du premier:', reminders[0]?.program_id);
     }
     const ids = (reminders || []).map(r => {
-      console.log('🔔 Mapping rappel:', r, '-> program_id:', r?.program_id);
+      console.log(' Mapping rappel:', r, '-> program_id:', r?.program_id);
       return String(r.program_id);
     });
     _reminderIds = new Set(ids);
-    console.log('🔔 IDs de rappels finaux:', Array.from(_reminderIds));
+    console.log(' IDs de rappels finaux:', Array.from(_reminderIds));
   } catch (err) {
     console.error('❌ Erreur chargement rappels:', err);
     _reminderIds = new Set();
@@ -590,7 +590,7 @@ window._selectDay = async function(dateStr) {
 window._loadAndRender = async function() {
   const container = document.getElementById('programs-list');
   container.innerHTML = '';
-  container.appendChild(createSnakeLoader(40));
+  container.appendChild(createPageSpinner());
   
   await loadPrograms_();
   await loadMyReminders_(); // Recharger les rappels à chaque rendu

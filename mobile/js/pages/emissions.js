@@ -1,5 +1,5 @@
 import * as api from '../services/api.js';
-import { createSnakeLoader } from '../utils/snakeLoader.js';
+import { createPageSpinner } from '../utils/snakeLoader.js';
 
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -26,7 +26,7 @@ function buildCategoryCard(cat) {
   return `
     <div class="col-6">
       <div class="position-relative rounded overflow-hidden"
-           style="background:#111;aspect-ratio:3/4;cursor:pointer;"
+           style="background:var(--surface,#111);aspect-ratio:3/4;cursor:pointer;"
            onclick="window.location.hash='#/emission-category/${encodeURIComponent(name)}'">
         <img src="${esc(image)}" alt="${esc(name)}" class="w-100 h-100"
              style="object-fit:cover;display:block;"
@@ -137,7 +137,7 @@ export async function loadEmissions() {
   _emState.liked.clear(); _emState.favd.clear(); _emState.counts = {};
 
   container.innerHTML = '';
-  container.appendChild(createSnakeLoader(40));
+  container.appendChild(createPageSpinner());
 
   try {
     const categories = await api.getEmissions();
@@ -161,9 +161,9 @@ export async function loadEmissions() {
     if (!categories || categories.length === 0) {
       container.innerHTML = `
         <div class="text-center py-5">
-          <i class="bi bi-grid" style="font-size:3rem;color:#444;"></i>
-          <p class="text-secondary mt-3">Aucune catégorie disponible</p>
-          <p class="text-secondary" style="font-size:13px;">Les catégories d'émissions seront affichées ici</p>
+          <i class="bi bi-grid" style="font-size:3rem;color:var(--text-3,#555);"></i>
+          <p style="color:var(--text-2,#888);" class="mt-3">Aucune catégorie disponible</p>
+          <p style="color:var(--text-3,#666);font-size:13px;">Les catégories d'émissions seront affichées ici</p>
         </div>`;
       return;
     }
@@ -174,8 +174,8 @@ export async function loadEmissions() {
     console.error('Erreur loadEmissions:', err);
     container.innerHTML = `
       <div class="text-center py-5">
-        <i class="bi bi-exclamation-circle text-danger" style="font-size:2rem;"></i>
-        <p class="text-secondary mt-2">Erreur lors du chargement</p>
+        <i class="bi bi-exclamation-circle" style="font-size:2rem;color:#E23E3E;"></i>
+        <p style="color:var(--text-2,#888);" class="mt-2">Erreur lors du chargement</p>
         <button class="btn btn-sm btn-outline-danger mt-2" onclick="location.reload()">Réessayer</button>
       </div>`;
   }
