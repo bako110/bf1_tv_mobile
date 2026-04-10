@@ -58,10 +58,10 @@ function renderAbout(container) {
           <span class="fw-bold" style="font-size:15px;color:var(--text,#fff);">Suivez-nous</span>
         </div>
         <div class="d-flex flex-column gap-2">
-          ${socialLink('bi-facebook', '#1877F2', 'Facebook', 'BF1 TV', 'https://www.facebook.com/BF1TV')}
-          ${socialLink('bi-youtube', '#FF0000', 'YouTube', '@BF1TV', 'https://www.youtube.com/@BF1TV')}
-          ${socialLink('bi-twitter-x', 'var(--text,#fff)', 'Twitter / X', '@BF1TV', 'https://twitter.com/BF1TV')}
-          ${socialLink('bi-instagram', '#E1306C', 'Instagram', '@bf1tv_officiel', 'https://www.instagram.com/bf1tv_officiel')}
+          ${socialLink('bi-globe', '#E23E3E', 'Site Web', 'bf1.tv', 'https://bf1.tv')}
+          ${socialLink('bi-facebook', '#1877F2', 'Facebook', 'Bf1TV', 'https://facebook.com/Bf1TV')}
+          ${socialLink('bi-twitter-x', 'var(--text,#fff)', 'Twitter', '@bf1tv', 'https://twitter.com/bf1tv')}
+          ${socialLink('bi-instagram', '#E1306C', 'Instagram', '@bf1_tv', 'https://instagram.com/bf1_tv')}
         </div>
       </div>
 
@@ -71,8 +71,8 @@ function renderAbout(container) {
           <i class="bi bi-geo-alt-fill" style="color:#E23E3E;font-size:18px;"></i>
           <span class="fw-bold" style="font-size:15px;color:var(--text,#fff);">Nous contacter</span>
         </div>
-        ${infoRow('bi-envelope', 'Email', 'contact@bf1tv.bf')}
-        ${infoRow('bi-telephone', 'Téléphone', '+226 25 36 00 00')}
+        ${infoRow('bi-envelope', 'Email', 'redaction@bf1news.com')}
+        ${infoRow('bi-telephone', 'Téléphone', '+226 05 60 64 10')}
         ${infoRow('bi-pin-map', 'Adresse', 'Ouagadougou, Burkina Faso')}
       </div>
 

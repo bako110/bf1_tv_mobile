@@ -36,23 +36,41 @@ function _fmtPrice(n) {
   return Math.round(n).toLocaleString('fr-FR');
 }
 
-function _featsByMonths(months) {
-  const f = [
-    'Accès à tous les contenus premium',
-    'Visionnage hors-ligne',
-    'Qualité HD et 4K',
-    'Sans publicité',
-    'Accès prioritaire aux nouveautés',
-  ];
+function _featsByCategory(category, months) {
+  const base = {
+    basic: [
+      'Accès aux contenus Basic',
+      'Qualité SD/HD',
+      'Sans publicité',
+    ],
+    standard: [
+      'Accès aux contenus Basic + Standard',
+      'Qualité HD',
+      'Sans publicité',
+      'Visionnage hors-ligne',
+    ],
+    premium: [
+      'Accès à TOUS les contenus',
+      'Qualité HD et 4K',
+      'Sans publicité',
+      'Visionnage hors-ligne',
+      'Accès prioritaire aux nouveautés',
+    ],
+  };
+  const f = [...(base[category] || base.basic)];
   if (months >= 3)  f.push('Support prioritaire');
-  if (months >= 12) f.push('Support prioritaire 24h/24', 'Meilleure offre de l\'année');
+  if (months >= 12) f.push('Meilleure offre de l\'année 🏆');
   return f;
 }
 
-function _savings(months, basePrice) {
-  if (months <= 1) return null;
-  const eco = 3000 * months - basePrice;
-  return eco > 0 ? `Économisez ${_fmtPrice(eco)} FCFA` : null;
+// Calcule promo depuis original_price_cents fixé par l'admin
+function _promoInfo(priceCents, originalPriceCents, multiplier) {
+  if (!originalPriceCents || originalPriceCents === priceCents) return null;
+  const promoXof = Math.min(priceCents, originalPriceCents) / 100 * multiplier;
+  const origXof  = Math.max(priceCents, originalPriceCents) / 100 * multiplier;
+  const eco = origXof - promoXof;
+  const pct = Math.round((eco / origXof) * 100);
+  return { eco, pct, origXof, promoXof };
 }
 
 function _badge(months) {
@@ -62,6 +80,9 @@ function _badge(months) {
 }
 
 function _catOf(plan) {
+  // Utiliser le champ category du backend en priorité (toujours présent)
+  if (plan.category && ['basic','standard','premium'].includes(plan.category)) return plan.category;
+  // Fallback: détecter depuis le code ou le nom
   const s = (plan.code || plan.name || '').toLowerCase();
   if (s.includes('premium'))  return 'premium';
   if (s.includes('standard')) return 'standard';
@@ -281,25 +302,32 @@ async function _renderStep1() {
       return;
     }
 
-    let plans = (Array.isArray(rawPlans) ? rawPlans : []).map(p => {
-      const base = (p.price_cents || 0) / 100;
+    const rawPlansList = Array.isArray(rawPlans) ? rawPlans : [];
+
+    const allPlans = rawPlansList.map(p => {
+      const pc = _catOf(p);
+      const promo = _promoInfo(p.price_cents || 0, p.original_price_cents || 0, multiplier);
+      const displayPrice = promo ? promo.promoXof : (p.price_cents || 0) / 100 * multiplier;
+      const origDisplayPrice = promo ? promo.origXof : null;
       return {
         ...p,
-        basePrice: base,
-        price:     base * multiplier,
+        price:        displayPrice,
+        origPrice:    origDisplayPrice,
         multiplier, isInCountry,
-        features:  _featsByMonths(p.duration_months || 1),
-        savings:   _savings(p.duration_months || 1, base * multiplier),
-        badge:     _badge(p.duration_months || 1),
-        category:  _catOf(p),
+        features:     _featsByCategory(pc, p.duration_months || 1),
+        promo,
+        badge:        _badge(p.duration_months || 1),
+        category:     pc,
       };
     });
 
-    if (cat) {
-      plans = plans.filter(p => (p.code || '').toLowerCase().startsWith(cat.toLowerCase()));
-    }
+    // Si une catégorie est requise, filtrer directement par p.category (champ fiable du backend)
+    const forcedCat = cat;
+    const filteredForced = forcedCat
+      ? allPlans.filter(p => p.category === forcedCat)
+      : null;
 
-    if (!plans.length) {
+    if (filteredForced !== null && !filteredForced.length) {
       body.innerHTML = `
         <div style="text-align:center;padding:40px 0;">
           <i class="bi bi-exclamation-circle" style="font-size:2.5rem;color:var(--text-3,#555);"></i>
@@ -308,63 +336,160 @@ async function _renderStep1() {
       return;
     }
 
+    // Grouper par catégorie
+    const CATS_ORDER = ['basic','standard','premium'];
+    const byCategory = {};
+    allPlans.forEach(p => {
+      if (!byCategory[p.category]) byCategory[p.category] = [];
+      byCategory[p.category].push(p);
+    });
+
+    // Onglet actif : catégorie requise ou 'basic' par défaut
+    const defaultTab = forcedCat || CATS_ORDER.find(c => byCategory[c]?.length) || 'basic';
+    _state._activeTab = defaultTab;
+
+    const _buildPlanCards = (plans) => plans.map(p => {
+      const cs      = CAT_STYLE[p.category] || CAT_STYLE.basic;
+      const months  = p.duration_months || 1;
+      const hasPromo = !!p.promo;
+      // Prix mensuel équivalent
+      const perMonth = _fmtPrice(p.price / months);
+
+      return `
+      <div style="background:var(--surface,#111);
+                  border:2px solid rgba(${cs.rgb},${hasPromo ? '.5' : '.25'});
+                  border-radius:20px;padding:20px;margin-bottom:16px;
+                  position:relative;animation:pmFadeUp .3s ease;" class="_pm-plan">
+
+        <!-- Badge durée (Populaire / Meilleur prix) -->
+        ${p.badge ? `
+        <div style="position:absolute;top:-1px;right:20px;
+                    background:${p.badge.color};color:${p.badge.dark};
+                    font-size:10px;font-weight:800;padding:4px 12px;
+                    border-radius:0 0 10px 10px;letter-spacing:.5px;text-transform:uppercase;">
+          ${p.badge.label}
+        </div>` : ''}
+
+        <!-- En-tête : icône + nom + badge réduction -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                        background:rgba(${cs.rgb},.15);border:1px solid rgba(${cs.rgb},.35);
+                        display:flex;align-items:center;justify-content:center;">
+              <i class="bi bi-star-fill" style="font-size:14px;color:${cs.hex};"></i>
+            </div>
+            <div>
+              <div style="color:var(--text,#fff);font-size:15px;font-weight:700;">${p.name || p.code}</div>
+              <div style="color:var(--text-3,#666);font-size:11px;">${months} mois d'accès</div>
+            </div>
+          </div>
+          ${hasPromo ? `
+          <div style="background:rgba(226,62,62,.15);border:1px solid rgba(226,62,62,.3);
+                      border-radius:20px;padding:4px 10px;text-align:center;">
+            <div style="color:#E23E3E;font-size:13px;font-weight:800;">−${p.promo.pct}%</div>
+          </div>` : ''}
+        </div>
+
+        <!-- Bloc prix -->
+        <div style="background:rgba(${cs.rgb},.07);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+          <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;">
+            ${hasPromo ? `
+            <span style="font-size:14px;color:var(--text-3,#555);text-decoration:line-through;">
+              ${_fmtPrice(p.origPrice)} FCFA
+            </span>` : ''}
+            <span style="font-size:32px;font-weight:900;color:${cs.hex};line-height:1;">
+              ${_fmtPrice(p.price)}
+            </span>
+            <span style="font-size:13px;color:var(--text-3,#666);">FCFA / ${months} mois</span>
+          </div>
+          <!-- Prix mensuel équivalent -->
+          <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:12px;color:var(--text-3,#666);">
+              Soit <strong style="color:${cs.hex};">${perMonth} FCFA/mois</strong>
+            </span>
+            ${hasPromo ? `
+            <span style="font-size:11px;font-weight:700;color:#22C55E;">
+              Économie : ${_fmtPrice(p.promo.eco)} FCFA
+            </span>` : ''}
+          </div>
+        </div>
+
+        <!-- Features -->
+        <div style="margin-bottom:18px;">
+          ${p.features.map(f => `
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;">
+            <i class="bi bi-check-circle-fill" style="color:${cs.hex};font-size:13px;flex-shrink:0;"></i>
+            <span style="color:var(--text-2,#bbb);font-size:13px;">${f}</span>
+          </div>`).join('')}
+        </div>
+
+        <!-- Bouton -->
+        <button onclick="window._pmSelectPlan(${JSON.stringify(p).replace(/"/g,'&quot;')})"
+                style="width:100%;background:${cs.hex};border:none;border-radius:14px;
+                       padding:15px;color:#000;font-size:15px;font-weight:800;cursor:pointer;
+                       display:flex;align-items:center;justify-content:center;gap:8px;
+                       box-shadow:0 4px 15px rgba(${cs.rgb},.35);"
+                class="_pm-ripple">
+          Choisir ce plan &nbsp;<i class="bi bi-arrow-right"></i>
+        </button>
+      </div>`;
+    }).join('');
+
+    // Labels d'onglets
+    const TAB_LABELS = { basic: 'Basic', standard: 'Standard', premium: 'Premium' };
+    const availableTabs = CATS_ORDER.filter(c => byCategory[c]?.length);
+
+    const _renderTabs = (activeTab) => {
+      return availableTabs.map(c => {
+        const cs = CAT_STYLE[c] || CAT_STYLE.basic;
+        const isActive = c === activeTab;
+        return `
+        <button onclick="window._pmSwitchTab('${c}')"
+                id="_pm-tab-${c}"
+                style="flex:1;border:none;border-radius:10px;padding:9px 6px;
+                       font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;
+                       background:${isActive ? cs.hex : 'var(--bg,#1a1a1a)'};
+                       color:${isActive ? '#000' : 'var(--text-3,#666)'};
+                       border:1px solid ${isActive ? cs.hex : 'var(--divider,#2a2a2a)'};">
+          ${TAB_LABELS[c] || c}
+        </button>`;
+      }).join('');
+    };
+
+    window._pmSwitchTab = (tabCat) => {
+      _state._activeTab = tabCat;
+      // Mettre à jour les onglets
+      availableTabs.forEach(c => {
+        const btn = document.getElementById(`_pm-tab-${c}`);
+        if (!btn) return;
+        const cs = CAT_STYLE[c] || CAT_STYLE.basic;
+        const active = c === tabCat;
+        btn.style.background = active ? cs.hex : 'var(--bg,#1a1a1a)';
+        btn.style.color = active ? '#000' : 'var(--text-3,#666)';
+        btn.style.borderColor = active ? cs.hex : 'var(--divider,#2a2a2a)';
+      });
+      // Mettre à jour les cartes
+      const plansContainer = document.getElementById('_pm-plans-container');
+      if (plansContainer) {
+        plansContainer.innerHTML = _buildPlanCards(byCategory[tabCat] || []);
+      }
+    };
+
     body.innerHTML = `
       ${!isInCountry ? `
         <div style="display:flex;align-items:center;gap:8px;background:var(--surface,#1a1a1a);
                     border:1px solid rgba(226,62,62,0.3);border-radius:10px;
-                    padding:10px 14px;margin-bottom:16px;">
+                    padding:10px 14px;margin-bottom:12px;">
           <i class="bi bi-geo-alt-fill" style="color:#E23E3E;font-size:14px;"></i>
           <span style="color:var(--text-2,#aaa);font-size:12px;">Tarif international appliqué (×${multiplier})</span>
         </div>` : ''}
-      ${plans.map(p => {
-        const cs = CAT_STYLE[p.category] || CAT_STYLE.basic;
-        return `
-        <div style="background:var(--surface,#111);
-                    border:1px solid rgba(${cs.rgb},.28);border-radius:18px;
-                    padding:20px;margin-bottom:14px;position:relative;
-                    animation:pmFadeUp .3s ease;" class="_pm-plan">
-          ${p.badge ? `
-          <div style="position:absolute;top:-1px;right:18px;background:${p.badge.color};
-                      color:${p.badge.dark};font-size:11px;font-weight:700;
-                      padding:4px 10px;border-radius:0 0 8px 8px;letter-spacing:.4px;">
-            ${p.badge.label}
-          </div>` : ''}
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:32px;height:32px;border-radius:9px;background:rgba(${cs.rgb},.14);
-                          display:flex;align-items:center;justify-content:center;
-                          border:1px solid rgba(${cs.rgb},.3);">
-                <i class="bi bi-star-fill" style="font-size:13px;color:${cs.hex};"></i>
-              </div>
-              <span style="color:var(--text,#fff);font-size:16px;font-weight:700;">${p.name || p.code}</span>
-            </div>
-            ${p.savings ? `
-            <span style="background:rgba(226,62,62,.14);color:#E23E3E;
-                         font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;">
-              ${p.savings}
-            </span>` : ''}
-          </div>
-          <div style="margin-bottom:14px;">
-            <span style="font-size:28px;font-weight:800;color:${cs.hex};">${_fmtPrice(p.price)}</span>
-            <span style="color:var(--text-3,#666);font-size:13px;"> ${p.currency||'FCFA'} / ${p.duration_months||1} mois</span>
-            ${!p.isInCountry && p.basePrice !== p.price ? `
-            <div style="font-size:11px;color:var(--text-3,#666);margin-top:3px;">Prix BF : ${_fmtPrice(p.basePrice)} FCFA</div>` : ''}
-          </div>
-          <div style="margin-bottom:18px;">
-            ${p.features.map(f => `
-              <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;">
-                <i class="bi bi-check-circle-fill" style="color:${cs.hex};font-size:13px;flex-shrink:0;"></i>
-                <span style="color:var(--text-2,#aaa);font-size:13px;">${f}</span>
-              </div>`).join('')}
-          </div>
-          <button onclick="window._pmSelectPlan(${JSON.stringify(p).replace(/"/g,'&quot;')})"
-                  style="width:100%;background:${cs.hex};border:none;border-radius:12px;
-                         padding:14px;color:#000;font-size:15px;font-weight:700;cursor:pointer;
-                         display:flex;align-items:center;justify-content:center;gap:8px;"
-                  class="_pm-ripple">
-            Choisir ce plan <i class="bi bi-arrow-right"></i>
-          </button>
-        </div>`;}).join('')}
+      ${forcedCat ? '' : `
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          ${_renderTabs(defaultTab)}
+        </div>`}
+      <div id="_pm-plans-container">
+        ${_buildPlanCards((forcedCat ? filteredForced : byCategory[defaultTab]) || [])}
+      </div>
       <p style="text-align:center;color:var(--text-3,#555);font-size:12px;margin:8px 0 4px;">
         Résiliez à tout moment. Aucun engagement.
       </p>`;
@@ -443,8 +568,17 @@ function _renderStep3() {
     <div style="background:var(--bg,#111);border-radius:10px;padding:10px 14px;margin-bottom:16px;
                 border:1px solid var(--divider,#1e1e1e);display:flex;align-items:center;gap:8px;">
       <i class="bi bi-info-circle-fill" style="color:#E23E3E;font-size:14px;flex-shrink:0;"></i>
-      <span style="color:var(--text-3,#666);font-size:12px;line-height:1.4;">
-        Composez <strong style="color:var(--text-2,#aaa);">#${m==='orange'?'144':'555'}#</strong> depuis votre téléphone pour obtenir votre code OTP.
+      <span style="color:var(--text-3,#666);font-size:12px;line-height:1.4;flex:1;">
+        Composez depuis votre téléphone pour obtenir votre code OTP :
+        <br>
+        <span id="_pm-ussd-code" style="color:var(--text-2,#aaa);font-weight:700;letter-spacing:.5px;">
+          ${m==='orange'?'*144*4*6*montant*code#':'*555*6#'}
+        </span>
+        <button onclick="navigator.clipboard.writeText('${m==='orange'?'*144*4*6*montant*code#':'*555*6#'}').then(()=>{this.innerHTML='<i class=\\'bi bi-check-lg\\'></i>';setTimeout(()=>{this.innerHTML='<i class=\\'bi bi-copy\\'></i>'},1500)})"
+                style="background:none;border:none;cursor:pointer;color:#E23E3E;font-size:13px;
+                       padding:2px 6px;margin-left:4px;vertical-align:middle;">
+          <i class="bi bi-copy"></i>
+        </button>
       </span>
     </div>`;
 

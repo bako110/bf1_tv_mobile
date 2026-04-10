@@ -6,6 +6,7 @@
   <title>BF1-TV</title>
   <link href="./assets/vendor/bootstrap.min.css" rel="stylesheet">
   <link href="./assets/vendor/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="./css/themes.css" rel="stylesheet">
   <link href="./style.css" rel="stylesheet">
   <!-- Applique le thème AVANT le premier rendu pour éviter le flash noir -->
   <script>
@@ -49,21 +50,23 @@
       </div>
 
       <div class="drawer-section-title">Navigation</div>
-      <a href="#/home" class="drawer-link" onclick="closeDrawer()">Accueil</a>
-      <a href="#/emissions" class="drawer-link" onclick="closeDrawer()">Émissions</a>
-      <a href="#/live" class="drawer-link" onclick="closeDrawer()">Direct Live</a>
-      <a href="#/reels" class="drawer-link" onclick="closeDrawer()">Reels</a>
+      <a href="#/home" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-house-fill"></i> Accueil</a>
+      <a href="#/emissions" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-tv"></i> Émissions</a>
+      <a href="#/live" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-broadcast"></i> Direct Live</a>
+      <a href="#/reels" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-play-circle"></i> Reels</a>
 
       <hr class="drawer-divider">
       <div class="drawer-section-title">Actualités &amp; Émissions</div>
-      <a href="#/news" class="drawer-link" onclick="closeDrawer()">Flash Info</a>
-      <a href="#/jtandmag" class="drawer-link" onclick="closeDrawer()">JT &amp; Mag</a>
-      <a href="#/divertissement" class="drawer-link" onclick="closeDrawer()">Divertissement</a>
-      <a href="#/sports" class="drawer-link" onclick="closeDrawer()">Sport</a>
-      <a href="#/reportages" class="drawer-link" onclick="closeDrawer()">Reportages</a>
-      <a href="#/archive" class="drawer-link" onclick="closeDrawer()">Archives</a>
-      <a href="#/tele-realite" class="drawer-link" onclick="closeDrawer()">Télé Réalité &amp; Événements</a>
-      <a href="#/programs" class="drawer-link" onclick="closeDrawer()">Calendrier</a>
+      <a href="#/missed" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-clock-history"></i> Vous l'avez raté?</a>
+      <a href="#/jtandmag" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-camera-video-fill"></i> Journaux</a>
+      <a href="#/reportages" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-film"></i> Reportages</a>
+      <a href="#/magazine" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-journal-richtext"></i> Magazines</a>
+      <a href="#/divertissement" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-music-note-beamed"></i> Divertissement</a>
+      <a href="#/tele-realite" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-stars"></i> Télé réalité et évènementiels</a>
+      <a href="#/sports" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-trophy-fill"></i> Sport</a>
+      <a href="#/archive" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-collection-play"></i> Archives Vidéo</a>
+      <a href="#/news" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-lightning-fill"></i> Flash Info</a>
+      <a href="#/programs" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-calendar-event"></i> Calendrier</a>
 
       <!-- <hr class="drawer-divider">
       <div class="drawer-section-title">Films &amp; Séries</div>
@@ -71,12 +74,18 @@
 
       <hr class="drawer-divider">
       <div class="drawer-section-title">Mon espace</div>
-      <a href="#/profile" class="drawer-link" onclick="closeDrawer()">Mon compte</a>
-      <a href="#/favorites" class="drawer-link" onclick="closeDrawer()">Favoris</a>
+      <a href="#/profile" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-person-circle"></i> Mon compte</a>
+      <a href="#/favorites" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-heart-fill"></i> Favoris</a>
 
       <hr class="drawer-divider">
-      <a href="#/about" class="drawer-link" onclick="closeDrawer()">À propos</a>
-      <a href="#/support" class="drawer-link" onclick="closeDrawer()">Support</a>
+      <a href="#/about" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-info-circle"></i> À propos</a>
+      <a href="#/support" class="drawer-link" onclick="closeDrawer()"><i class="bi bi-headset"></i> Support</a>
+
+      <hr class="drawer-divider">
+      <button id="drawer-logout-btn" class="drawer-link" onclick="closeDrawer();window._bf1Logout?.()"
+              style="background:none;border:none;color:#E23E3E;cursor:pointer;display:flex;align-items:center;gap:10px;width:100%;font-size:inherit;padding:12px 20px;text-align:left;">
+        <i class="bi bi-box-arrow-right"></i> Déconnexion
+      </button>
     </nav>
 
     <!-- ===== TOP HEADER ===== -->
@@ -168,6 +177,24 @@
     document.addEventListener('keydown', function(e) { 
       if (e.key === 'Escape') closeDrawer(); 
     });
+
+    // Déconnexion globale
+    window._bf1Logout = function() {
+      if (!confirm('Voulez-vous vraiment vous déconnecter ?')) return;
+      localStorage.removeItem('bf1_token');
+      localStorage.removeItem('bf1_user');
+      window._invalidateKaCache?.();
+      window.location.hash = '#/home';
+      location.reload();
+    };
+
+    // Masquer/afficher le bouton déconnexion selon l'état de connexion
+    function _updateDrawerLogout() {
+      var btn = document.getElementById('drawer-logout-btn');
+      if (btn) btn.style.display = localStorage.getItem('bf1_token') ? '' : 'none';
+    }
+    document.getElementById('side-drawer')?.addEventListener('transitionstart', _updateDrawerLogout);
+    document.addEventListener('DOMContentLoaded', _updateDrawerLogout);
   </script>
   <script type="module" src="./js/app.js"></script>
 </body>

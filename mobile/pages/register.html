@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -30,8 +30,8 @@
     <form id="register-form">
 
       <div style="margin-bottom:14px;">
-        <label style="display:block;font-size:13px;color:#888;margin-bottom:8px;">Nom d’utilisateur</label>
-        <input type="text" name="username"
+        <label style="display:block;font-size:13px;color:#888;margin-bottom:8px;">Email</label>
+        <input type="email" name="email" id="reg-email"
                style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:12px;
                       padding:14px 16px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;
                       -webkit-appearance:none;"
@@ -40,16 +40,6 @@
       </div>
 
       <div style="margin-bottom:14px;">
-        <label style="display:block;font-size:13px;color:#888;margin-bottom:8px;">Email</label>
-        <input type="email" name="email"
-               style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:12px;
-                      padding:14px 16px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;
-                      -webkit-appearance:none;"
-               onfocus="this.style.borderColor='#E23E3E'" onblur="this.style.borderColor='#2a2a2a'"
-               required>
-      </div>
-
-      <div style="margin-bottom:24px;">
         <label style="display:block;font-size:13px;color:#888;margin-bottom:8px;">Mot de passe <span style="color:#555;">(min. 6 caractères)</span></label>
         <input type="password" name="password"
                style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:12px;
@@ -59,6 +49,19 @@
                required minlength="6">
       </div>
 
+      <div style="margin-bottom:24px;">
+        <label style="display:block;font-size:13px;color:#888;margin-bottom:8px;">
+          Nom d'utilisateur
+          <span id="reg-username-hint" style="font-size:11px;margin-left:6px;"></span>
+        </label>
+        <input type="text" name="username" id="reg-username"
+               style="width:100%;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:12px;
+                      padding:14px 16px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;
+                      -webkit-appearance:none;"
+               onfocus="this.style.borderColor='#E23E3E'" onblur="this.style.borderColor='#2a2a2a'"
+               placeholder="Généré automatiquement depuis l'email"
+               required>
+      </div>
       <button type="submit"
               style="width:100%;background:#E23E3E;border:none;border-radius:12px;
                      padding:15px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;

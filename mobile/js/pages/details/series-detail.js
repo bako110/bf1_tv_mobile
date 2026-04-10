@@ -13,14 +13,15 @@ function _fmtTime(s) {
 function _setupYTGlobals() {
   if (window.__ytSetup) return;
   window.__ytSetup  = true;
-  window._ytPlayers = window._ytPlayers || {};
-  window._ytTimers  = window._ytTimers  || {};
+  window._ytPlayers = {};
+  window._ytTimers  = {};
   window._ytQueue   = window._ytQueue   || [];
-  window._ytPending = window._ytPending || {};
+  window._ytPending = {};
 
-  const _orig = window.onYouTubeIframeAPIReady;
+  // Ne wrapper qu'une seule fois le callback natif (évite la chaîne infinie au reset)
+  if (!window.__ytOrigReady) window.__ytOrigReady = window.onYouTubeIframeAPIReady || null;
   window.onYouTubeIframeAPIReady = function() {
-    if (_orig) _orig();
+    if (window.__ytOrigReady) window.__ytOrigReady();
     window._ytReady = true;
     (window._ytQueue || []).forEach(fn => fn());
     window._ytQueue = [];
@@ -98,18 +99,20 @@ function _createYTPlayer(pid, ytId, posterId) {
           if (window._ytPending && window._ytPending[pid]) {
             window._ytPlayers[pid].playVideo();
             delete window._ytPending[pid];
-            const post = document.getElementById(posterId);
-            if (post) post.style.display = 'none';
           }
         },
         onStateChange: (e) => {
-          const playing = e.data === 1;
-          const btn = document.getElementById(pid + '-playbtn');
+          const playing   = e.data === 1;
+          const buffering = e.data === 3;
+          const started   = e.data === 1 || e.data === 2 || e.data === 0;
+          const btn   = document.getElementById(pid + '-playbtn');
+          const post  = document.getElementById(posterId);
+          const snake = document.getElementById(pid + '-snake');
           if (btn) btn.innerHTML = playing
-            ? '<i class="bi bi-pause-fill" style="font-size:18px;"></i>'
-            : '<i class="bi bi-play-fill"  style="font-size:18px;"></i>';
-          const post = document.getElementById(posterId);
-          if (post && playing) post.style.display = 'none';
+            ? '<i class="bi bi-pause-fill" style="font-size:22px;"></i>'
+            : '<i class="bi bi-play-fill"  style="font-size:22px;"></i>';
+          if (post  && started) post.style.display = 'none';
+          if (snake) snake.style.display = buffering ? 'flex' : 'none';
           if (playing) window._ytStartTimer(pid);
           else clearInterval(window._ytTimers[pid]);
         },
@@ -121,6 +124,18 @@ function _createYTPlayer(pid, ytId, posterId) {
 }
 
 function buildEpVideoPlayer(videoUrl, posterImg) {
+  const _css = `
+    <style>
+      @keyframes _epSnake {
+        0%   { stroke-dashoffset: 340; }
+        50%  { stroke-dashoffset: 100; }
+        100% { stroke-dashoffset: -340; }
+      }
+      @keyframes _epFadeIn { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:scale(1); } }
+      @keyframes _epPulse  { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.12); } }
+      @keyframes _epBarGlow { 0%,100%{ box-shadow:none; } 50%{ box-shadow:0 0 6px 1px rgba(226,62,62,.55); } }
+    </style>`;
+
   if (!videoUrl) return `
     <div style="width:100%;height:180px;background:#111;display:flex;flex-direction:column;
          align-items:center;justify-content:center;gap:8px;">
@@ -133,59 +148,104 @@ function buildEpVideoPlayer(videoUrl, posterImg) {
     const pid      = 'epyt' + Date.now().toString(36);
     const posterId = pid + '-post';
     _createYTPlayer(pid, ytId, posterId);
-    const pStyle = posterImg
-      ? `background:url('${esc(posterImg)}') center/cover no-repeat;`
-      : 'background:#111;';
-    return `
-      <div style="background:#000;">
+    const hasPoster = !!posterImg;
+    return `${_css}
+      <div style="animation:_epFadeIn .35s ease;background:#000;">
         <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
           <div id="${pid}" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+
+          <!-- Poster + snake -->
           <div id="${posterId}"
-               onclick="window._ytToggle('${pid}');this.style.display='none';"
-               style="position:absolute;inset:0;cursor:pointer;z-index:5;${pStyle}">
-            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);
-                        display:flex;align-items:center;justify-content:center;">
-              <div style="width:56px;height:56px;background:rgba(226,62,62,.92);border-radius:50%;
-                          display:flex;align-items:center;justify-content:center;
-                          box-shadow:0 4px 20px rgba(226,62,62,.45);">
-                <i class="bi bi-play-fill" style="color:#fff;font-size:22px;margin-left:2px;"></i>
+               onclick="this.style.pointerEvents='none';window._ytToggle('${pid}');document.getElementById('${pid}-snake').style.display='flex';"
+               style="position:absolute;inset:0;cursor:pointer;z-index:5;
+                      ${hasPoster ? `background:url('${esc(posterImg)}') center/cover no-repeat;` : 'background:#111;'}">
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 55%);"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+              <div style="position:relative;width:64px;height:64px;">
+                <svg viewBox="0 0 120 120" style="position:absolute;inset:0;width:100%;height:100%;">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(226,62,62,.3)" stroke-width="4"/>
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="#E23E3E" stroke-width="4"
+                    stroke-dasharray="340" stroke-dashoffset="340" stroke-linecap="round"
+                    transform="rotate(-90 60 60)"
+                    style="animation:_epSnake 2s ease-in-out infinite;"/>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                  <div style="width:42px;height:42px;background:rgba(226,62,62,.92);border-radius:50%;
+                              display:flex;align-items:center;justify-content:center;
+                              box-shadow:0 4px 22px rgba(226,62,62,.5);
+                              animation:_epPulse 2s ease-in-out infinite;">
+                    <i class="bi bi-play-fill" style="color:#fff;font-size:20px;margin-left:2px;"></i>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Snake buffering -->
+          <div id="${pid}-snake" style="display:none;position:absolute;inset:0;z-index:6;
+                                        background:rgba(0,0,0,.6);
+                                        align-items:center;justify-content:center;pointer-events:none;">
+            <svg viewBox="0 0 60 60" style="width:52px;height:52px;">
+              <circle cx="30" cy="30" r="24" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+              <circle cx="30" cy="30" r="24" fill="none" stroke="#E23E3E" stroke-width="4"
+                stroke-dasharray="150" stroke-dashoffset="150" stroke-linecap="round"
+                transform="rotate(-90 30 30)"
+                style="animation:_epSnake 1s linear infinite;"/>
+            </svg>
+          </div>
         </div>
-        <div style="background:#0d0d0d;padding:8px 14px;display:flex;align-items:center;
+
+        <!-- Barre contrôle -->
+        <div style="background:#0d0d0d;padding:10px 14px;display:flex;align-items:center;
                     gap:10px;border-top:1px solid #1a1a1a;">
           <button id="${pid}-playbtn" onclick="window._ytToggle('${pid}')"
-                  style="background:none;border:none;color:#fff;cursor:pointer;
-                         padding:0;flex-shrink:0;line-height:1;">
-            <i class="bi bi-play-fill" style="font-size:18px;"></i>
+                  style="background:none;border:none;color:#fff;cursor:pointer;padding:0;
+                         flex-shrink:0;line-height:1;transition:transform .1s;"
+                  ontouchstart="this.style.transform='scale(.82)'"
+                  ontouchend="this.style.transform='scale(1)'">
+            <i class="bi bi-play-fill" style="font-size:22px;"></i>
           </button>
-          <div style="flex:1;height:4px;background:#2a2a2a;border-radius:2px;
-                      cursor:pointer;position:relative;"
+          <div style="flex:1;height:5px;background:#2a2a2a;border-radius:3px;
+                      cursor:pointer;position:relative;overflow:hidden;"
                onclick="window._ytSeek(event,'${pid}')">
             <div id="${pid}-prog"
-                 style="height:100%;background:#E23E3E;border-radius:2px;
-                        width:0%;pointer-events:none;transition:width .4s linear;"></div>
+                 style="height:100%;background:linear-gradient(90deg,#E23E3E,#ff6b6b);
+                        border-radius:3px;width:0%;pointer-events:none;
+                        transition:width .4s linear;
+                        animation:_epBarGlow 2s ease-in-out infinite;"></div>
           </div>
           <span id="${pid}-time"
-                style="font-size:11px;color:#888;white-space:nowrap;
-                       min-width:78px;text-align:right;">0:00 / 0:00</span>
+                style="font-size:11px;color:#888;white-space:nowrap;min-width:78px;text-align:right;">
+            0:00 / 0:00
+          </span>
           <button onclick="window._ytFullscreen('${pid}')"
-                  style="background:none;border:none;color:#888;cursor:pointer;
-                         padding:0;flex-shrink:0;line-height:1;">
+                  style="background:none;border:none;color:#666;cursor:pointer;padding:0;flex-shrink:0;line-height:1;">
             <i class="bi bi-fullscreen" style="font-size:16px;"></i>
           </button>
         </div>
       </div>`;
   }
 
-  return `
-    <video controls autoplay muted playsinline preload="auto"
-           style="width:100%;max-height:260px;display:block;background:#000;"
-           ${posterImg ? `poster="${esc(posterImg)}"` : ''}>
-      <source src="${esc(videoUrl)}" type="video/mp4">
-      Votre navigateur ne supporte pas la lecture vidéo.
-    </video>`;
+  const vid = 'epv' + Date.now().toString(36);
+  return `${_css}
+    <div style="position:relative;width:100%;background:#000;animation:_epFadeIn .35s ease;">
+      <div id="${vid}-loader" style="position:absolute;inset:0;z-index:5;background:#000;
+                                     display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        ${posterImg ? `<img src="${esc(posterImg)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;">` : ''}
+        <svg viewBox="0 0 60 60" style="width:56px;height:56px;position:relative;z-index:1;">
+          <circle cx="30" cy="30" r="24" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+          <circle cx="30" cy="30" r="24" fill="none" stroke="#E23E3E" stroke-width="4"
+            stroke-dasharray="150" stroke-dashoffset="150" stroke-linecap="round"
+            transform="rotate(-90 30 30)" style="animation:_epSnake 1s linear infinite;"/>
+        </svg>
+      </div>
+      <video controls autoplay muted playsinline preload="auto"
+             style="width:100%;display:block;background:#000;"
+             ${posterImg ? `poster="${esc(posterImg)}"` : ''}
+             oncanplay="(function(){var l=document.getElementById('${vid}-loader');if(l)l.style.display='none';})()">
+        <source src="${esc(videoUrl)}" type="video/mp4">
+      </video>
+    </div>`;
 }
 
 function fmtDur(min) {
@@ -435,6 +495,39 @@ function buildEpCard(ep) {
         ${!hasVideo ? `<span style="font-size:11px;color:#555;margin-top:3px;">Non disponible</span>` : ''}
       </div>
     </div>`;
+}
+
+// ─── Cleanup au départ de la page ────────────────────────────────────────────
+
+export function cleanupSeriesDetail() {
+  // Fermer le lecteur d'épisode
+  const overlay = document.getElementById('ep-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  // Détruire tous les joueurs YouTube (y compris les épisodes)
+  if (window._ytPlayers) {
+    Object.keys(window._ytPlayers).forEach(pid => {
+      try {
+        const player = window._ytPlayers[pid];
+        if (player) {
+          if (typeof player.stopVideo === 'function') player.stopVideo();
+          if (typeof player.destroy === 'function') player.destroy();
+        }
+      } catch (e) {}
+      if (window._ytTimers?.[pid]) {
+        clearInterval(window._ytTimers[pid]);
+        delete window._ytTimers[pid];
+      }
+      delete window._ytPlayers[pid];
+    });
+  }
+
+  // Arrêter toutes les vidéos natives
+  document.querySelectorAll('video').forEach(video => {
+    video.pause();
+    video.src = '';
+    video.load();
+  });
 }
 
 // ─── Entry point ──────────────────────────────────────────────────────────────

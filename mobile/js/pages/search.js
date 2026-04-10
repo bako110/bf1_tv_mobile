@@ -10,7 +10,8 @@ const TYPE_CFG = {
   news:          { label: 'Flash Info',    color: '#E23E3E', icon: 'bi-lightning-fill',   route: item => `#/news/${item.id}` },
   sport:         { label: 'Sport',          color: '#1DA1F2', icon: 'bi-trophy-fill',       route: item => `#/show/sport/${item.id}` },
   show:          { label: 'Émission',       color: '#10B981', icon: 'bi-tv-fill',           route: item => `#/show/show/${item.id}` },
-  jtandmag:      { label: 'JT & Mag',       color: '#E23E3E', icon: 'bi-camera-video-fill', route: item => `#/show/jtandmag/${item.id}` },
+  jtandmag:      { label: 'Journal',      color: '#E23E3E', icon: 'bi-camera-video-fill', route: item => `#/show/jtandmag/${item.id}` },
+  magazine:      { label: 'Magazine',      color: '#8B5CF6', icon: 'bi-journal-richtext',  route: item => `#/show/magazine/${item.id}` },
   divertissement:{ label: 'Divertissement', color: '#A855F7', icon: 'bi-music-note-beamed', route: item => `#/show/divertissement/${item.id}` },
   reportage:     { label: 'Reportage',      color: '#F59E0B', icon: 'bi-film',              route: item => `#/show/reportage/${item.id}` },
   archive:       { label: 'Archive',        color: '#6B7280', icon: 'bi-archive-fill',      route: item => `#/show/archive/${item.id}` },
@@ -45,7 +46,7 @@ function renderResults(items) {
     grouped[t].push(item);
   });
 
-  const ORDER = ['news','sport','jtandmag','divertissement','reportage','tele_realite','show','archive'];
+  const ORDER = ['news','sport','jtandmag','magazine','divertissement','reportage','tele_realite','show','archive'];
   const sortedKeys = [...ORDER.filter(k => grouped[k]), ...Object.keys(grouped).filter(k => !ORDER.includes(k))];
 
   area.innerHTML = sortedKeys.map(type => {
@@ -135,7 +136,8 @@ export async function loadSearch() {
 
   const suggestions = [
     { label: 'Sport',          icon: 'bi-trophy-fill',       color: '#1DA1F2', href: '#/sports' },
-    { label: 'JT & Magazine',  icon: 'bi-camera-video-fill', color: '#E23E3E', href: '#/jtandmag' },
+    { label: 'Journaux',        icon: 'bi-camera-video-fill', color: '#E23E3E', href: '#/jtandmag' },
+    { label: 'Magazines',       icon: 'bi-journal-richtext',  color: '#8B5CF6', href: '#/magazine' },
     { label: 'Divertissement', icon: 'bi-music-note-beamed', color: '#A855F7', href: '#/divertissement' },
     { label: 'Reportages',     icon: 'bi-film',              color: '#F59E0B', href: '#/reportages' },
     { label: 'Flash Info',     icon: 'bi-lightning-fill',    color: '#E23E3E', href: '#/news' },

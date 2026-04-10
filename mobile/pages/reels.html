@@ -45,22 +45,14 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   z-index: 1;
   background: #000;
 }
 
 /* ── Gradient bas ── */
 .reel-gradient {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 70%;
-  background: linear-gradient(to top,
-    rgba(0,0,0,0.92) 0%,
-    rgba(0,0,0,0.5)  40%,
-    transparent      100%);
-  pointer-events: none;
-  z-index: 2;
+  display: none;
 }
 
 /* ── Infos bas gauche ── */
@@ -69,7 +61,7 @@
   bottom: 0;
   left: 0;
   right: 76px;
-  padding: 16px 14px 28px;
+  padding: 16px 14px calc(var(--reel-nav-h, 60px) + 8px);
   z-index: 3;
   pointer-events: none;
 }
@@ -118,12 +110,13 @@
 .reel-actions {
   position: absolute;
   right: 10px;
-  bottom: 24px;
+  bottom: calc(var(--reel-nav-h, 60px) + 4px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  z-index: 3;
+  z-index: 4;
+  pointer-events: auto;
 }
 .reel-action-btn {
   display: flex;

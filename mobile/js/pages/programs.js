@@ -389,9 +389,8 @@ function renderWeekCalendar() {
   if (!container) return;
   
   let html = `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;gap:6px;">
-      ${_selectedDate ? `<button onclick="window._selectDate(null)" style="background:#0a0a0a;border:1px solid #1e1e1e;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap;"><i class="bi bi-arrow-left me-1"></i>Semaine</button>` : ''}
-      <div style="overflow-x:auto;display:flex;gap:6px;flex:1;-webkit-overflow-scrolling:touch;">`;
+    <div style="padding:8px;">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">`;
   
   _weekDates.forEach(day => {
     const isSelected = _selectedDate === day.date;
@@ -402,12 +401,11 @@ function renderWeekCalendar() {
       <button onclick="window._selectDate('${day.date}')" style="
         background:${bgColor};
         border:1px solid ${isSelected ? '#E23E3E' : '#1e1e1e'};
-        padding:6px 10px;
+        padding:6px 4px;
         border-radius:4px;
         cursor:pointer;
-        flex-shrink:0;
         text-align:center;
-        font-size:10px;
+        font-size:9px;
         ${day.isToday && !isSelected ? 'border-color:#E23E3E;' : ''}
       ">
         <div style="color:${textColor};font-weight:600;">${day.dayName}</div>
@@ -584,6 +582,22 @@ window._selectDay = async function(dateStr) {
   _selectedDay = dateStr;
   renderDaySelector();
   renderPrograms();
+  
+  // Scroll automatique pour centrer le jour sélectionné
+  setTimeout(() => {
+    const container = document.getElementById('programs-days');
+    if (!container) return;
+    const scrollContainer = container.querySelector('[style*="overflow-x"]');
+    if (!scrollContainer) return;
+    const selectedButton = scrollContainer.querySelector(`button[onclick*="${dateStr}"]`);
+    if (selectedButton) {
+      const containerWidth = scrollContainer.offsetWidth;
+      const buttonLeft = selectedButton.offsetLeft;
+      const buttonWidth = selectedButton.offsetWidth;
+      const scrollPosition = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
+      scrollContainer.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+    }
+  }, 50);
 };
 
 // Charger et afficher

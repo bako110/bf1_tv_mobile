@@ -1,4 +1,11 @@
 ﻿import * as api from '../../services/api.js';
+import { API_CONFIG } from '../../config/routes.js';
+
+function _resolveAvatar(url) {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return API_CONFIG.API_URL + url;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -28,6 +35,105 @@ function formatRelative(d) {
   } catch { return 'Récemment'; }
 }
 
+// Fonction de partage native améliorée avec deep links
+function shareContent(platform, title, url) {
+  const deepLink = createDeepLink(url || location.href);
+  const playStoreUrl = 'https://play.google.com/store/apps/details?id=tv.bf1.app';
+  const shareText = `${title || document.title}\n\n${deepLink}\n\nTéléchargez BF1 TV : ${playStoreUrl}`;
+  
+  const shareData = {
+    title: title || document.title,
+    text: shareText,
+    url: deepLink
+  };
+
+  if (platform === 'native') {
+    if (navigator.share) {
+      navigator.share(shareData)
+        .then(() => console.log('Partage réussi'))
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            console.error('Erreur de partage:', err);
+            copyToClipboard(shareText);
+          }
+        });
+    } else {
+      copyToClipboard(shareText);
+    }
+  } else if (platform === 'facebook') {
+    const fbText = `${title || document.title}\n\n${deepLink}\n\nTéléchargez BF1 TV : ${playStoreUrl}`;
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(playStoreUrl)}&quote=${encodeURIComponent(fbText)}`,
+      '_blank',
+      'width=600,height=400'
+    );
+  } else if (platform === 'whatsapp') {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+      '_blank'
+    );
+  } else if (platform === 'twitter') {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      '_blank',
+      'width=600,height=400'
+    );
+  }
+}
+
+function createDeepLink(hashUrl) {
+  const hash = hashUrl.includes('#') ? hashUrl.split('#')[1] : hashUrl;
+  if (hash && hash.startsWith('/')) {
+    const path = hash.substring(1);
+    return `bf1tv://${path}`;
+  }
+  return 'bf1tv://home';
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('Lien copié dans le presse-papiers !'))
+      .catch(() => showToast('Impossible de copier le lien'));
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showToast('Lien copié dans le presse-papiers !');
+    } catch (err) {
+      showToast('Impossible de copier le lien');
+    }
+    document.body.removeChild(textarea);
+  }
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    z-index: 10000;
+    animation: fadeInOut 2.5s ease;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+window.shareContent = shareContent;
+
 // ─── Rendu commentaires ───────────────────────────────────────────────────────
 
 function renderComments(comments, currentUserId) {
@@ -37,12 +143,16 @@ function renderComments(comments, currentUserId) {
   return comments.map(c => {
     const isOwn = currentUserId && String(c.user_id) === String(currentUserId);
     const username = c.username || c.user?.username || 'Utilisateur';
-    const avatar = (username[0] || 'U').toUpperCase();
+    const av = _resolveAvatar(c.avatar_url || c.user?.avatar_url);
+    const letter = (username[0] || 'U').toUpperCase();
     return `
     <div class="nd-comment" data-id="${esc(c.id || c._id)}" style="display:flex;gap:10px;margin-bottom:16px;">
       <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#E23E3E;
-                  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;">
-        ${esc(avatar)}
+                  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;overflow:hidden;">
+        ${av
+          ? `<img src="${esc(av)}" style="width:100%;height:100%;object-fit:cover;"
+                  onerror="this.parentElement.innerHTML='${esc(letter)}'">`
+          : esc(letter)}
       </div>
       <div style="flex:1;background:#1a1a1a;border-radius:12px;border-top-left-radius:4px;padding:10px 12px;">
         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -161,15 +271,19 @@ export async function loadNewsDetail(id) {
         <div style="margin-bottom:28px;">
           <p style="font-size:12px;font-weight:600;color:#555;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px;">Partager</p>
           <div class="d-flex gap-2 flex-wrap">
-            <button onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),'_blank')"
+            <button onclick="shareContent('facebook', '${esc(news.title)}', location.href)"
                     style="display:inline-flex;align-items:center;gap:6px;background:#1877F2;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
               <i class="bi bi-facebook"></i> Facebook
             </button>
-            <button onclick="window.open('https://wa.me/?text='+encodeURIComponent(document.title+' '+location.href),'_blank')"
+            <button onclick="shareContent('whatsapp', '${esc(news.title)}', location.href)"
                     style="display:inline-flex;align-items:center;gap:6px;background:#25D366;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
               <i class="bi bi-whatsapp"></i> WhatsApp
             </button>
-            <button onclick="navigator.share ? navigator.share({title:document.title,url:location.href}) : navigator.clipboard?.writeText(location.href)"
+            <button onclick="shareContent('twitter', '${esc(news.title)}', location.href)"
+                    style="display:inline-flex;align-items:center;gap:6px;background:#1DA1F2;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
+              <i class="bi bi-twitter"></i> Twitter
+            </button>
+            <button onclick="shareContent('native', '${esc(news.title)}', location.href)"
                     style="display:inline-flex;align-items:center;gap:6px;background:#333;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
               <i class="bi bi-share-fill"></i> Plus
             </button>
@@ -290,9 +404,10 @@ export async function loadNewsDetail(id) {
         const isOwn = user && String(c.user_id) === String(user.id);
         const uname = c.username || c.user?.username || 'Utilisateur';
         const cid = esc(String(c.id || c._id));
+        const av = _resolveAvatar(c.avatar_url || c.user?.avatar_url);
         return `
         <div class="nd-cm-comment" data-id="${cid}" style="display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #1a0000;">
-          <div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:#E23E3E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;">${esc((uname[0]||'U').toUpperCase())}</div>
+          <div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:#E23E3E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;overflow:hidden;">${av ? `<img src="${esc(av)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${esc((uname[0]||'U').toUpperCase())}'">` : esc((uname[0]||'U').toUpperCase())}</div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:4px;">
               <span style="font-size:13px;font-weight:600;color:#fff;">${esc(uname)}</span>

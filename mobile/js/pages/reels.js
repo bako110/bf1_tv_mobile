@@ -1,5 +1,12 @@
 import * as api from '../services/api.js';
 import { createPageSpinner } from '../utils/snakeLoader.js';
+import { API_CONFIG } from '../config/routes.js';
+
+function _resolveAvatar(url) {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return API_CONFIG.API_URL + url;
+}
 
 // ── State global ──────────────────────────────────────────────────────────────
 const _likes    = new Map(); // id → count
@@ -27,7 +34,7 @@ function buildSlide(reel, index, isLiked) {
   const title    = reel.title || '';
   const desc     = reel.description || '';
   const author   = reel.author_name || reel.author || 'BF1 TV';
-  const avatar   = reel.author_avatar || '';
+  const avatar   = _resolveAvatar(reel.author_avatar);
   const nLikes   = Number(Array.isArray(reel.likes) ? reel.likes.length : (reel.likes ?? 0));
   const nComments= Number(Array.isArray(reel.comments) ? reel.comments.length : (reel.comments ?? reel.comments_count ?? 0));
   const nShares  = Number(reel.shares ?? reel.shares_count ?? 0);
@@ -302,10 +309,11 @@ function _renderComments(items) {
       <p style="margin:10px 0 0;font-size:13px;color:#555;">Aucun commentaire.<br>Soyez le premier !</p>
     </div>`;
   return items.map(c => {
-    const user = c.user?.username || c.author || 'Anonyme';
-    const text = c.text || c.content || '';
-    const time = _timeAgo(c.created_at);
-    const av   = c.user?.avatar;
+    const user = c.user?.username || c.user?.name || c.user?.display_name
+              || c.author_name || c.author || c.username || c.name || 'Anonyme';
+    const text = c.text || c.content || c.body || '';
+    const time = _timeAgo(c.created_at || c.createdAt);
+    const av   = _resolveAvatar(c.user?.avatar || c.user?.avatar_url || c.author_avatar || c.avatar_url);
     return `
     <div style="padding:12px 0;border-bottom:1px solid #1a1a1a;display:flex;gap:10px;">
       <div style="width:36px;height:36px;border-radius:50%;background:#1e1e1e;flex-shrink:0;
@@ -317,7 +325,7 @@ function _renderComments(items) {
       </div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
-          <span style="color:#ddd;font-size:13px;font-weight:600;">${user}</span>
+          <span style="color:#fff;font-size:13px;font-weight:700;">${user}</span>
           ${time ? `<span style="color:#444;font-size:11px;">${time}</span>` : ''}
         </div>
         <p style="margin:0;color:#bbb;font-size:13px;line-height:1.45;word-break:break-word;">${text}</p>
@@ -408,7 +416,7 @@ window.__reelSubmitComment = async function() {
                     display:flex;align-items:center;justify-content:center;">
           <i class="bi bi-person-fill" style="font-size:18px;color:#555;"></i>
         </div>
-        <div><span style="color:#ddd;font-size:13px;font-weight:600;">Moi</span>
+        <div><span style="color:#fff;font-size:13px;font-weight:700;">Moi</span>
           <p style="margin:3px 0 0;color:#bbb;font-size:13px;">${text}</p>
         </div>`;
       list.appendChild(div); list.scrollTop = list.scrollHeight;
@@ -446,14 +454,11 @@ function _toast(msg) {
 }
 
 // ── Nav bar compensation ──────────────────────────────────────────────────────
-// Le feed est position:fixed, on pousse les infos/actions vers le haut
-// si une bottom-nav existe, on applique un padding-bottom sur les éléments bas
+// On utilise une variable CSS pour éviter le reflow sur chaque slide
 function _applyNavOffset() {
   const nav = document.querySelector('.bottom-nav');
   const navH = nav ? nav.offsetHeight : 60;
-  document.querySelectorAll('.reel-info, .reel-actions').forEach(el => {
-    el.style.paddingBottom = (navH + (el.classList.contains('reel-info') ? 8 : 4)) + 'px';
-  });
+  document.documentElement.style.setProperty('--reel-nav-h', navH + 'px');
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────

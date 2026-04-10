@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Grep search reels.js for #E23E3E to understand pattern",
+			"type": "shell",
+			"command": "grep -n '#E23E3E' c:\\Users\\PC1\\projetSah\\perso\\Bf1\\bf1_tv_mobile\\mobile\\js\\pages\\reels.js | head -15"
+		}
+	]
+}

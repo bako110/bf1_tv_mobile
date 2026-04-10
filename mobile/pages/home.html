@@ -5,109 +5,420 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body class="d-none" id="home-page">
-  <div style="color:#FFFFFF; padding: 8px 0 0;">
+  <div class="bf1-home-container">
 
-    <!-- LIVE BF1 -->
-    <div id="live-section" style="margin-bottom: 24px;">
-      <div id="live-content" style="min-height: 180px; display:flex; align-items:center; justify-content:center;">
-        <div class="spinner-border text-danger" role="status"></div>
+    <!-- LIVE BF1 - Hero Section -->
+    <div id="live-section" class="bf1-live-hero">
+      <div id="live-content" class="bf1-live-wrapper">
+        <div class="bf1-live-skeleton">
+          <div class="spinner-border text-danger" role="status"></div>
+        </div>
       </div>
     </div>
+
+    <!-- RATTRAPAGE / MISSED -->
+    <section id="missed-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Vous l'avez raté?</h2>
+        <a href="#/missed" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <div id="missed-content" class="bf1-scroll-container"></div>
+    </section>
+
 
     <!-- FLASH INFO -->
-    <div id="flashInfo-section" style="margin-bottom: 24px;">
-      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
-        <h3 style="font-size:14px; font-weight:700; color:var(--text-1,#FFFFFF); margin:0;">Flash Info</h3>
-        <a href="#/news" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+    <!-- <section id="flashInfo-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Flash Info</h2>
+        <a href="#/news" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
       </div>
-      <div id="flashInfo-content" class="scroll-row"></div>
-    </div>
+      <div id="flashInfo-content" class="bf1-scroll-container"></div>
+    </section> -->
 
-    <!-- JT ET MAG -->
-    <div id="jtMag-section" style="margin-bottom: 24px;">
-      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
-        <h3 style="font-size:14px; font-weight:700; color:var(--text-1,#FFFFFF); margin:0;">JT et Mag</h3>
-        <a href="#/jtandmag" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
-      </div>
-      <div id="jtMag-content" class="scroll-row"></div>
-    </div>
 
-    <!-- TÉLÉ RÉALITÉ -->
-    <div id="teleRealite-section" style="margin-bottom: 24px;">
-      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
-        <h3 style="font-size:14px; font-weight:700; color:var(--text-1,#FFFFFF); margin:0;">Télé Réalité et Événements</h3>
-        <a href="#/tele-realite" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+    <!-- JOURNAUX -->
+    <section id="jtMag-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Journaux</h2>
+        <a href="#/jtandmag" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
       </div>
-      <div id="teleRealite-content" class="scroll-row"></div>
-    </div>
-
-    <!-- DIVERTISSEMENT -->
-    <div id="divertissements-section" style="margin-bottom: 24px;">
-      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
-        <h3 style="font-size:14px; font-weight:700; color:var(--text-1,#FFFFFF); margin:0;">Divertissement</h3>
-        <a href="#/divertissement" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
-      </div>
-      <div id="divertissements-content" class="scroll-row"></div>
-    </div>
-
-    <!-- SPORT -->
-    <div id="sports-section" style="margin-bottom: 24px;">
-      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
-        <h3 style="font-size:14px; font-weight:700; color:var(--text-1,#FFFFFF); margin:0;">Sport</h3>
-        <a href="#/sports" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
-      </div>
-      <div id="sports-content" class="scroll-row"></div>
-    </div>
+      <div id="jtMag-content" class="bf1-scroll-container"></div>
+    </section>
 
     <!-- REPORTAGES -->
-    <div id="reportages-section" style="margin-bottom: 24px;">
-      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
-        <h3 style="font-size:14px; font-weight:700; color:var(--text-1,#FFFFFF); margin:0;">Reportages</h3>
-        <a href="#/reportages" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+    <section id="reportages-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Reportages</h2>
+        <a href="#/reportages" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
       </div>
-      <div id="reportages-content" class="scroll-row"></div>
-    </div>
+      <div id="reportages-content" class="bf1-scroll-container"></div>
+    </section>
 
-    <!-- ARCHIVES VIDEO -->
-    <div id="archives-section" style="margin-bottom: 0;">
-      <div class="d-flex justify-content-between align-items-center" style="padding: 0 16px; margin-bottom: 16px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <h3 style="font-size:14px; font-weight:700; color:var(--text-1,#FFFFFF); margin:0;">Archives Video</h3>
-          <span style="background:#E23E3E; color:#fff; font-size:0.6rem; font-weight:600; padding:2px 7px; border-radius:10px;">Premium</span>
-        </div>
-        <a href="#/archive" class="see-more-btn"><i class="bi bi-arrow-right-circle-fill"></i></a>
+    <!-- MAGAZINES -->
+    <section id="magazine-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Magazines</h2>
+        <a href="#/magazine" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
       </div>
-      <div id="archives-content" class="scroll-row"></div>
-    </div>
+      <div id="magazine-content" class="bf1-scroll-container"></div>
+    </section>
+
+    <!-- DIVERTISSEMENT -->
+    <section id="divertissements-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Divertissement</h2>
+        <a href="#/divertissement" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <div id="divertissements-content" class="bf1-scroll-container"></div>
+    </section>
+
+    <!-- TÉLÉ RÉALITÉ ET ÉVÈNEMENTIELS -->
+    <section id="teleRealite-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Télé réalité et évènementiels</h2>
+        <a href="#/tele-realite" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <div id="teleRealite-content" class="bf1-scroll-container"></div>
+    </section>
+
+    <!-- SPORT -->
+    <section id="sports-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Sport</h2>
+        <a href="#/sports" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <div id="sports-content" class="bf1-scroll-container"></div>
+    </section>
+
+    <!-- ARCHIVES VIDÉO -->
+    <section id="archives-section" class="bf1-content-section" data-animate>
+      <div class="bf1-section-header">
+        <h2 class="bf1-section-title">Archives Vidéo</h2>
+        <a href="#/archive" class="bf1-see-more-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="arrow-line" d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="arrow-head" d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <div id="archives-content" class="bf1-scroll-container"></div>
+    </section>
 
   </div>
 
   <style>
-    .see-more-btn {
+    :root {
+      --bf1-primary: #E23E3E;
+      --bf1-bg-dark: #0d0d0d;
+      --bf1-bg-card: #1a1a1a;
+      --bf1-text-primary: #FFFFFF;
+      --bf1-text-secondary: #999999;
+      --bf1-border-subtle: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background: var(--bf1-bg-dark) !important;
+    }
+
+    .bf1-home-container {
+      color: var(--bf1-text-primary);
+      padding-top: 0;
+      background: var(--bf1-bg-dark);
+      min-height: 100vh;
+    }
+
+    /* ===== LIVE HERO SECTION ===== */
+    .bf1-live-hero {
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bf1-live-wrapper {
+      position: relative;
+      border-radius: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .bf1-live-skeleton {
+      min-height: 56.25vw;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 18px;
-      /* background: rgba(226,62,62,0.25); */
-      color: #E23E3E;
-      font-size: 22px;
+      background: #000;
+    }
+
+    /* ===== SECTION STYLING ===== */
+    .bf1-content-section {
+      margin-bottom: 40px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .bf1-content-section[data-animate] {
+      animation-delay: calc(var(--section-index, 0) * 0.1s);
+    }
+
+    .bf1-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
+    .bf1-section-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0;
+      color: #FFFFFF;
+      letter-spacing: -0.6px;
+      font-family: 'Inter', sans-serif;
+      position: relative;
+      flex: 1;
+    }
+
+    .bf1-section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 40px;
+      height: 3px;
+      background: var(--bf1-primary);
+      border-radius: 2px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bf1-section-header:hover .bf1-section-title::after {
+      width: 60px;
+    }
+
+    /* Flèche ultra moderne */
+    .bf1-see-more-arrow {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: var(--bf1-text-primary);
       text-decoration: none;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
       flex-shrink: 0;
     }
-    .see-more-btn:hover { background: rgba(226,62,62,0.45); color: #E23E3E; }
-    .scroll-row {
+
+    .bf1-see-more-arrow::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(226, 62, 62, 0.1) 0%, rgba(226, 62, 62, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .bf1-see-more-arrow:hover {
+      background: rgba(226, 62, 62, 0.15);
+      border-color: rgba(226, 62, 62, 0.4);
+      transform: translateX(4px) scale(1.05);
+      box-shadow: 0 4px 20px rgba(226, 62, 62, 0.3);
+    }
+
+    .bf1-see-more-arrow:hover::before {
+      opacity: 1;
+    }
+
+    .bf1-see-more-arrow:active {
+      transform: translateX(2px) scale(0.98);
+    }
+
+    .bf1-see-more-arrow svg {
+      position: relative;
+      z-index: 1;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bf1-see-more-arrow:hover svg {
+      transform: translateX(3px);
+    }
+
+    /* Animation de la ligne de la flèche */
+    .bf1-see-more-arrow .arrow-line {
+      stroke-dasharray: 14;
+      stroke-dashoffset: 14;
+      transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bf1-see-more-arrow:hover .arrow-line {
+      stroke-dashoffset: 0;
+    }
+
+    /* Animation de la tête de la flèche */
+    .bf1-see-more-arrow .arrow-head {
+      transform-origin: center;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bf1-see-more-arrow:hover .arrow-head {
+      transform: translateX(2px);
+    }
+
+    /* Glow effect au hover */
+    @keyframes glowPulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(226, 62, 62, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 0 4px rgba(226, 62, 62, 0);
+      }
+    }
+
+    .bf1-see-more-arrow:hover {
+      animation: glowPulse 1.5s infinite;
+    }
+
+    /* ===== SCROLL CONTAINER ===== */
+    .bf1-scroll-container {
       display: flex;
       overflow-x: auto;
-      gap: 10px;
-      padding: 0 16px 10px;
+      overflow-y: hidden;
+      gap: 12px;
+      padding: 0 16px 16px;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
     }
-    .scroll-row::-webkit-scrollbar { display: none; }
-    @keyframes liveDot { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .bf1-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .bf1-scroll-container > * {
+      scroll-snap-align: start;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes livePulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.4;
+        transform: scale(0.8);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+      }
+      100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+      }
+    }
+
+    @keyframes bf1Shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    /* ===== SECTION ANIMATION DELAYS ===== */
+    #flashInfo-section { --section-index: 1; }
+    #missed-section { --section-index: 2; }
+    #jtMag-section { --section-index: 3; }
+    #teleRealite-section { --section-index: 4; }
+    #divertissements-section { --section-index: 5; }
+    #sports-section { --section-index: 6; }
+    #reportages-section { --section-index: 7; }
+    #archives-section { --section-index: 8; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .bf1-section-title {
+        font-size: 20px;
+      }
+
+      .bf1-see-more-arrow {
+        width: 40px;
+        height: 40px;
+      }
+    }
   </style>
 </body>
 </html>

@@ -133,21 +133,6 @@
 <!-- Wrapper principal flex colonne -->
 <div id="live-page">
 
-  <!-- Barre de statut LIVE (au-dessus de la vidéo) -->
-  <div style="display:flex;align-items:center;justify-content:space-between;
-              padding:10px 14px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="width:8px;height:8px;border-radius:50%;background:#E23E3E;
-             animation:livePulse 1.4s ease-in-out infinite;display:inline-block;"></span>
-      <span style="font-size:13px;color:#E23E3E;font-weight:700;letter-spacing:.5px;">EN DIRECT</span>
-    </div>
-    <span id="live-viewers-header" style="display:none;align-items:center;gap:4px;
-          font-size:12px;color:rgba(255,255,255,0.55);">
-      <i class="bi bi-eye"></i>
-      <span id="live-viewers-count">0</span> spectateurs
-    </span>
-  </div>
-
   <!-- Lecteur vidéo (taille fixe) -->
   <div id="live-video-container">
     <div style="display:flex;justify-content:center;align-items:center;
@@ -160,14 +145,35 @@
 
   <!-- Sections de contenu (scrollables) -->
   <div id="live-sections">
-    <!-- Drag handle -->
-    <div style="display:flex;justify-content:center;padding:10px 0 6px;">
-      <div style="width:36px;height:4px;background:#2a2a2a;border-radius:2px;"></div>
+
+    <!-- ── Bouton unique Chat & Commentaires ── -->
+    <div id="live-chat-btn-bar" style="display:none;padding:10px 16px 4px;">
+      <button onclick="window._openLiveModal && window._openLiveModal('chat')"
+              style="display:flex;align-items:center;gap:12px;width:100%;
+                     background:var(--surface,#1a1a1a);border:1px solid var(--border,#2a2a2a);
+                     border-radius:12px;padding:12px 16px;cursor:pointer;text-align:left;">
+        <i class="bi bi-chat-dots-fill" style="color:#E23E3E;font-size:17px;flex-shrink:0;"></i>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-1,#fff);">Chat &amp; Commentaires</div>
+          <div id="live-modal-subtitle" style="font-size:11px;color:var(--text-3,#888);margin-top:1px;">
+            Rejoindre la discussion
+          </div>
+        </div>
+        <i class="bi bi-chevron-up" style="color:var(--text-3,#555);font-size:13px;"></i>
+      </button>
     </div>
-    <div style="display:flex;justify-content:center;padding:20px 0 28px;">
-      <div style="width:26px;height:26px;border:2px solid #1a1a1a;
-                  border-top-color:#444;border-radius:50%;
-                  animation:liveSpin 0.75s linear infinite;"></div>
+
+    <!-- Conteneur épisodes/onglets — rempli dynamiquement par loadLive() -->
+    <div id="live-episodes-container">
+      <!-- Drag handle initial -->
+      <div style="display:flex;justify-content:center;padding:10px 0 6px;">
+        <div style="width:36px;height:4px;background:#2a2a2a;border-radius:2px;"></div>
+      </div>
+      <div style="display:flex;justify-content:center;padding:20px 0 28px;">
+        <div style="width:26px;height:26px;border:2px solid #1a1a1a;
+                    border-top-color:#444;border-radius:50%;
+                    animation:liveSpin 0.75s linear infinite;"></div>
+      </div>
     </div>
   </div>
 

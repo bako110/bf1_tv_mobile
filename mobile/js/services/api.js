@@ -152,6 +152,16 @@ export async function getJTandMag(skip = 0, limit = 20) {
   return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
+export async function getMagazine(skip = 0, limit = 20) {
+  const res = await http.get(`/magazine?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
+}
+
+export async function getMissed(skip = 0, limit = 20) {
+  const res = await http.get(`/missed?skip=${skip}&limit=${limit}`).catch(() => ({}));
+  return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
+}
+
 // ===== DÉTAILS PAR ID =====
 export async function getNewsById(id) {
   return http.get(`/news/${id}`);
@@ -161,11 +171,13 @@ export async function getShowById(id, type) {
   switch (type) {
     case 'sport':         return http.get(`/sports/${id}`);
     case 'jtandmag':      return http.get(`/jtandmag/${id}`);
+    case 'magazine':      return http.get(`/magazine/${id}`);
     case 'divertissement':return http.get(`/divertissement/${id}`);
     case 'reportage':     return http.get(`/reportage/${id}`);
     case 'archive':       return http.get(`/archives/${id}`);
     case 'tele_realite':  return http.get(`/tele-realite/${id}`);
     case 'movie':         return http.get(`/movies/${id}`);
+    case 'missed':        return http.get(`/missed/${id}`);
     default:              return http.get(`/shows/${id}`);
   }
 }
@@ -195,7 +207,8 @@ export async function getSeasonEpisodes(seasonId) {
 export function getCategoryEndpoint(category) {
   const name = (category || '').toLowerCase();
   if (name.includes('sport')) return { endpoint: '/sports', contentType: 'sport' };
-  if (name.includes('jt') || name.includes('mag')) return { endpoint: '/jtandmag', contentType: 'jtandmag' };
+  if (name.includes('jt') || name.includes('journal')) return { endpoint: '/jtandmag', contentType: 'jtandmag' };
+  if (name.includes('mag')) return { endpoint: '/magazine', contentType: 'magazine' };
   if (name.includes('divertissement')) return { endpoint: '/divertissement', contentType: 'divertissement' };
   if (name.includes('reportage')) return { endpoint: '/reportage', contentType: 'reportage' };
   if (
@@ -222,11 +235,13 @@ export async function getRelatedByType(type, excludeId) {
     case 'news':           items = extract(await http.get('/news?skip=0&limit=20').catch(() => ({}))); break;
     case 'sport':          items = extract(await http.get('/sports?skip=0&limit=20').catch(() => ({}))); break;
     case 'jtandmag':       items = extract(await http.get('/jtandmag?skip=0&limit=20').catch(() => ({}))); break;
+    case 'magazine':       items = extract(await http.get('/magazine?skip=0&limit=20').catch(() => ({}))); break;
     case 'divertissement': items = extract(await http.get('/divertissement?skip=0&limit=20').catch(() => ({}))); break;
     case 'reportage':      items = extract(await http.get('/reportage?skip=0&limit=20').catch(() => ({}))); break;
     case 'archive':        items = extract(await http.get('/archives?skip=0&limit=20').catch(() => ({}))); break;
     case 'tele_realite':   items = extract(await http.get('/tele-realite?skip=0&limit=20').catch(() => ({}))); break;
     case 'movie':          items = extract(await http.get('/movies?skip=0&limit=20').catch(() => ({}))); break;
+    case 'missed':         items = extract(await http.get('/missed?skip=0&limit=20').catch(() => ({}))); break;
     default:               items = []; break;
   }
   return items
@@ -240,12 +255,24 @@ export async function getLive() {
 }
 
 /**
- * Retourne l'URL du proxy HLS.
- * Le vrai lien du flux n'est jamais transmis au frontend — le backend fait le relais.
+ * Retourne l'URL du flux HLS depuis l'endpoint /status.
  */
 export async function getLiveStreamUrl() {
-  const { API_CONFIG } = await import('../config/routes.js');
-  return `${API_CONFIG.API_BASE_URL}/livestream/stream-proxy`;
+  try {
+    const liveData = await getLive();
+    let url = liveData?.live_dailymotion_url || '';
+    
+    // Ajouter des paramètres pour masquer les métadonnées Dailymotion
+    if (url && url.includes('dailymotion')) {
+      const separator = url.includes('?') ? '&' : '?';
+      url += `${separator}ui-logo=0&ui-start-screen-info=0&sharing-enable=0&endscreen-enable=0&queue-enable=0&ui-theme=dark&syndication=0`;
+    }
+    
+    return url;
+  } catch (error) {
+    console.error('Erreur récupération URL stream:', error);
+    return '';
+  }
 }
 
 export async function getReels(skip = 0, limit = 20) {
@@ -292,8 +319,39 @@ export async function deleteComment(commentId) {
   return http.delete(`/comments/${commentId}`);
 }
 
+// ===== COMMENTAIRES LIVE =====
+export async function getLiveComments(skip = 0, limit = 50) {
+  const res = await http.get(`/livestream/comments?skip=${skip}&limit=${limit}`).catch(() => ({ comments: [] }));
+  return res.comments || [];
+}
+
+export async function addLiveComment(text) {
+  return http.post('/livestream/comments', { text });
+}
+
+export async function deleteLiveComment(commentId) {
+  return http.delete(`/livestream/comments/${commentId}`);
+}
+
 export async function updateComment(commentId, text) {
   return http.put(`/comments/${commentId}`, { text });
+}
+
+export async function incrementView(contentType, contentId) {
+  const user = getUser();
+  return http.post('/views/increment', {
+    content_type: contentType,
+    content_id: contentId,
+    user_id: user?.id ? String(user.id) : null,
+  }).catch(() => null); // silencieux — ne jamais bloquer l'UI
+}
+
+export async function deleteMyChatMessage(messageId) {
+  return http.delete(`/ws/chat/my/${messageId}`);
+}
+
+export async function editMyChatMessage(messageId, text) {
+  return http.patch(`/ws/chat/my/${messageId}`, { text });
 }
 
 // ===== LIKES =====
@@ -363,6 +421,16 @@ export async function deleteNotification(notifId) {
 
 export async function deleteAllNotifications() {
   return http.delete('/notifications/delete-all');
+}
+
+// ===== PROFIL UTILISATEUR =====
+export async function updateProfile(patch) {
+  const res = await http.patch('/users/me', patch);
+  if (res) {
+    const current = getUser() || {};
+    setUser({ ...current, ...res });
+  }
+  return res;
 }
 
 // ===== PARAMÈTRES UTILISATEUR =====

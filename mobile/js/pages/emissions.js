@@ -11,66 +11,53 @@ function formatCount(n) {
   return String(n);
 }
 
+function formatTime(date) {
+  const d = new Date(date);
+  return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
 const _emState = { liked: new Set(), favd: new Set(), counts: {} };
 
-function buildCategoryCard(cat) {
+function buildCategoryCard(cat, index = 0) {
   const id    = cat.id || cat._id;
   const name  = cat.name || 'Sans titre';
   const image = cat.image_main || cat.image_url || cat.image || 'https://via.placeholder.com/400x560/111/333?text=BF1';
-  const likes = cat.likes ?? 0;
-  const isNew = cat.is_new;
+  const isNew = cat.is_new || false;
+  const likes = cat.likes || 0;
+  const time  = formatTime(cat.created_at || cat.updated_at);
   const liked = _emState.liked.has(String(id));
   const favd  = _emState.favd.has(String(id));
   _emState.counts[id] = likes;
 
+  // Badge "Nouveau" pour les 2 premiers ou si is_new
+  const nouveauBadge = (index < 2 || isNew) ? `
+    <div style="position:absolute;top:8px;right:8px;background:#0E7AFE;color:white;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;z-index:3;box-shadow:0 2px 8px rgba(14,122,254,0.4);">
+      Nouveau
+    </div>
+  ` : '';
+
+  // Bouton + en bas à droite
+  const addButton = `
+    <div onclick="event.stopPropagation();event.preventDefault();window.toggleFavorite('emission_category','${id}',this)" style="position:absolute;bottom:8px;right:8px;width:36px;height:36px;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px;z-index:3;border:1px solid rgba(255,255,255,0.15);cursor:pointer;">
+      <i class="bi bi-plus-lg"></i>
+    </div>
+  `;
+
   return `
-    <div class="col-6">
-      <div class="position-relative rounded overflow-hidden"
-           style="background:var(--surface,#111);aspect-ratio:3/4;cursor:pointer;"
-           onclick="window.location.hash='#/emission-category/${encodeURIComponent(name)}'">
-        <img src="${esc(image)}" alt="${esc(name)}" class="w-100 h-100"
-             style="object-fit:cover;display:block;"
-             onerror="this.src='https://via.placeholder.com/400x560/111/333?text=BF1'" />
-
-        <!-- gradient -->
-        <div class="position-absolute bottom-0 start-0 end-0"
-             style="background:linear-gradient(transparent,rgba(0,0,0,0.88));padding:40px 10px 10px;"></div>
-
-        ${isNew ? `<div class="position-absolute top-0 start-0 m-2">
-          <span class="badge" style="background:#E23E3E;font-size:10px;">Nouveau</span>
-        </div>` : ''}
-
-        <!-- Favorite btn top-right -->
-        <button id="emfav-${esc(id)}"
-                onclick="event.stopPropagation();_emToggleFav('${esc(id)}','${esc(name)}')"
-                style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);
-                       border:none;border-radius:50%;width:32px;height:32px;
-                       display:flex;align-items:center;justify-content:center;
-                       cursor:pointer;z-index:2;padding:0;">
-          <i class="bi ${favd ? 'bi-bookmark-fill' : 'bi-bookmark'}"
-             style="font-size:15px;color:${favd ? '#F59E0B' : '#fff'};"></i>
-        </button>
-
-        <!-- Like btn below fav -->
-        <button id="emlike-${esc(id)}"
-                onclick="event.stopPropagation();_emToggleLike('${esc(id)}','${esc(name)}')"
-                style="position:absolute;top:46px;right:8px;background:rgba(0,0,0,0.55);
-                       border:none;border-radius:50%;width:32px;height:32px;
-                       display:flex;flex-direction:column;align-items:center;justify-content:center;
-                       cursor:pointer;z-index:2;padding:0;gap:1px;">
-          <i class="bi ${liked ? 'bi-heart-fill' : 'bi-heart'}"
-             style="font-size:15px;color:${liked ? '#E23E3E' : '#fff'};"></i>
-        </button>
-        <span id="emlike-count-${esc(id)}"
-              style="position:absolute;top:82px;right:0;left:0;text-align:center;
-                     color:#fff;font-size:9px;font-weight:600;z-index:2;
-                     ${likes > 0 ? '' : 'display:none;'}">${formatCount(likes)}</span>
-
-        <!-- name bottom -->
-        <div class="position-absolute bottom-0 start-0 end-0 p-2">
-          <p class="mb-0 fw-bold" style="color:var(--description-grid-color, #fff);font-size:13px;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.8);">${esc(name)}</p>
+    <div class="col-6" style="--card-index:${index};">
+      <a href="#/emission-category/${encodeURIComponent(name)}" class="bf1-emission-card" style="text-decoration:none;display:block;">
+        <div class="bf1-emission-inner">
+          <div class="bf1-emission-image-wrapper">
+            <img src="${esc(image)}" alt="${esc(name)}" class="bf1-emission-image"
+                 onerror="this.src='https://via.placeholder.com/400x560/111/333?text=BF1'" />
+            ${nouveauBadge}
+            ${addButton}
+          </div>
+          <div class="bf1-emission-content">
+            <h3 class="bf1-emission-title">${esc(name)}</h3>
+          </div>
         </div>
-      </div>
+      </a>
     </div>
   `;
 }
@@ -160,23 +147,151 @@ export async function loadEmissions() {
 
     if (!categories || categories.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-5">
-          <i class="bi bi-grid" style="font-size:3rem;color:var(--text-3,#555);"></i>
-          <p style="color:var(--text-2,#888);" class="mt-3">Aucune catégorie disponible</p>
-          <p style="color:var(--text-3,#666);font-size:13px;">Les catégories d'émissions seront affichées ici</p>
+        <div class="bf1-empty-state">
+          <i class="bi bi-grid"></i>
+          <p>Aucune catégorie disponible</p>
         </div>`;
       return;
     }
 
-    container.innerHTML = `<div class="row g-3 px-3 py-3">${categories.map(buildCategoryCard).join('')}</div>`;
+    container.innerHTML = `<div class="row g-3 px-3 py-3">${categories.map((cat, i) => buildCategoryCard(cat, i)).join('')}</div>`;
+    
+    // Injecter les styles
+    injectEmissionStyles();
 
   } catch (err) {
     console.error('Erreur loadEmissions:', err);
     container.innerHTML = `
       <div class="text-center py-5">
         <i class="bi bi-exclamation-circle" style="font-size:2rem;color:#E23E3E;"></i>
-        <p style="color:var(--text-2,#888);" class="mt-2">Erreur lors du chargement</p>
+        <p style="color:#888;" class="mt-2">Erreur lors du chargement</p>
         <button class="btn btn-sm btn-outline-danger mt-2" onclick="location.reload()">Réessayer</button>
       </div>`;
   }
+}
+
+function injectEmissionStyles() {
+  if (document.getElementById('bf1-emission-styles')) return;
+  
+  const style = document.createElement('style');
+  style.id = 'bf1-emission-styles';
+  style.textContent = `
+    /* ===== EMISSION CARDS ===== */
+    .bf1-emission-card {
+      display: block;
+      cursor: pointer;
+      animation: cardFadeIn 0.5s ease-out forwards;
+      animation-delay: calc(var(--card-index) * 0.05s);
+      opacity: 0;
+    }
+
+    .bf1-emission-inner {
+      position: relative;
+      width: 100%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bf1-emission-card:active .bf1-emission-inner {
+      transform: scale(0.97);
+    }
+
+    .bf1-emission-image-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3/4;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #1a1a1a;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .bf1-emission-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bf1-emission-card:hover .bf1-emission-image {
+      transform: scale(1.05);
+    }
+
+    .bf1-emission-content {
+      padding: 12px 0 0;
+    }
+
+    .bf1-emission-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin: 0 0 8px;
+      color: white;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      letter-spacing: -0.2px;
+    }
+
+    .bf1-emission-stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 500;
+    }
+
+    .bf1-emission-stats span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bf1-emission-stats i {
+      font-size: 11px;
+    }
+
+    .bf1-likes {
+      color: #E23E3E !important;
+    }
+
+    .bf1-likes i {
+      color: #E23E3E !important;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .bf1-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .bf1-empty-state i {
+      font-size: 64px;
+      color: #333;
+      margin-bottom: 16px;
+    }
+
+    .bf1-empty-state p {
+      font-size: 15px;
+      margin: 0;
+    }
+  `;
+  document.head.appendChild(style);
 }

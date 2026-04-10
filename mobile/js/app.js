@@ -3,6 +3,7 @@ import { createPageSpinner } from './utils/snakeLoader.js';
 import { themeManager } from './utils/themeManager.js';
 import { attachPullToRefresh } from './utils/pullToRefresh.js';
 import { initAnimations, animateContainer } from './utils/animations.js';
+import { initDeepLinkHandler } from './utils/deepLinkHandler.js';
 
 // ── Toast global (pages détail) ───────────────────────────────────────────────
 window._detailToast = function(msg) {
@@ -10,10 +11,7 @@ window._detailToast = function(msg) {
   if (!t) {
     t = document.createElement('div');
     t.id = '_global-toast';
-    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);' +
-      'background:#1e1e1e;color:#fff;padding:10px 20px;border-radius:20px;' +
-      'font-size:13px;z-index:99999;opacity:0;transition:opacity .2s;pointer-events:none;' +
-      'white-space:nowrap;border:1px solid #2a2a2a;';
+    t.className = 'bf1-toast';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -167,14 +165,7 @@ window._detailToast = function(msg) {
     if (!t) {
       t = document.createElement('div');
       t.id = '_bf1-exit-toast';
-      t.style.cssText =
-        'position:fixed;bottom:calc(74px + env(safe-area-inset-bottom,0px));' +
-        'left:50%;transform:translateX(-50%) translateY(14px);' +
-        'background:#1e1e1e;color:#fff;padding:11px 22px;border-radius:20px;' +
-        'font-size:14px;z-index:99999;opacity:0;' +
-        'transition:opacity .22s,transform .22s;pointer-events:none;' +
-        'white-space:nowrap;border:1px solid #2a2a2a;' +
-        'box-shadow:0 4px 20px rgba(0,0,0,.65);';
+      t.className = 'bf1-exit-toast';
       document.body.appendChild(t);
     }
     t.textContent = msg;
@@ -196,25 +187,17 @@ window._detailToast = function(msg) {
     if (document.getElementById('_login-modal')) return;
     const el = document.createElement('div');
     el.id = '_login-modal';
-    el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;' +
-                       'align-items:flex-end;justify-content:center;';
+    el.className = 'bf1-login-backdrop';
     el.innerHTML = `
-      <div id="_login-sheet"
-           style="background:#111;border-radius:20px 20px 0 0;
-                  padding:0 0 env(safe-area-inset-bottom,16px);
-                  width:100%;max-width:480px;margin:0 auto;
-                  transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);">
-        <div style="width:40px;height:4px;background:#2a2a2a;border-radius:2px;
-                    margin:12px auto 24px;"></div>
+      <div id="_login-sheet" class="bf1-login-sheet">
+        <div class="bf1-login-handle"></div>
         <div style="text-align:center;padding:0 28px 32px;">
           <div style="width:64px;height:64px;background:rgba(226,62,62,.12);border-radius:50%;
                       display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
             <i class="bi bi-lock-fill" style="font-size:28px;color:#E23E3E;"></i>
           </div>
-          <h3 style="color:#fff;font-size:18px;font-weight:700;margin:0 0 8px;">Connexion requise</h3>
-          <p id="_login-modal-msg"
-             style="color:#888;font-size:14px;line-height:1.5;margin:0 0 28px;
-                    max-width:280px;margin-left:auto;margin-right:auto;">
+          <h3 class="bf1-login-title">Connexion requise</h3>
+          <p id="_login-modal-msg" class="bf1-login-msg">
             Connectez-vous pour accéder à cette fonctionnalité
           </p>
           <button onclick="window.location.hash='#/login';window._closeLoginModal()"
@@ -223,10 +206,7 @@ window._detailToast = function(msg) {
                          font-weight:700;cursor:pointer;margin-bottom:10px;">
             Se connecter
           </button>
-          <button onclick="window._closeLoginModal()"
-                  style="display:block;width:100%;background:transparent;border:1px solid #252525;
-                         border-radius:12px;padding:14px;color:#888;font-size:14px;
-                         cursor:pointer;">
+          <button onclick="window._closeLoginModal()" class="bf1-login-btn-cancel">
             Continuer sans connexion
           </button>
         </div>
@@ -268,6 +248,7 @@ const routes = {
   '#/register': 'pages/register.html',
   '#/forgot-password': 'pages/forgot-password.html',
   '#/news': 'pages/news.html',
+  '#/missed': 'pages/missed.html',
   '#/movies': 'pages/movies.html',
   '#/series': 'pages/series.html',
   '#/programs': 'pages/programs.html',
@@ -276,6 +257,7 @@ const routes = {
   '#/reportages': 'pages/reportages.html',
   '#/archive': 'pages/archive.html',
   '#/jtandmag': 'pages/jtandmag.html',
+  '#/magazine': 'pages/magazine.html',
   '#/tele-realite': 'pages/tele-realite.html',
   '#/favorites': 'pages/favorites.html',
   '#/notifications': 'pages/notifications.html',
@@ -395,6 +377,34 @@ async function renderRoute(route) {
 
   // ── Pages détail & fullscreen : pas de keep-alive ─────────────────────────
   if (!_isKeepAlive(route)) {
+    // Cleanup des vidéos de la page précédente
+    try {
+      const prevShowDetail = (await import('./pages/details/show-detail.js')).cleanupShowDetail;
+      if (prevShowDetail) prevShowDetail();
+    } catch (e) {}
+
+    try {
+      const prevSeriesDetail = (await import('./pages/details/series-detail.js')).cleanupSeriesDetail;
+      if (prevSeriesDetail) prevSeriesDetail();
+    } catch (e) {}
+
+    // Purger tous les players YT orphelins (DOM supprimé) pour éviter les fuites
+    if (window._ytPlayers) {
+      Object.keys(window._ytPlayers).forEach(pid => {
+        try {
+          const player = window._ytPlayers[pid];
+          if (player && typeof player.stopVideo === 'function') player.stopVideo();
+        } catch (e) {}
+        if (window._ytTimers?.[pid]) {
+          clearInterval(window._ytTimers[pid]);
+          delete window._ytTimers[pid];
+        }
+        delete window._ytPlayers[pid];
+      });
+    }
+    // Réinitialiser le flag pour que _setupYTGlobals reconfigure les handlers
+    window.__ytSetup = false;
+
     // Cacher toutes les pages KA
     _kaPages.forEach(p => { p.el.style.display = 'none'; });
 
@@ -453,9 +463,42 @@ async function renderRoute(route) {
 
   // ── Pages keep-alive ──────────────────────────────────────────────────────
 
-  // Cacher la page détail si visible
+  // Cacher la page détail si visible + cleanup vidéos
   const detailEl = document.getElementById('_detail-page');
-  if (detailEl) detailEl.style.display = 'none';
+  if (detailEl && detailEl.style.display !== 'none') {
+    try { (await import('./pages/details/show-detail.js')).cleanupShowDetail?.(); } catch (e) {}
+    try { (await import('./pages/details/series-detail.js')).cleanupSeriesDetail?.(); } catch (e) {}
+    if (window._ytPlayers) {
+      Object.keys(window._ytPlayers).forEach(pid => {
+        try { window._ytPlayers[pid]?.stopVideo?.(); } catch (e) {}
+        if (window._ytTimers?.[pid]) { clearInterval(window._ytTimers[pid]); delete window._ytTimers[pid]; }
+        delete window._ytPlayers[pid];
+      });
+    }
+    window.__ytSetup = false;
+    detailEl.style.display = 'none';
+  } else if (detailEl) {
+    detailEl.style.display = 'none';
+  }
+
+  // Cleanup de la page home (arrêter le live) si on quitte cette page
+  if (window._prevHash === '#/home' && route !== '#/home') {
+    try {
+      (await import('./pages/home.js')).cleanupHome?.();
+    } catch (e) {
+      console.warn('Erreur cleanup home:', e);
+    }
+  }
+
+  // Toujours couper + supprimer le mini-player flottant si on n'est pas sur home
+  if (route !== '#/home' && route !== '#/') {
+    const _mini = document.getElementById('bf1-mini-live-player');
+    if (_mini) {
+      _mini.querySelectorAll('iframe').forEach(f => { f.src = ''; });
+      _mini.remove();
+    }
+    document.getElementById('bf1-iframe-placeholder')?.remove();
+  }
 
   // S'assurer que le ka-container est visible
   const kaCont = _getKaContainer();
@@ -476,6 +519,14 @@ async function renderRoute(route) {
     const page = _kaPages.get(route);
     page.el.style.display = '';
     requestAnimationFrame(() => { page.el.scrollTop = page.scrollTop || 0; });
+    
+    // Recharger uniquement l'iframe du live si on revient sur home ou live
+    if (route === '#/home') {
+      import('./pages/home.js').then(m => m.reloadHomeLive?.()).catch(e => console.warn('Erreur reload home live:', e));
+    } else if (route === '#/live') {
+      import('./pages/live.js').then(m => m.reloadLivePlayer?.()).catch(e => console.warn('Erreur reload live player:', e));
+    }
+    
     return;
   }
 
@@ -524,7 +575,9 @@ async function loadPageScript(route, detailParams = null) {
   const pageScripts = {
     '#/home':           () => import('./pages/home.js').then(m => m.loadHome()),
     '#/news':           () => import('./pages/news.js').then(m => m.loadNews()),
+    '#/missed':         () => import('./pages/missed.js').then(m => m.loadMissed()),
     '#/jtandmag':       () => import('./pages/jtandmag.js').then(m => m.loadJTandMag()),
+    '#/magazine':       () => import('./pages/magazine.js').then(m => m.loadMagazine()),
     '#/sports':         () => import('./pages/sports.js').then(m => m.loadSports()),
     '#/reportages':     () => import('./pages/reportages.js').then(m => m.loadReportages()),
     '#/divertissement': () => import('./pages/divertissement.js').then(m => m.loadDivertissement()),
@@ -585,7 +638,7 @@ function renderNotFound() {
         <i class="bi bi-map" style="font-size:36px;color:#E23E3E;"></i>
       </div>
       <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;" class="bf1-section-title">Page introuvable</h2>
-      <p style="font-size:14px;color:#888;margin:0 0 28px;line-height:1.6;">
+      <p style="font-size:14px;color:var(--text-3);margin:0 0 28px;line-height:1.6;">
         Cette page n'existe pas ou a été déplacée.
       </p>
       <a href="#/home" style="display:inline-flex;align-items:center;gap:8px;background:#E23E3E;
@@ -608,7 +661,7 @@ function renderOffline() {
         <i class="bi bi-wifi-off" style="font-size:36px;color:#E23E3E;"></i>
       </div>
       <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;" class="bf1-section-title">Pas de connexion</h2>
-      <p style="font-size:14px;color:#888;margin:0 0 28px;line-height:1.6;">
+      <p style="font-size:14px;color:var(--text-3);margin:0 0 28px;line-height:1.6;">
         Vérifie ta connexion internet<br>et réessaie.
       </p>
       <button onclick="window.location.reload()" 
@@ -682,30 +735,7 @@ function updateTopNav() {
   }
 }
 
-// Gestion des formulaires
-document.addEventListener('submit', async (e) => {
-  if (e.target.id === 'login-form') {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await login(fd.get('identifier'), fd.get('password'));
-      window.location.hash = '#/profile';
-    } catch (err) {
-      alert('Erreur connexion: ' + err.message);
-    }
-  }
-
-  if (e.target.id === 'register-form') {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await register(fd.get('username'), fd.get('email'), fd.get('password'));
-      window.location.hash = '#/profile';
-    } catch (err) {
-      alert('Erreur inscription: ' + err.message);
-    }
-  }
-});
+// Formulaires gérés dans leurs pages respectives : login.js, register.js
 
 // ===== SPLASH SCREEN =====
 function startSplash() {
@@ -732,6 +762,8 @@ function hideSplash() {
   const splash = document.getElementById('splash-screen');
   if (!splash) return;
   splash.classList.add('hiding');
+  // Afficher l'app shell (header, contenu, nav)
+  document.body.classList.add('splash-hidden');
   setTimeout(() => splash.remove(), 520);
 }
 
@@ -742,12 +774,35 @@ window.addEventListener('hashchange', async (e) => {
   const prev = e.oldURL ? (e.oldURL.split('#')[1] ? '#' + e.oldURL.split('#')[1] : '#/home') : '#/home';
   if (prev !== '#/premium') window._prevHash = prev;
 
-  // Arrêter le flux HLS si on quitte la page live
-  if (prev === '#/live' && route !== '#/live') {
+  // Arrêter le flux HLS si on quitte la page live (y compris vers les détails)
+  if (prev === '#/live') {
     try {
-      const { destroyLive } = await import('./pages/live.js');
-      destroyLive();
-    } catch (e) {}
+      const { cleanupLive } = await import('./pages/live.js');
+      cleanupLive();
+    } catch (e) {
+      console.warn('Erreur cleanup live:', e);
+    }
+  }
+
+  // Arrêter le flux live si on quitte la page d'accueil
+  if (prev === '#/home' || prev === '#/') {
+    try {
+      const { cleanupHome } = await import('./pages/home.js');
+      cleanupHome();
+    } catch (e) {
+      console.warn('Erreur cleanup home:', e);
+    }
+  }
+
+  // Failsafe : couper + supprimer le mini-player flottant si on n'est plus sur home
+  const _route = window.location.hash || '#/home';
+  if (_route !== '#/home' && _route !== '#/') {
+    const _miniFs = document.getElementById('bf1-mini-live-player');
+    if (_miniFs) {
+      _miniFs.querySelectorAll('iframe').forEach(f => { f.src = ''; });
+      _miniFs.remove();
+    }
+    document.getElementById('bf1-iframe-placeholder')?.remove();
   }
 
   renderRoute(route);
@@ -772,20 +827,17 @@ window.addEventListener('hashchange', async (e) => {
     if (ol) { ol.style.display = 'flex'; return; }
     ol = document.createElement('div');
     ol.id = '_bf1-offline-overlay';
-    ol.style.cssText =
-      'position:fixed;inset:0;z-index:999999;background:#000;' +
-      'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-      'padding:32px 24px;text-align:center;';
+    ol.className = 'bf1-offline-overlay';
     ol.innerHTML = `
       <div style="width:90px;height:90px;background:rgba(226,62,62,0.12);border-radius:50%;
                   display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
         <i class="bi bi-wifi-off" style="font-size:42px;color:#E23E3E;"></i>
       </div>
-      <h2 style="font-size:22px;font-weight:700;color:#fff;margin:0 0 10px;">Pas de connexion</h2>
-      <p style="font-size:14px;color:#888;margin:0 0 8px;line-height:1.65;">
+      <h2 class="bf1-offline-title">Pas de connexion</h2>
+      <p class="bf1-offline-msg">
         Vérifie ta connexion internet<br>et réessaie.
       </p>
-      <p id="_bf1-offline-status" style="font-size:12px;color:#555;margin:0 0 32px;">
+      <p id="_bf1-offline-status" class="bf1-offline-status">
         Tentative de reconnexion…
       </p>
       <button onclick="window._bf1TryReconnectNow()"
@@ -828,25 +880,10 @@ window.addEventListener('hashchange', async (e) => {
     setTimeout(() => renderRoute(_lastRoute), 600);
   });
 
-  // Vérifier la connexion en appelant une ressource minimale
-  async function _tryReconnect() {
-    try {
-      const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 5000);
-      
-      const response = await fetch('https://bf1.fly.dev/api/v1/health', {
-        signal: ctrl.signal,
-        cache: 'no-store'
-      });
-      
-      clearTimeout(timeout);
-      
-      if (response.ok && !_isOffline) {
-        // La connexion est effectivement rétablie
-        window.dispatchEvent(new Event('online'));
-      }
-    } catch (err) {
-      // Pas encore connecté
+  // Vérifier la connexion via navigator.onLine
+  function _tryReconnect() {
+    if (navigator.onLine && !_isOffline) {
+      window.dispatchEvent(new Event('online'));
     }
   }
 
@@ -863,12 +900,7 @@ window.addEventListener('hashchange', async (e) => {
     if (!t) {
       t = document.createElement('div');
       t.id = '_bf1-conn-toast';
-      t.style.cssText =
-        'position:fixed;top:env(safe-area-inset-top,0px);' +
-        'left:0;right:0;background:#1a1a1a;color:#fff;padding:12px 16px;' +
-        'font-size:13px;z-index:99998;opacity:0;' +
-        'transition:opacity .3s;text-align:center;' +
-        'border-bottom:1px solid #2a2a2a;';
+      t.className = 'bf1-conn-toast';
       document.body.appendChild(t);
     }
     
@@ -909,17 +941,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ┌─ Initialiser le thème ─────────────────────────────────────────────┐
   try {
     // localStorage a la priorité absolue (choix explicite de l'utilisateur)
-    // Sans préférence locale ET connecté → interroger le serveur
-    // Sans préférence locale ET non connecté → dark par défaut
+    // Sans préférence locale → dark par défaut, puis sync serveur en arrière-plan
     const localTheme = localStorage.getItem('bf1_theme_preference');
     if (localTheme) {
       themeManager.init(localTheme);
-    } else if (isAuthenticated()) {
-      const userSettings = await getUserSettings().catch(() => null);
-      const savedTheme = userSettings?.theme || 'dark';
-      themeManager.init(savedTheme);
     } else {
       themeManager.init('dark');
+      // Charger les settings serveur en arrière-plan (ne bloque pas le splash)
+      if (isAuthenticated()) {
+        getUserSettings().then(s => {
+          if (s?.theme && s.theme !== 'dark') {
+            localStorage.setItem('bf1_theme_preference', s.theme);
+            themeManager.init(s.theme);
+          }
+        }).catch(() => {});
+      }
     }
   } catch (err) {
     console.warn('⚠️ Impossible de charger le thème:', err.message);
@@ -927,10 +963,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   // └────────────────────────────────────────────────────────────────────┘
 
+  // ┌─ Écouteur global pour changement de thème ────────────────────────┐
+  // Recharger la page actuelle quand le thème change
+  window.addEventListener('themechange', (e) => {
+    const currentRoute = window.location.hash || '#/home';
+    console.log(`🎨 Thème changé vers: ${e.detail.theme}. Rafraîchir page...`);
+    renderRoute(currentRoute);
+  });
+  // └────────────────────────────────────────────────────────────────────┘
+
   // Si l'app était déjà initialisée dans cette session → pas de splash, juste recharger la page courante
   if (sessionStorage.getItem('bf1_ready')) {
     const splash = document.getElementById('splash-screen');
     if (splash) splash.remove();
+    // Afficher l'app shell immédiatement
+    document.body.classList.add('splash-hidden');
     const hash = window.location.hash;
     const target = (!hash || hash === '#' || hash === '#/') ? '#/home' : hash;
     history.replaceState(null, '', target);
@@ -944,17 +991,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const splashStart = Date.now();
 
   // Health check backend en parallèle (timeout 5s)
-  const healthCheck = fetch('https://bf1.fly.dev/api/v1/health', { signal: AbortSignal.timeout(5000) })
-    .then(() => {}).catch(() => {}); // ne pas bloquer si fail
+  // const healthCheck = fetch('https://bf1.fly.dev/api/v1/health', { signal: AbortSignal.timeout(5000) })
+  //   .then(() => {}).catch(() => {}); // ne pas bloquer si fail
 
-  await healthCheck;
+  // await healthCheck;
 
-  // Minimum 3 secondes de splash
+  // Minimum 1.8 secondes de splash (juste assez pour le typewriter)
   const elapsed = Date.now() - splashStart;
-  const remaining = Math.max(0, 3000 - elapsed);
+  const remaining = Math.max(0, 1800 - elapsed);
   await new Promise(r => setTimeout(r, remaining));
 
-  // Charger la page puis cacher le splash
+  // Initialiser le gestionnaire de deep links
+  initDeepLinkHandler();
+
+  // Cacher le splash AVANT de charger la page (pas de blocage par les appels API)
+  hideSplash();
+
+  // Charger la page (le contenu se charge avec son propre loader)
   const hash = window.location.hash;
   if (!hash || hash === '#' || hash === '#/') {
     history.replaceState(null, '', '#/home');
@@ -962,6 +1015,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     await renderRoute(hash);
   }
-
-  hideSplash();
 });

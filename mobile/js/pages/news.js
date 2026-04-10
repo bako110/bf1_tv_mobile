@@ -208,6 +208,32 @@ function renderNewsList(container) {
 
   const cards = sorted.map(currentMode === 'grid' ? buildGridCard : buildListCard).join('');
   container.innerHTML = `<div class="news-cards-wrapper px-3 pt-2 pb-3">${cards}</div>`;
+  
+  // Vérifier l'état des favoris si connecté
+  if (api.isAuthenticated()) {
+    sorted.forEach((item, index) => {
+      const contentId = item.id || item._id || '';
+      if (contentId) {
+        api.checkFavorite('news', contentId).then(isFavorited => {
+          const wrapper = container.querySelector('.news-cards-wrapper');
+          if (wrapper) {
+            const cards = wrapper.querySelectorAll('.news-card-link, .bf1-content-card');
+            const card = cards[index];
+            if (card && isFavorited) {
+              const btn = card.querySelector('[onclick*="toggleFavorite"]');
+              if (btn) {
+                const icon = btn.querySelector('i');
+                if (icon) {
+                  icon.className = 'bi bi-check-lg';
+                  btn.style.background = 'rgba(14,122,254,0.9)';
+                }
+              }
+            }
+          }
+        }).catch(() => {});
+      }
+    });
+  }
 }
 
 function buildSkeleton() {

@@ -5,24 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Émission - BF1</title>
 </head>
-<body style="background:var(--bg,#000);min-height:100vh;color:var(--text,#fff);">
+<body style="background:var(--bg,#0a0a0a);min-height:100vh;color:var(--text,#fff);">
 
-  <!-- Header sticky -->
-  <div class="sticky-top" style="background:var(--bg,#000);border-bottom:1px solid var(--divider,#1e1e1e);z-index:10;">
-    <div class="d-flex align-items-center gap-2 px-3 py-3">
-      <button onclick="history.back()"
-              style="background:none;border:none;padding:0;line-height:1;cursor:pointer;">
-        <i class="bi bi-arrow-left" style="font-size:22px;color:var(--primary,#E23E3E);"></i>
+  <!-- Header sticky ultra-pro -->
+  <div id="emcat-header" style="
+    position:sticky;top:0;z-index:100;
+    background:rgba(10,10,10,0.85);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    transition:all 0.3s ease;
+  ">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px 10px;">
+
+      <!-- Bouton retour premium -->
+      <button onclick="history.back()" id="emcat-back-btn" style="
+        width:38px;height:38px;border-radius:12px;border:none;cursor:pointer;
+        background:rgba(226,62,62,0.12);
+        display:flex;align-items:center;justify-content:center;
+        flex-shrink:0;
+        transition:all 0.2s ease;
+        position:relative;overflow:hidden;
+      ">
+        <i class="bi bi-arrow-left" style="font-size:18px;color:#E23E3E;position:relative;z-index:1;"></i>
       </button>
-      <h1 class="mb-0 fw-bold flex-grow-1" id="emcat-title"
-          style="font-size:18px;color:var(--primary,#E23E3E);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
-        Émission
-      </h1>
-      <i class="bi bi-tv-fill" style="font-size:18px;color:var(--primary,#E23E3E);"></i>
+
+      <!-- Titre -->
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="
+            width:3px;height:18px;border-radius:2px;
+            background:linear-gradient(180deg,#E23E3E,#FF6B6B);
+            flex-shrink:0;
+          "></div>
+          <h1 id="emcat-title" style="
+            font-size:17px;font-weight:800;margin:0;
+            color:#fff;letter-spacing:-0.3px;
+            overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+          ">Émission</h1>
+        </div>
+        <p id="emcat-subtitle" style="
+          font-size:11px;color:rgba(255,255,255,0.4);margin:2px 0 0 11px;
+          font-weight:500;
+        ">Chargement…</p>
+      </div>
+
     </div>
+
   </div>
 
-  <div id="emcat-container" style="padding-bottom:70px;"></div>
+  <div id="emcat-container" style="padding-bottom:80px;"></div>
+
+  <style>
+    #emcat-back-btn:active {
+      background: rgba(226,62,62,0.25) !important;
+      transform: scale(0.93);
+    }
+
+    .emcat-card-pro {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .emcat-card-pro:active {
+      transform: scale(0.97);
+    }
+
+    @keyframes emcat-shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+    @keyframes emcat-fadein {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes bf1-pulse {
+      0%,100% { opacity:1; }
+      50%      { opacity:0.4; }
+    }
+    @keyframes live-ring {
+      0%   { transform:scale(1);   opacity:0.8; }
+      70%  { transform:scale(1.6); opacity:0;   }
+      100% { transform:scale(1.6); opacity:0;   }
+    }
+  </style>
 
 </body>
 </html>

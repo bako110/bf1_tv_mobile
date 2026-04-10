@@ -85,7 +85,7 @@ function _syncToggleUI(key, val) {
 function _settingRow(icon, label, desc, toggleId, checked, saveKey) {
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;
-                padding:14px 14px;background:#111;border-radius:14px;border:1px solid #1e1e1e;">
+                padding:14px 14px;background:var(--bg-2);border-radius:14px;border:1px solid var(--border);">
       <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
         <div style="width:40px;height:40px;background:rgba(226,62,62,0.12);border-radius:12px;
                     display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -93,8 +93,8 @@ function _settingRow(icon, label, desc, toggleId, checked, saveKey) {
           <i class="bi ${icon}" style="color:#E23E3E;font-size:18px;"></i>
         </div>
         <div style="min-width:0;">
-          <div style="color:#fff;font-size:14px;font-weight:500;line-height:1.3;">${label}</div>
-          <div style="color:#4a4a4a;font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${desc}</div>
+          <div style="color:var(--text);font-size:14px;font-weight:500;line-height:1.3;">${label}</div>
+          <div style="color:var(--text-3);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${desc}</div>
         </div>
       </div>
       ${_makeToggle(`tog-${toggleId}`, checked, `window._setToggle('${saveKey}', this.checked)`)}
@@ -112,7 +112,7 @@ function _sectionTitle(title) {
 function _selectorRow(icon, label, value, displayValue, onclick) {
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;
-                padding:14px 14px;background:#111;border-radius:14px;border:1px solid #1e1e1e;cursor:pointer;"
+                padding:14px 14px;background:var(--bg-2);border-radius:14px;border:1px solid var(--border);cursor:pointer;"
          onclick="${onclick}">
       <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
         <div style="width:40px;height:40px;background:rgba(226,62,62,0.12);border-radius:12px;
@@ -121,12 +121,12 @@ function _selectorRow(icon, label, value, displayValue, onclick) {
           <i class="bi ${icon}" style="color:#E23E3E;font-size:18px;"></i>
         </div>
         <div style="min-width:0;">
-          <div style="color:#fff;font-size:14px;font-weight:500;line-height:1.3;">${label}</div>
-          <div style="color:#4a4a4a;font-size:12px;margin-top:2px;" id="val-${value}">${displayValue}</div>
+          <div style="color:var(--text);font-size:14px;font-weight:500;line-height:1.3;">${label}</div>
+          <div style="color:var(--text-3);font-size:12px;margin-top:2px;" id="val-${value}">${displayValue}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-        <i class="bi bi-chevron-right" style="color:#2e2e2e;font-size:13px;"></i>
+        <i class="bi bi-chevron-right" style="color:var(--text-3);font-size:13px;"></i>
       </div>
     </div>`;
 }

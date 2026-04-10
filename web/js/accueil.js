@@ -614,10 +614,17 @@ function setupCarouselSwipe(container) {
 // ==================== HLS VIDEO PLAYER ====================
 
 /**
- * Récupère l'URL du flux HLS depuis l'API
+ * Récupère l'URL du flux depuis l'API
  */
 async function fetchLiveStreamUrl() {
-  return 'https://bf1.fly.dev/api/v1/livestream/stream-proxy';
+  try {
+    const response = await fetch('https://bf1.fly.dev/api/v1/livestream/status');
+    const data = await response.json();
+    return data?.live_dailymotion_url || '';
+  } catch (error) {
+    console.error('Erreur récupération URL stream:', error);
+    return '';
+  }
 }
 
 /**

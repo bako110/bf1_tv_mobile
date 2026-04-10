@@ -1,0 +1,626 @@
+/* ============================================
+   BF1 TV - SYSTÈME DE THÈMES CENTRALISÉ
+   ============================================ */
+
+/* ===== MODE SOMBRE (PAR DÉFAUT) ===== */
+:root {
+  /* Couleurs principales */
+  --primary: #E23E3E;
+  --primary-hover: #C93535;
+  --primary-light: rgba(226, 62, 62, 0.1);
+  
+  /* Backgrounds */
+  --bg: #070707;
+  --bg-1: #000000;
+  --bg-2: #0d0d0d;
+  --bg-3: #1a1a1a;
+  --surface: #141414;
+  --card-bg: #1a1a1a;
+  --hover-bg: #111111;
+  
+  /* Textes */
+  --text: #FFFFFF;
+  --text-1: #FFFFFF;
+  --text-2: #CCCCCC;
+  --text-3: #A0A0A0;
+  --text-4: #888888;
+  --text-secondary: #A0A0A0;
+  --heading-color: #FFFFFF;
+  --subheading-color: #CCCCCC;
+  --body-color: #CCCCCC;
+  --body-muted: #A0A0A0;
+  
+  /* Bordures et séparateurs */
+  --border: #2a2a2a;
+  --divider: #1e1e1e;
+  
+  /* Icônes */
+  --icon-color: #FFFFFF;
+  
+  /* Header */
+  --header-bg: #000000;
+  --header-border: #1e1e1e;
+  --header-text: #FFFFFF;
+  --header-back-btn: #FFFFFF;
+  
+  /* Badges et tags */
+  --badge-bg: #2a2a2a;
+  --badge-text: #CCCCCC;
+  
+  /* Boutons secondaires */
+  --btn-secondary-bg: #1a1a1a;
+  --btn-secondary-text: #FFFFFF;
+  --btn-secondary-border: #2a2a2a;
+  
+  /* Descriptions sur cartes */
+  --description-color: #CCCCCC;
+  --description-secondary: #A0A0A0;
+  --description-list-color: #CCCCCC;
+  --description-grid-color: #FFFFFF;
+  --description-news-list-color: #CCCCCC;
+  --card-description-bg: rgba(255, 255, 255, 0.05);
+  --card-description-border: #2a2a2a;
+  
+  /* Overlays et gradients */
+  --hero-overlay: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.85) 100%);
+  --card-overlay: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7) 100%);
+  
+  /* Skeleton loader */
+  --skeleton-bg: #1a1a1a;
+  --skeleton-shimmer: rgba(255, 255, 255, 0.07);
+  
+  /* Variables BF1 spécifiques */
+  --bf1-bg-card: #1a1a1a;
+  --bf1-text-secondary: #A0A0A0;
+  --search-text-title: #FFFFFF;
+  --header-text-color: #FFFFFF;
+}
+
+/* ===== MODE CLAIR ===== */
+[data-theme="light"] {
+  /* Couleurs principales */
+  --primary: #E23E3E;
+  --primary-hover: #C93535;
+  --primary-light: rgba(226, 62, 62, 0.08);
+  
+  /* Backgrounds */
+  --bg: #F2F2F2;
+  --bg-1: #FFFFFF;
+  --bg-2: #F5F5F5;
+  --bg-3: #EEEEEE;
+  --surface: #FFFFFF;
+  --card-bg: #EEEEEE;
+  --hover-bg: #E8E8E8;
+  
+  /* Textes */
+  --text: #111111;
+  --text-1: #1a1a1a;
+  --text-2: #444444;
+  --text-3: #666666;
+  --text-4: #FFFFFF;
+  --text-secondary: #555555;
+  --heading-color: #1a1a1a;
+  --subheading-color: #333333;
+  --body-color: #444444;
+  --body-muted: #666666;
+  
+  /* Bordures et séparateurs */
+  --border: #DDDDDD;
+  --divider: #E0E0E0;
+  
+  /* Icônes */
+  --icon-color: #000000;
+  
+  /* Header */
+  --header-bg: #FFFFFF;
+  --header-border: #DDDDDD;
+  --header-text: #1a1a1a;
+  --header-back-btn: #E23E3E;
+  
+  /* Badges et tags */
+  --badge-bg: #EEEEEE;
+  --badge-text: #444444;
+  
+  /* Boutons secondaires */
+  --btn-secondary-bg: #F0F0F0;
+  --btn-secondary-text: #1a1a1a;
+  --btn-secondary-border: #DDDDDD;
+  
+  /* Descriptions sur cartes */
+  --description-color: #444444;
+  --description-secondary: #666666;
+  --description-list-color: #444444;
+  --description-grid-color: #FFFFFF;
+  --description-news-list-color: #FFFFFF;
+  --card-description-bg: rgba(0, 0, 0, 0.03);
+  --card-description-border: #DDDDDD;
+  
+  /* Overlays et gradients */
+  --hero-overlay: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.7) 100%);
+  --card-overlay: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7) 100%);
+  
+  /* Skeleton loader */
+  --skeleton-bg: #E8E8E8;
+  --skeleton-shimmer: rgba(0, 0, 0, 0.03);
+  
+  /* Variables BF1 spécifiques */
+  --bf1-bg-card: #EEEEEE;
+  --bf1-text-secondary: #555555;
+  --search-text-title: #000000;
+  --header-text-color: #1a1a1a;
+}
+
+/* ===== STYLES GLOBAUX UTILISANT LES VARIABLES ===== */
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Header */
+.app-header {
+  background-color: var(--header-bg);
+  border-bottom: 2px solid var(--primary);
+  color: var(--header-text);
+}
+
+.app-header .brand {
+  color: var(--header-text);
+}
+
+/* Drawer / Menu latéral */
+.drawer {
+  background: var(--surface);
+  border-right: 2px solid var(--primary);
+}
+
+.drawer-header {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--divider);
+}
+
+.drawer-title {
+  color: var(--text);
+}
+
+.drawer-link {
+  color: var(--text);
+}
+
+.drawer-link:hover,
+.drawer-link:focus {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.drawer-section-title {
+  color: var(--text-3);
+}
+
+.drawer-divider {
+  border-color: var(--divider);
+}
+
+.drawer-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  background-color: var(--surface);
+  border-top: 2px solid var(--primary);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.bottom-nav .tab-link {
+  color: var(--text-3);
+}
+
+.bottom-nav .tab-link.active {
+  color: var(--primary);
+}
+
+.bottom-nav .tab-link:hover {
+  color: var(--primary);
+}
+
+/* Page Loader */
+#page-loader {
+  background: var(--bg);
+}
+
+/* App Content */
+#app-content {
+  background: var(--bg);
+}
+
+/* Cards Bootstrap */
+.card {
+  background-color: var(--card-bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* Modals */
+.modal-content {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-3);
+}
+
+/* Voir plus card at end of horizontal sections */
+@keyframes voirPlusSlideIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes voirPlusShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes voirPlusChevron {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  50%       { transform: translateX(5px); opacity: 0.5; }
+}
+
+.bf1-voir-plus-card {
+  flex-shrink: 0;
+  width: 120px;
+  height: 320px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--text-1);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s, transform 0.15s;
+  animation: voirPlusSlideIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Shimmer sweep */
+.bf1-voir-plus-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255,255,255,0.08) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: voirPlusShimmer 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.bf1-voir-plus-card:active {
+  transform: scale(0.95);
+  background: var(--surface-2, var(--border));
+}
+
+.bf1-voir-plus-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.bf1-voir-plus-inner i.bi-grid-3x3-gap {
+  font-size: 1.6rem;
+  color: var(--accent-red, #E23E3E);
+}
+
+.bf1-voir-plus-inner span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-1);
+}
+
+.bf1-voir-plus-inner i.bi-chevron-right {
+  font-size: 1rem;
+  color: var(--text-3);
+  animation: voirPlusChevron 1.6s ease-in-out infinite;
+}
+
+/* Skeleton Loader */
+.bf1-skeleton-card {
+  flex-shrink: 0;
+  width: 200px;
+  height: 300px;
+  border-radius: 16px;
+  background: var(--skeleton-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.bf1-skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 30%,
+    var(--skeleton-shimmer) 50%,
+    transparent 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: bf1Shimmer 1.5s ease-in-out infinite;
+}
+
+.bf1-sk-overlay {
+  background: var(--skeleton-bg);
+}
+
+.bf1-sk-overlay::after {
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    var(--skeleton-shimmer) 50%,
+    transparent 70%
+  );
+}
+
+/* Empty State */
+.bf1-empty-state {
+  color: var(--text-secondary);
+}
+
+/* Titres */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading-color);
+}
+
+/* Texte secondaire */
+.text-secondary,
+.text-muted {
+  color: var(--text-secondary);
+}
+
+/* Badges */
+.badge {
+  background: var(--badge-bg);
+  color: var(--badge-text);
+}
+
+/* Boutons secondaires */
+.btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border-color: var(--btn-secondary-border);
+}
+
+.btn-secondary:hover {
+  background: var(--hover-bg);
+}
+
+/* Dividers */
+hr,
+.divider {
+  border-color: var(--divider);
+}
+
+/* ===== CONTENEURS DE PAGES ===== */
+
+.bf1-section-header {
+  border-bottom-color: var(--border);
+}
+
+.bf1-section-title {
+  color: var(--text);
+}
+
+.bf1-see-more {
+  color: var(--primary);
+}
+
+/* ===== OVERRIDES SPÉCIFIQUES MODE CLAIR ===== */
+
+/* En mode clair, garder les overlays sombres pour la lisibilité du texte blanc sur les images */
+[data-theme="light"] .bf1-card-overlay {
+  background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7) 100%);
+}
+
+/* Classes Bootstrap en mode clair */
+[data-theme="light"] .text-white {
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .text-light {
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .bg-dark {
+  background-color: var(--surface) !important;
+}
+
+[data-theme="light"] .text-dark {
+  color: var(--text) !important;
+}
+
+/* Profile content */
+[data-theme="light"] #profile-content {
+  background: var(--bg);
+}
+
+/* Cartes d'abonnement */
+[data-theme="light"] #profile-content span:not([style*="color"]),
+[data-theme="light"] #profile-content p:not([style*="color"]) {
+  color: var(--text);
+}
+
+/* ===== COMPOSANTS JS GLOBAUX (thémables) ===== */
+
+/* Toast notification */
+.bf1-toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  z-index: 99999;
+  opacity: 0;
+  transition: opacity .2s;
+  pointer-events: none;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+}
+
+/* Toast "double-appui pour quitter" */
+.bf1-exit-toast {
+  position: fixed;
+  bottom: calc(74px + env(safe-area-inset-bottom,0px));
+  left: 50%;
+  transform: translateX(-50%) translateY(14px);
+  background: var(--surface);
+  color: var(--text);
+  padding: 11px 22px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 99999;
+  opacity: 0;
+  transition: opacity .22s, transform .22s;
+  pointer-events: none;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+}
+
+/* Toast connexion internet */
+.bf1-conn-toast {
+  position: fixed;
+  top: env(safe-area-inset-top,0px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  color: var(--text);
+  padding: 12px 16px;
+  font-size: 13px;
+  z-index: 99998;
+  opacity: 0;
+  transition: opacity .3s;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Modal connexion — backdrop */
+.bf1-login-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 99999;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Modal connexion — feuille */
+.bf1-login-sheet {
+  background: var(--bg-2);
+  border-radius: 20px 20px 0 0;
+  padding: 0 0 env(safe-area-inset-bottom,16px);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+
+.bf1-login-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 12px auto 24px;
+}
+
+.bf1-login-title {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.bf1-login-msg {
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 28px;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bf1-login-btn-cancel {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  color: var(--text-3);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Overlay hors-ligne */
+.bf1-offline-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.bf1-offline-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+.bf1-offline-msg {
+  font-size: 14px;
+  color: var(--text-3);
+  margin: 0 0 8px;
+  line-height: 1.65;
+}
+
+.bf1-offline-status {
+  font-size: 12px;
+  color: var(--text-4);
+  margin: 0 0 32px;
+}

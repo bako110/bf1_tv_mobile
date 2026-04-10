@@ -1,6 +1,13 @@
 ﻿import * as api from '../../services/api.js';
+import { API_CONFIG } from '../../config/routes.js';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+function _resolveAvatar(url) {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return API_CONFIG.API_URL + url;
+}
+
+// --- Helpers -----------------------------------------------------------------
 
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -17,7 +24,7 @@ function formatRelative(d) {
   try {
     const diff = Date.now() - new Date(d).getTime();
     const m = Math.floor(diff / 60000);
-    if (m < 1) return "À l'instant";
+    if (m < 1) return "à l'instant";
     if (m < 60) return `${m}m`;
     const h = Math.floor(m / 60);
     if (h < 24) return `${h}h`;
@@ -27,7 +34,113 @@ function formatRelative(d) {
   } catch { return 'Récemment'; }
 }
 
-// ─── YouTube IFrame API — custom player ─────────────────────────────────────
+// Fonction de partage native améliorée avec deep links
+function shareContent(platform, title, url) {
+  const deepLink = createDeepLink(url || location.href);
+  const playStoreUrl = 'https://play.google.com/store/apps/details?id=tv.bf1.app';
+  
+  const shareText = `${title || document.title}\n\n${deepLink}\n\nTéléchargez BF1 TV : ${playStoreUrl}`;
+  
+  const shareData = {
+    title: title || document.title,
+    text: shareText,
+    url: deepLink
+  };
+
+  if (platform === 'native') {
+    if (navigator.share) {
+      navigator.share(shareData)
+        .then(() => console.log('Partage réussi'))
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            console.error('Erreur de partage:', err);
+            copyToClipboard(shareText);
+          }
+        });
+    } else {
+      copyToClipboard(shareText);
+    }
+  } else if (platform === 'facebook') {
+    const fbText = `${title || document.title}\n\n${deepLink}\n\nTéléchargez BF1 TV : ${playStoreUrl}`;
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(playStoreUrl)}&quote=${encodeURIComponent(fbText)}`,
+      '_blank',
+      'width=600,height=400'
+    );
+  } else if (platform === 'whatsapp') {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+      '_blank'
+    );
+  } else if (platform === 'twitter') {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      '_blank',
+      'width=600,height=400'
+    );
+  }
+}
+
+function createDeepLink(hashUrl) {
+  const hash = hashUrl.includes('#') ? hashUrl.split('#')[1] : hashUrl;
+  
+  if (hash && hash.startsWith('/')) {
+    const path = hash.substring(1);
+    return `bf1tv://${path}`;
+  }
+  
+  return 'bf1tv://home';
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        showToast('Lien copié dans le presse-papiers !');
+      })
+      .catch(() => {
+        showToast('Impossible de copier le lien');
+      });
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showToast('Lien copié dans le presse-papiers !');
+    } catch (err) {
+      showToast('Impossible de copier le lien');
+    }
+    document.body.removeChild(textarea);
+  }
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    z-index: 10000;
+    animation: fadeInOut 2.5s ease;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+window.shareContent = shareContent;
+
+// --- YouTube IFrame API à custom player -------------------------------------
 
 function _fmtTime(s) {
   const m = Math.floor(s / 60);
@@ -37,14 +150,14 @@ function _fmtTime(s) {
 function _setupYTGlobals() {
   if (window.__ytSetup) return;
   window.__ytSetup  = true;
-  window._ytPlayers = window._ytPlayers || {};
-  window._ytTimers  = window._ytTimers  || {};
+  window._ytPlayers = {};
+  window._ytTimers  = {};
   window._ytQueue   = window._ytQueue   || [];
-  window._ytPending = window._ytPending || {};
+  window._ytPending = {};
 
-  const _orig = window.onYouTubeIframeAPIReady;
+  if (!window.__ytOrigReady) window.__ytOrigReady = window.onYouTubeIframeAPIReady || null;
   window.onYouTubeIframeAPIReady = function() {
-    if (_orig) _orig();
+    if (window.__ytOrigReady) window.__ytOrigReady();
     window._ytReady = true;
     (window._ytQueue || []).forEach(fn => fn());
     window._ytQueue = [];
@@ -122,18 +235,20 @@ function _createYTPlayer(pid, ytId, posterId) {
           if (window._ytPending && window._ytPending[pid]) {
             window._ytPlayers[pid].playVideo();
             delete window._ytPending[pid];
-            const post = document.getElementById(posterId);
-            if (post) post.style.display = 'none';
           }
         },
         onStateChange: (e) => {
-          const playing = e.data === 1;
-          const btn = document.getElementById(pid + '-playbtn');
+          const playing   = e.data === 1;
+          const buffering = e.data === 3;
+          const started   = e.data === 1 || e.data === 2 || e.data === 0;
+          const btn   = document.getElementById(pid + '-playbtn');
+          const post  = document.getElementById(posterId);
+          const snake = document.getElementById(pid + '-snake');
           if (btn) btn.innerHTML = playing
-            ? '<i class="bi bi-pause-fill" style="font-size:20px;"></i>'
-            : '<i class="bi bi-play-fill"  style="font-size:20px;"></i>';
-          const post = document.getElementById(posterId);
-          if (post && playing) post.style.display = 'none';
+            ? '<i class="bi bi-pause-fill" style="font-size:22px;"></i>'
+            : '<i class="bi bi-play-fill"  style="font-size:22px;"></i>';
+          if (post  && started) post.style.display = 'none';
+          if (snake) snake.style.display = buffering ? 'flex' : 'none';
           if (playing) window._ytStartTimer(pid);
           else clearInterval(window._ytTimers[pid]);
         },
@@ -148,82 +263,202 @@ function buildVideoPlayer(videoUrl, posterImg) {
   if (!videoUrl) return '';
   const ytId = extractYoutubeId(videoUrl);
 
+  const _playerCSS = `
+    <style>
+      @keyframes _sdSnake {
+        0%   { stroke-dashoffset: 340; }
+        50%  { stroke-dashoffset: 100; }
+        100% { stroke-dashoffset: -340; }
+      }
+      @keyframes _sdFadeIn { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:scale(1); } }
+      @keyframes _sdPulse  { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.12); } }
+      @keyframes _sdBarGlow { 0%,100%{ box-shadow:none; } 50%{ box-shadow:0 0 6px 1px rgba(226,62,62,.55); } }
+    </style>`;
+
   if (ytId) {
     const pid      = 'ytp' + Date.now().toString(36);
     const posterId = pid + '-post';
     _createYTPlayer(pid, ytId, posterId);
-    const pStyle = posterImg
-      ? `background:url('${esc(posterImg)}') center/cover no-repeat;`
-      : 'background:var(--bg-3,#111);';
-    return `
-    <div style="background:#000;">
+    const hasPoster = !!posterImg;
+    return `${_playerCSS}
+    <div style="animation:_sdFadeIn .35s ease;background:#000;border-radius:0;">
       <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
         <div id="${pid}" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+
+        <!-- Poster + snake loader -->
         <div id="${posterId}"
-             onclick="window._ytToggle('${pid}');this.style.display='none';"
-             style="position:absolute;inset:0;cursor:pointer;z-index:5;${pStyle}">
-          <div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);
-                      display:flex;align-items:center;justify-content:center;">
-            <div style="width:62px;height:62px;background:rgba(226,62,62,.92);border-radius:50%;
-                        display:flex;align-items:center;justify-content:center;
-                        box-shadow:0 4px 20px rgba(226,62,62,.45);">
-              <i class="bi bi-play-fill" style="color:#fff;font-size:26px;margin-left:3px;"></i>
+             onclick="this.style.pointerEvents='none';window._ytToggle('${pid}');document.getElementById('${pid}-snake').style.display='flex';"
+             style="position:absolute;inset:0;cursor:pointer;z-index:5;
+                    ${hasPoster ? `background:url('${esc(posterImg)}') center/cover no-repeat;` : 'background:#111;'}">
+
+          <!-- Dégradé -->
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%);"></div>
+
+          <!-- Bouton play animé -->
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+            <div style="position:relative;width:68px;height:68px;">
+              <!-- Cercle serpent SVG -->
+              <svg viewBox="0 0 120 120" style="position:absolute;inset:0;width:100%;height:100%;">
+                <circle cx="60" cy="60" r="54"
+                  fill="none" stroke="rgba(226,62,62,.35)" stroke-width="4"/>
+                <circle cx="60" cy="60" r="54"
+                  fill="none" stroke="#E23E3E" stroke-width="4"
+                  stroke-dasharray="340" stroke-dashoffset="340"
+                  stroke-linecap="round"
+                  transform="rotate(-90 60 60)"
+                  style="animation:_sdSnake 2s ease-in-out infinite;"/>
+              </svg>
+              <!-- Icône play -->
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                <div style="width:44px;height:44px;background:rgba(226,62,62,.92);border-radius:50%;
+                            display:flex;align-items:center;justify-content:center;
+                            box-shadow:0 4px 22px rgba(226,62,62,.5);
+                            animation:_sdPulse 2s ease-in-out infinite;">
+                  <i class="bi bi-play-fill" style="color:#fff;font-size:22px;margin-left:3px;"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Snake de chargement après clic (caché par défaut) -->
+        <div id="${pid}-snake" style="display:none;position:absolute;inset:0;z-index:6;
+                                      background:rgba(0,0,0,.6);
+                                      align-items:center;justify-content:center;pointer-events:none;">
+          <svg viewBox="0 0 60 60" style="width:52px;height:52px;">
+            <circle cx="30" cy="30" r="24"
+              fill="none" stroke="#1a1a1a" stroke-width="4"/>
+            <circle cx="30" cy="30" r="24"
+              fill="none" stroke="#E23E3E" stroke-width="4"
+              stroke-dasharray="150" stroke-dashoffset="150"
+              stroke-linecap="round"
+              transform="rotate(-90 30 30)"
+              style="animation:_sdSnake 1s linear infinite;"/>
+          </svg>
+        </div>
       </div>
-      <div style="background:var(--bg-2,#0d0d0d);padding:8px 14px;display:flex;align-items:center;
+
+      <!-- Barre de contrôle -->
+      <div style="background:#0d0d0d;padding:10px 14px;display:flex;align-items:center;
                   gap:10px;border-top:1px solid var(--divider,#1a1a1a);">
         <button id="${pid}-playbtn" onclick="window._ytToggle('${pid}')"
-                style="background:none;border:none;color:var(--text-1,#fff);cursor:pointer;
-                       padding:0;flex-shrink:0;line-height:1;">
-          <i class="bi bi-play-fill" style="font-size:20px;"></i>
+                style="background:none;border:none;color:#fff;cursor:pointer;
+                       padding:0;flex-shrink:0;line-height:1;transition:transform .1s;"
+                ontouchstart="this.style.transform='scale(.82)'"
+                ontouchend="this.style.transform='scale(1)'">
+          <i class="bi bi-play-fill" style="font-size:22px;"></i>
         </button>
-        <div style="flex:1;height:4px;background:var(--border,#2a2a2a);border-radius:2px;
-                    cursor:pointer;position:relative;"
+
+        <!-- Barre de progression cliquable -->
+        <div style="flex:1;height:5px;background:#2a2a2a;border-radius:3px;
+                    cursor:pointer;position:relative;overflow:hidden;"
              onclick="window._ytSeek(event,'${pid}')">
           <div id="${pid}-prog"
-               style="height:100%;background:#E23E3E;border-radius:2px;
-                      width:0%;pointer-events:none;transition:width .4s linear;"></div>
+               style="height:100%;background:linear-gradient(90deg,#E23E3E,#ff6b6b);
+                      border-radius:3px;width:0%;pointer-events:none;
+                      transition:width .4s linear;
+                      animation:_sdBarGlow 2s ease-in-out infinite;"></div>
         </div>
+
         <span id="${pid}-time"
-              style="font-size:11px;color:var(--body-muted,#888);white-space:nowrap;
-                     min-width:78px;text-align:right;">0:00 / 0:00</span>
+              style="font-size:11px;color:#888;white-space:nowrap;min-width:78px;text-align:right;">
+          0:00 / 0:00
+        </span>
         <button onclick="window._ytFullscreen('${pid}')"
-                style="background:none;border:none;color:var(--body-muted,#888);cursor:pointer;
-                       padding:0;flex-shrink:0;line-height:1;">
+                style="background:none;border:none;color:#666;cursor:pointer;
+                       padding:0;flex-shrink:0;line-height:1;transition:color .15s;"
+                onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='#666'">
           <i class="bi bi-fullscreen" style="font-size:16px;"></i>
         </button>
       </div>
     </div>`;
   }
 
-  // ── Direct / MP4 ─────────────────────────────────────────────────────────
-  return `
-    <div style="position:relative;width:100%;background:#000;">
+  // -- Direct / MP4 ---------------------------------------------------------
+  const vid = 'sdv' + Date.now().toString(36);
+  return `${_playerCSS}
+    <div style="position:relative;width:100%;background:#000;animation:_sdFadeIn .35s ease;">
+
+      <!-- Snake loader visible jusqu'au canplay -->
+      <div id="${vid}-loader" style="position:absolute;inset:0;z-index:5;background:#000;
+                                     display:flex;align-items:center;justify-content:center;
+                                     pointer-events:none;">
+        ${posterImg ? `<img src="${esc(posterImg)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;">` : ''}
+        <svg viewBox="0 0 60 60" style="width:56px;height:56px;position:relative;z-index:1;">
+          <circle cx="30" cy="30" r="24" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+          <circle cx="30" cy="30" r="24"
+            fill="none" stroke="#E23E3E" stroke-width="4"
+            stroke-dasharray="150" stroke-dashoffset="150"
+            stroke-linecap="round" transform="rotate(-90 30 30)"
+            style="animation:_sdSnake 1s linear infinite;"/>
+        </svg>
+      </div>
+
       <video id="sd-video" controls autoplay muted playsinline preload="auto"
-             style="width:100%;max-height:280px;display:block;object-fit:contain;"
-             ${posterImg ? `poster="${esc(posterImg)}"` : ''}>
+             style="width:100%;display:block;object-fit:contain;"
+             ${posterImg ? `poster="${esc(posterImg)}"` : ''}
+             oncanplay="(function(){var l=document.getElementById('${vid}-loader');if(l)l.style.display='none';})()">
         <source src="${esc(videoUrl)}" type="video/mp4">
-        Votre navigateur ne supporte pas la lecture vidéo.
       </video>
     </div>`;
 }
 
-// ─── Config par type ──────────────────────────────────────────────────────────
+// --- Config par type ----------------------------------------------------------
 
 const TYPE_CONFIG = {
   sport:         { label: 'Sport',                  icon: 'bi-trophy-fill',        color: '#1DA1F2', apiType: 'sport' },
-  jtandmag:      { label: 'JT & Magazine',          icon: 'bi-camera-video-fill',  color: '#E23E3E', apiType: 'jtandmag' },
+  jtandmag:      { label: 'Journal',                 icon: 'bi-camera-video-fill',  color: '#E23E3E', apiType: 'jtandmag' },
+  magazine:      { label: 'Magazine',                 icon: 'bi-journal-richtext',   color: '#8B5CF6', apiType: 'magazine' },
   divertissement:{ label: 'Divertissement',         icon: 'bi-music-note-beamed',  color: '#A855F7', apiType: 'divertissement' },
   reportage:     { label: 'Reportage',              icon: 'bi-film',               color: '#F59E0B', apiType: 'reportage' },
   archive:       { label: 'Archive',                icon: 'bi-archive-fill',       color: '#6B7280', apiType: 'archive' },
   tele_realite:  { label: 'Télé Réalité',           icon: 'bi-camera-video-fill',  color: '#EC4899', apiType: 'tele_realite' },
   show:          { label: 'Émission',               icon: 'bi-tv-fill',            color: '#10B981', apiType: 'show' },
   movie:         { label: 'Film',                   icon: 'bi-film',               color: '#E23E3E', apiType: 'movie' },
+  missed:        { label: 'Rattrapage',             icon: 'bi-clock-history',      color: '#F59E0B', apiType: 'missed' },
 };
 
-// ─── Export principal ─────────────────────────────────────────────────────────
+// --- Cleanup au départ de la page --------------------------------------------
+
+export function cleanupShowDetail() {
+  const video = document.getElementById('sd-video');
+  if (video) {
+    video.pause();
+    video.src = '';
+    video.load();
+  }
+
+  if (window._ytPlayers) {
+    Object.keys(window._ytPlayers).forEach(pid => {
+      try {
+        const player = window._ytPlayers[pid];
+        if (player) {
+          if (typeof player.stopVideo === 'function') player.stopVideo();
+          if (typeof player.destroy === 'function') player.destroy();
+        }
+      } catch (e) {}
+      if (window._ytTimers?.[pid]) {
+        clearInterval(window._ytTimers[pid]);
+        delete window._ytTimers[pid];
+      }
+      delete window._ytPlayers[pid];
+    });
+  }
+}
+
+// --- Cache mémoire détail (TTL 5 min) ----------------------------------------
+const _showCache = new Map();
+const _SHOW_TTL  = 5 * 60 * 1000;
+
+function _cacheGet(key) {
+  const e = _showCache.get(key);
+  if (!e) return null;
+  if (Date.now() - e.ts > _SHOW_TTL) { _showCache.delete(key); return null; }
+  return e.payload;
+}
+function _cacheSet(key, payload) { _showCache.set(key, { payload, ts: Date.now() }); }
+
+// --- Export principal ---------------------------------------------------------
 
 export async function loadShowDetail(id, type) {
   const container = document.getElementById('sd-container');
@@ -232,112 +467,136 @@ export async function loadShowDetail(id, type) {
 
   const cfg = TYPE_CONFIG[type] || { label: 'Programme', icon: 'bi-play-circle', color: '#E23E3E', apiType: type };
   const CONTENT_TYPE = cfg.apiType;
+  const cacheKey = `${type}:${id}`;
 
   try {
     let show = null;
     let showError = null;
-    try {
-      show = await api.getShowById(id, type);
-    } catch (err) {
-      showError = err;
-    }
+    let related, comments, likesCount, userLiked, userFavorited;
 
-    if (!show) {
-      const status = showError?.status;
+    const cached = _cacheGet(cacheKey);
 
-      // ── 401 : non connecté ────────────────────────────────────────────────
-      if (status === 401) {
+    if (cached) {
+      show          = cached.show;
+      related       = cached.related;
+      comments      = cached.comments;
+      likesCount    = cached.likesCount;
+      userLiked     = cached.userLiked;
+      userFavorited = cached.userFavorited;
+    } else {
+      try {
+        show = await api.getShowById(id, type);
+      } catch (err) {
+        showError = err;
+      }
+
+      if (!show) {
+        const status = showError?.status;
+
+        if (status === 401) {
+          const isArchive = type === 'archive';
+          container.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        padding:40px 24px;text-align:center;">
+              <div style="width:72px;height:72px;background:rgba(226,62,62,.12);border-radius:50%;
+                          display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                <i class="bi bi-lock-fill" style="font-size:32px;color:#E23E3E;"></i>
+              </div>
+              <h3 style="font-size:18px;font-weight:700;margin:0 0 8px;
+                         color:var(--heading-color,#fff);">Connexion requise</h3>
+              <p style="font-size:14px;line-height:1.6;margin:0 0 20px;color:var(--body-color,#aaa);">
+                Ce contenu est réservé aux abonnés.<br>Connectez-vous pour y accéder.
+              </p>
+              <div style="display:flex;gap:12px;">
+                <button onclick="history.back()"
+                        style="background:var(--bg-3,#1a1a1a);color:var(--body-muted,#aaa);
+                               border:1px solid var(--divider,#2a2a2a);border-radius:8px;
+                               padding:10px 20px;cursor:pointer;font-size:14px;">Retour</button>
+                <button onclick="window.location.hash='#/login'"
+                        style="background:#E23E3E;color:#fff;border:none;border-radius:8px;
+                               padding:10px 20px;cursor:pointer;font-size:14px;font-weight:700;">Se connecter</button>
+              </div>
+            </div>`;
+          return;
+        }
+
+        if (status === 403) {
+          const userCat = (() => { try { return JSON.parse(localStorage.getItem('bf1_user') || 'null')?.subscription_category; } catch { return null; } })();
+          // Récupérer la catégorie requise depuis la réponse backend (ex: {required_category: 'basic'})
+          const requiredCat = showError?.data?.required_category || showError?.data?.detail?.required_category || 'basic';
+          const BADGES = {
+            basic:    { label: 'Basic',    color: '#3B82F6', icon: 'bi-shield-fill' },
+            standard: { label: 'Standard', color: '#9C27B0', icon: 'bi-shield-fill' },
+            premium:  { label: 'Premium',  color: '#FF6F00', icon: 'bi-star-fill'   },
+          };
+          const reqBadge  = BADGES[requiredCat]  || BADGES.basic;
+          const userBadge = userCat ? BADGES[userCat] : null;
+          container.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        padding:40px 24px;text-align:center;">
+              <div style="width:72px;height:72px;background:rgba(${reqBadge.color === '#3B82F6' ? '59,130,246' : reqBadge.color === '#9C27B0' ? '156,39,176' : '255,111,0'},.12);border-radius:50%;
+                          display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                <i class="bi ${reqBadge.icon}" style="font-size:32px;color:${reqBadge.color};"></i>
+              </div>
+              <h3 style="font-size:18px;font-weight:700;margin:0 0 8px;color:var(--heading-color,#fff);">
+                Abonnement <span style="color:${reqBadge.color};">${reqBadge.label}</span> requis
+              </h3>
+              <p style="font-size:14px;line-height:1.6;margin:0 0 4px;color:var(--body-color,#aaa);">
+                ${userBadge
+                  ? `Votre abonnement actuel : <strong style="color:var(--text-1,#fff);">${userBadge.label}</strong>`
+                  : "Vous n'avez pas encore d'abonnement."}
+              </p>
+              <p style="font-size:14px;line-height:1.6;margin:0 0 20px;color:var(--body-color,#aaa);">
+                Souscrivez à un abonnement <strong style="color:${reqBadge.color};">${reqBadge.label}</strong> pour accéder à ce contenu.
+              </p>
+              <div style="display:flex;gap:12px;">
+                <button onclick="history.back()"
+                        style="background:var(--bg-3,#1a1a1a);color:var(--body-muted,#aaa);
+                               border:1px solid var(--divider,#2a2a2a);border-radius:8px;
+                               padding:10px 20px;cursor:pointer;font-size:14px;">Retour</button>
+                <button onclick="window._showPremiumModal ? window._showPremiumModal({requiredCategory:'${requiredCat}'}) : (window.location.hash='#/premium')"
+                        style="background:${reqBadge.color};color:#fff;border:none;border-radius:8px;
+                               padding:10px 20px;cursor:pointer;font-size:14px;font-weight:700;">
+                  <i class="bi bi-arrow-up-circle me-1"></i> Voir les offres
+                </button>
+              </div>
+            </div>`;
+          return;
+        }
+
         container.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
-                      padding:40px 24px;text-align:center;">
-            <div style="width:72px;height:72px;background:rgba(226,62,62,.12);border-radius:50%;
-                        display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
-              <i class="bi bi-lock-fill" style="font-size:32px;color:#E23E3E;"></i>
-            </div>
-            <h3 style="font-size:18px;font-weight:700;margin:0 0 8px;
-                       color:var(--heading-color,#fff);">Connexion requise</h3>
-            <p style="font-size:14px;line-height:1.6;margin:0 0 20px;
-                      color:var(--body-color,#aaa);">
-              Cette archive est réservée aux abonnés.<br>Connectez-vous pour accéder à notre contenu premium.
-            </p>
-            <div style="display:flex;gap:12px;">
-              <button onclick="history.back()"
-                      style="background:var(--bg-3,#1a1a1a);color:var(--body-muted,#aaa);
-                             border:1px solid var(--divider,#2a2a2a);border-radius:8px;
-                             padding:10px 20px;cursor:pointer;font-size:14px;">Retour</button>
-              <button onclick="window.location.hash='#/login'"
-                      style="background:#E23E3E;color:#fff;border:none;border-radius:8px;
-                             padding:10px 20px;cursor:pointer;font-size:14px;font-weight:700;">Se connecter</button>
-            </div>
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;">
+            <i class="bi bi-exclamation-circle" style="font-size:3rem;color:#E23E3E;"></i>
+            <p style="margin-top:12px;color:var(--body-muted,#888);">Contenu introuvable</p>
+            <button onclick="history.back()"
+                    style="background:#E23E3E;color:#fff;border:none;border-radius:8px;
+                           padding:9px 20px;cursor:pointer;margin-top:8px;">Retour</button>
           </div>`;
         return;
       }
 
-      // ── 403 : abonnement insuffisant ──────────────────────────────────────
-      if (status === 403) {
-        const isLoggedIn = (() => { try { return Boolean(localStorage.getItem('bf1_token')); } catch { return false; } })();
-        const userCat    = (() => { try { return JSON.parse(localStorage.getItem('bf1_user') || 'null')?.subscription_category; } catch { return null; } })();
-        const BADGES = { basic: { label: 'Basic', color: '#3B82F6' }, standard: { label: 'Standard', color: '#9C27B0' }, premium: { label: 'Premium', color: '#FF6F00' } };
-        const userBadge = userCat ? BADGES[userCat] : null;
-        container.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
-                      padding:40px 24px;text-align:center;">
-            <div style="width:72px;height:72px;background:rgba(255,111,0,.12);border-radius:50%;
-                        display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
-              <i class="bi bi-star-fill" style="font-size:32px;color:#FF6F00;"></i>
-            </div>
-            <h3 style="font-size:18px;font-weight:700;margin:0 0 8px;
-                       color:var(--heading-color,#fff);">Abonnement insuffisant</h3>
-            <p style="font-size:14px;line-height:1.6;margin:0 0 4px;color:var(--body-color,#aaa);">
-              ${userBadge
-                ? `Votre abonnement actuel : <strong style="color:var(--text-1,#fff);">${userBadge.label}</strong>`
-                : "Vous n'avez pas encore d'abonnement."}
-            </p>
-            <p style="font-size:14px;line-height:1.6;margin:0 0 20px;color:var(--body-color,#aaa);">
-              Améliorez votre abonnement pour accéder à cette archive.
-            </p>
-            <div style="display:flex;gap:12px;">
-              <button onclick="history.back()"
-                      style="background:var(--bg-3,#1a1a1a);color:var(--body-muted,#aaa);
-                             border:1px solid var(--divider,#2a2a2a);border-radius:8px;
-                             padding:10px 20px;cursor:pointer;font-size:14px;">Retour</button>
-              <button onclick="window._archiveBannerUpgrade ? window._archiveBannerUpgrade('premium') : (window.location.hash='#/premium')"
-                      style="background:#FF6F00;color:#fff;border:none;border-radius:8px;
-                             padding:10px 20px;cursor:pointer;font-size:14px;font-weight:700;">Voir les offres</button>
-            </div>
-          </div>`;
-        return;
-      }
-
-      // ── Erreur générique ──────────────────────────────────────────────────
-      container.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;">
-          <i class="bi bi-exclamation-circle" style="font-size:3rem;color:#E23E3E;"></i>
-          <p style="margin-top:12px;color:var(--body-muted,#888);">Contenu introuvable</p>
-          <button onclick="history.back()"
-                  style="background:#E23E3E;color:#fff;border:none;border-radius:8px;
-                         padding:9px 20px;cursor:pointer;margin-top:8px;">Retour</button>
-        </div>`;
-      return;
-    }
-
-    // ── Données complémentaires ───────────────────────────────────────────────
-    const [related, comments, likesCount] = await Promise.all([
-      api.getRelatedByType(type, id).catch(() => []),
-      api.getComments(CONTENT_TYPE, id).catch(() => []),
-      api.getLikesCount(CONTENT_TYPE, id).catch(() => 0),
-    ]);
-
-    let userLiked = false;
-    let userFavorited = false;
-    const user = (() => { try { return JSON.parse(localStorage.getItem('bf1_user') || 'null'); } catch { return null; } })();
-    if (user) {
-      [userLiked, userFavorited] = await Promise.all([
-        api.checkLiked(CONTENT_TYPE, id).catch(() => false),
-        api.checkFavorite(CONTENT_TYPE, id).catch(() => false),
+      const user = (() => { try { return JSON.parse(localStorage.getItem('bf1_user') || 'null'); } catch { return null; } })();
+      [related, comments, likesCount] = await Promise.all([
+        api.getRelatedByType(type, id).catch(() => []),
+        api.getComments(CONTENT_TYPE, id).catch(() => []),
+        api.getLikesCount(CONTENT_TYPE, id).catch(() => 0),
       ]);
+      userLiked     = false;
+      userFavorited = false;
+      if (user) {
+        [userLiked, userFavorited] = await Promise.all([
+          api.checkLiked(CONTENT_TYPE, id).catch(() => false),
+          api.checkFavorite(CONTENT_TYPE, id).catch(() => false),
+        ]);
+      }
+
+      _cacheSet(cacheKey, { show, related, comments, likesCount, userLiked, userFavorited });
+
+      // Incrémenter les vues (silencieux, ne bloque pas l'UI)
+      api.incrementView(CONTENT_TYPE, id);
     }
 
+    const user = (() => { try { return JSON.parse(localStorage.getItem('bf1_user') || 'null'); } catch { return null; } })();
     if (headerTitle) headerTitle.textContent = cfg.label;
 
     const videoUrl = show.video_url || show.stream_url || show.url || '';
@@ -347,201 +606,279 @@ export async function loadShowDetail(id, type) {
     const date     = formatDate(show.created_at || show.date || show.published_at);
     const duration = show.duration ? `${Math.floor(show.duration / 60)}min` : '';
 
-    // Stocker allow_comments pour accès global (modal)
     window._showDetailData = { allow_comments: show.allow_comments };
-    // ── HTML principal ────────────────────────────────────────────────────────
+
+    const skeleton = document.getElementById('sd-skeleton');
+    if (skeleton) skeleton.style.display = 'none';
+
     container.innerHTML = `
+    <style>
+      @keyframes sd-bar-anim  { from{width:0} to{width:100%} }
+      @keyframes sd-fadeUp    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes sd-fadeIn    { from{opacity:0} to{opacity:1} }
+      @keyframes sd-scaleIn   { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+
+      #sd-content-card {
+        position:relative; z-index:5;
+        background:var(--bg-1,#0a0a0a);
+        border-radius:22px 22px 0 0;
+        margin-top:-24px;
+        padding:22px 18px 0;
+      }
+      .sd-action-pill {
+        display:inline-flex; align-items:center; gap:7px;
+        background:var(--bg-3,rgba(255,255,255,.06));
+        border:1px solid rgba(255,255,255,.09);
+        border-radius:50px; padding:9px 16px;
+        font-size:13px; color:var(--body-muted,#999);
+        cursor:pointer; white-space:nowrap;
+        transition:background .2s,border-color .2s,color .2s,transform .15s;
+        -webkit-tap-highlight-color:transparent;
+      }
+      .sd-action-pill:active { transform:scale(.92); }
+      .sd-action-pill.active-red   { background:rgba(226,62,62,.18);  border-color:#E23E3E; color:#E23E3E; }
+      .sd-action-pill.active-amber { background:rgba(245,158,11,.18); border-color:#F59E0B; color:#F59E0B; }
+
+      .sd-share-btn {
+        display:inline-flex; align-items:center; justify-content:center;
+        width:38px; height:38px; border-radius:50%;
+        border:1px solid rgba(255,255,255,.09);
+        background:var(--bg-3,rgba(255,255,255,.06));
+        color:#fff; cursor:pointer; font-size:16px; flex-shrink:0;
+        transition:background .2s,transform .15s;
+        -webkit-tap-highlight-color:transparent;
+      }
+      .sd-share-btn:active { transform:scale(.88); }
+      .sd-share-btn.fb    { background:rgba(24,119,242,.2);  border-color:rgba(24,119,242,.4);  color:#1877F2; }
+      .sd-share-btn.wa    { background:rgba(37,211,102,.2);  border-color:rgba(37,211,102,.4);  color:#25D366; }
+      .sd-share-btn.tw    { background:rgba(29,161,242,.2);  border-color:rgba(29,161,242,.4);  color:#1DA1F2; }
+      .sd-share-btn.share { background:rgba(226,62,62,.15);  border-color:rgba(226,62,62,.35);  color:#E23E3E; }
+
+      #sd-see-also-scroll {
+        display:flex; gap:12px;
+        overflow-x:auto; padding:4px 0 14px;
+        scrollbar-width:none;
+        -webkit-overflow-scrolling:touch;
+      }
+      #sd-see-also-scroll::-webkit-scrollbar { display:none; }
+
+      .sd-related-card {
+        flex-shrink:0; width:148px;
+        border-radius:12px; overflow:hidden;
+        background:var(--bg-3,#161616);
+        border:1px solid rgba(255,255,255,.07);
+        cursor:pointer;
+        transition:transform .2s;
+      }
+      .sd-related-card:active { transform:scale(.95); }
+
+      .sd-section-title {
+        font-size:13px; font-weight:700;
+        color:var(--body-muted,#666);
+        text-transform:uppercase; letter-spacing:.8px;
+        margin:0;
+      }
+      #sd-desc-inner {
+        overflow:hidden;
+        max-height:calc(1.7em * 4);
+        transition:max-height .4s cubic-bezier(.22,1,.36,1);
+      }
+      #sd-desc-inner.expanded { max-height:2000px; }
+      .sd-divider { height:1px; background:rgba(255,255,255,.07); margin:20px 0; }
+    </style>
+
+    <!-- --- HERO --- -->
+    <div style="position:relative;width:100%;overflow:hidden;">
 
       ${videoUrl ? buildVideoPlayer(videoUrl, img) : img ? `
-      <div style="position:relative;width:100%;max-height:260px;overflow:hidden;">
-        <img src="${esc(img)}" alt="" style="width:100%;object-fit:cover;display:block;max-height:260px;"
+      <div style="position:relative;width:100%;">
+        <img src="${esc(img)}" alt=""
+             style="width:100%;height:260px;object-fit:cover;display:block;"
              onerror="this.style.display='none'">
-        <div style="position:absolute;inset:0;background:var(--hero-overlay,linear-gradient(transparent 40%,#000 100%));"></div>
-        <div style="position:absolute;top:12px;left:12px;">
-          <span style="display:inline-flex;align-items:center;gap:4px;background:${cfg.color};
-                       color:#fff;border-radius:4px;padding:3px 9px;font-size:11px;font-weight:700;">
-            <i class="bi ${cfg.icon}" style="font-size:10px;"></i>${esc(cfg.label.toUpperCase())}
-          </span>
+        ${duration ? `
+        <div style="position:absolute;bottom:34px;right:14px;
+                    background:rgba(0,0,0,.72);backdrop-filter:blur(6px);
+                    -webkit-backdrop-filter:blur(6px);
+                    border:1px solid rgba(255,255,255,.12);border-radius:6px;
+                    padding:3px 9px;color:#fff;font-size:11px;font-weight:600;">
+          <i class="bi bi-clock" style="margin-right:4px;"></i>${esc(duration)}
+        </div>` : ''}
+      </div>` : `<div style="height:100px;"></div>`}
+    </div>
+
+    <!-- --- CONTENT CARD --- -->
+    <div id="sd-content-card">
+
+      <!-- -- Ligne badges meta -- -->
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+        <span style="display:inline-flex;align-items:center;gap:5px;
+                     background:${cfg.color};color:#fff;border-radius:6px;
+                     padding:4px 11px;font-size:11px;font-weight:700;letter-spacing:.3px;">
+          <i class="bi ${cfg.icon}" style="font-size:10px;"></i>${esc(cfg.label.toUpperCase())}
+        </span>
+        ${date ? `<span style="font-size:12px;color:var(--body-muted,#666);display:inline-flex;align-items:center;gap:4px;">
+          <i class="bi bi-calendar3" style="font-size:10px;"></i>${date}</span>` : ''}
+        ${show.channel ? `<span style="font-size:11px;color:var(--body-muted,#555);display:inline-flex;align-items:center;gap:4px;">
+          <i class="bi bi-tv" style="font-size:10px;"></i>${esc(show.channel)}</span>` : ''}
+      </div>
+
+      <!-- -- Titre -- -->
+      <h1 style="font-size:21px;font-weight:800;line-height:1.3;margin:0 0 6px;
+                 color:var(--heading-color,#fff);">
+        ${esc(title)}
+      </h1>
+
+      ${show.host ? `
+      <!-- -- Présentateur -- -->
+      <p style="font-size:14px;color:var(--body-muted,#999);margin:0 0 10px;display:inline-flex;align-items:center;gap:6px;">
+        <i class="bi bi-person-fill" style="font-size:13px;color:${cfg.color};"></i>
+        <span style="font-weight:600;">${esc(show.host)}</span>
+      </p>` : ''}
+
+      <!-- -- Ligne catégorie -- -->
+      ${show.category ? `
+      <p style="font-size:13px;color:${cfg.color};margin:0 0 16px;font-weight:600;
+                display:inline-flex;align-items:center;gap:5px;">
+        <i class="bi bi-tag-fill" style="font-size:11px;"></i>${esc(show.category)}
+      </p>` : '<div style="margin-bottom:16px;"></div>'}
+
+      <!-- -- Barre accent -- -->
+      <div style="height:2px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:18px;overflow:hidden;">
+        <div style="height:100%;width:100%;background:linear-gradient(90deg,${cfg.color},transparent);animation:sd-bar-anim .8s .4s ease both;"></div>
+      </div>
+
+      <!-- -- ACTIONS -- -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;
+                  overflow-x:auto;scrollbar-width:none;">
+
+        <!-- Like -->
+        <button id="sd-like-btn" onclick="toggleSdLike()"
+                class="sd-action-pill ${userLiked ? 'active-red' : ''}">
+          <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}" style="font-size:15px;"></i>
+          <span id="sd-like-count" style="font-weight:700;">${likesCount}</span>
+        </button>
+
+        <!-- Commentaires -->
+        <button onclick="${show.allow_comments === false ? `window._detailToast('Les commentaires sont désactivés')` : 'openSdComments()'}"
+                class="sd-action-pill" style="${show.allow_comments === false ? 'opacity:.45;' : ''}">
+          <i class="bi ${show.allow_comments === false ? 'bi-chat-slash' : 'bi-chat-dots'}" style="font-size:15px;"></i>
+          <span id="sd-cm-count-btn" style="font-weight:600;">${comments.length}</span>
+        </button>
+
+        <!-- Favori -->
+        <button id="sd-fav-btn" onclick="toggleSdFavorite()"
+                class="sd-action-pill ${userFavorited ? 'active-amber' : ''}" title="Favoris">
+          <i class="bi ${userFavorited ? 'bi-bookmark-fill' : 'bi-bookmark'}" style="font-size:15px;"></i>
+        </button>
+
+        <!-- Espaceur -->
+        <div style="flex:1;"></div>
+
+        <!-- Share rapide -->
+        <button class="sd-share-btn fb" onclick="shareContent('facebook','${esc(show.title)}',location.href)" title="Facebook">
+          <i class="bi bi-facebook"></i>
+        </button>
+        <button class="sd-share-btn wa" onclick="shareContent('whatsapp','${esc(show.title)}',location.href)" title="WhatsApp">
+          <i class="bi bi-whatsapp"></i>
+        </button>
+        <button class="sd-share-btn share" onclick="shareContent('native','${esc(show.title)}',location.href)" title="Plus">
+          <i class="bi bi-share-fill"></i>
+        </button>
+      </div>
+
+      <!-- -- Description -- -->
+      ${desc ? `
+      <div style="margin-bottom:24px;">
+        <div id="sd-desc-inner">
+          <p style="font-size:14.5px;color:var(--body-color,#ccc);line-height:1.75;
+                    white-space:pre-wrap;margin:0;">${esc(desc)}</p>
         </div>
-        ${duration ? `<div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.7);
-                                   color:#fff;border-radius:4px;padding:2px 7px;font-size:11px;">
-                        <i class="bi bi-clock me-1"></i>${esc(duration)}</div>` : ''}
+        <button onclick="_sdToggleDesc()"
+                id="sd-desc-toggle"
+                style="margin-top:8px;background:none;border:none;
+                       color:${cfg.color};font-size:13px;font-weight:700;
+                       cursor:pointer;padding:0;">Lire plus <i class="bi bi-chevron-down"></i></button>
       </div>` : ''}
 
-      <div class="px-3 pt-3">
+      <div class="sd-divider"></div>
 
-        <!-- Badges méta -->
-        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-          <span style="background:${cfg.color};color:#fff;border-radius:4px;
-                       padding:3px 9px;font-size:12px;font-weight:600;">
-            <i class="bi ${cfg.icon} me-1" style="font-size:10px;"></i>${esc(cfg.label)}
-          </span>
-          ${date     ? `<span style="font-size:12px;color:var(--body-muted,#666);">${date}</span>` : ''}
-          ${duration ? `<span style="font-size:12px;color:var(--body-muted,#666);">
-                          <i class="bi bi-clock me-1"></i>${esc(duration)}</span>` : ''}
-        </div>
-
-        <!-- Titre -->
-        <h1 style="font-size:20px;font-weight:700;line-height:1.35;margin-bottom:12px;
-                   color:var(--heading-color,#fff);
-                   overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
-          ${esc(title)}
-        </h1>
-
-        <!-- Chaîne / Catégorie -->
-        ${show.channel ? `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <i class="bi bi-tv" style="color:var(--body-muted,#555);"></i>
-          <span style="font-size:13px;color:var(--body-color,#888);">${esc(show.channel)}</span>
-        </div>` : ''}
-        ${show.category ? `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <i class="bi bi-tag" style="color:var(--body-muted,#555);"></i>
-          <span style="font-size:13px;color:var(--body-color,#888);">${esc(show.category)}</span>
-        </div>` : ''}
-
-        <!-- Actions : Like / Commentaires / Favori -->
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;
-                    padding-bottom:16px;border-bottom:1px solid var(--divider,#1e1e1e);">
-          <button id="sd-like-btn" onclick="toggleSdLike()"
-                  style="display:inline-flex;align-items:center;gap:6px;
-                         background:${userLiked ? '#E23E3E' : 'var(--bg-3,#1a1a1a)'};
-                         border:1px solid ${userLiked ? '#E23E3E' : 'var(--divider,#2a2a2a)'};
-                         border-radius:20px;padding:7px 14px;
-                         color:${userLiked ? '#fff' : 'var(--body-muted,#888)'};
-                         cursor:pointer;font-size:13px;">
-            <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
-            <span id="sd-like-count">${likesCount}</span>
-          </button>
-          <button onclick="${show.allow_comments === false ? `window._detailToast('Les commentaires sont désactivés sur ce contenu')` : 'openSdComments()'}"
-                  style="display:inline-flex;align-items:center;gap:6px;
-                         background:var(--bg-3,#1a1a1a);
-                         border:1px solid var(--divider,#2a2a2a);
-                         border-radius:20px;padding:7px 14px;
-                         color:${show.allow_comments === false ? 'rgba(136,136,136,0.5)' : 'var(--body-muted,#888)'};
-                         cursor:pointer;font-size:13px;">
-            <i class="bi ${show.allow_comments === false ? 'bi-chat-slash-fill' : 'bi-chat-dots'}"></i>
-            <span id="sd-cm-count-btn">${comments.length} commentaire${comments.length !== 1 ? 's' : ''}</span>
-          </button>
-          <button id="sd-fav-btn" onclick="toggleSdFavorite()"
-                  style="display:inline-flex;align-items:center;gap:6px;
-                         background:${userFavorited ? '#F59E0B' : 'var(--bg-3,#1a1a1a)'};
-                         border:1px solid ${userFavorited ? '#F59E0B' : 'var(--divider,#2a2a2a)'};
-                         border-radius:20px;padding:7px 14px;
-                         color:${userFavorited ? '#fff' : 'var(--body-muted,#888)'};
-                         cursor:pointer;font-size:13px;" title="Favoris">
-            <i class="bi ${userFavorited ? 'bi-bookmark-fill' : 'bi-bookmark'}"></i>
-          </button>
-        </div>
-
-        <!-- Description -->
-        ${desc ? `
-        <div style="margin-bottom:24px;">
-          <div id="sd-desc-wrap" onclick="_sdToggleDesc()"
-               style="position:relative;overflow:hidden;max-height:calc(1.75em * 5);cursor:pointer;">
-            <p id="sd-desc-text"
-               style="font-size:15px;color:var(--body-color,#d0d0d0);line-height:1.75;
-                      white-space:pre-wrap;margin:0;">${esc(desc)}</p>
-            <div id="sd-desc-fade"
-                 style="position:absolute;bottom:0;left:0;right:0;height:40px;
-                        background:linear-gradient(transparent, var(--bg-1,#000));
-                        pointer-events:none;"></div>
+      <!-- -- VOIR AUSSI (horizontal scroll) -- -->
+      ${related.length > 0 ? `
+      <div style="margin-bottom:26px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:3px;height:18px;background:${cfg.color};border-radius:2px;"></div>
+            <span class="sd-section-title" style="margin:0;">Voir aussi</span>
           </div>
-        </div>` : ''}
-
-        <!-- Partager -->
-        <div style="margin-bottom:28px;">
-          <p style="font-size:12px;font-weight:600;color:var(--body-muted,#555);
-                    margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px;">Partager</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),'_blank')"
-                    style="display:inline-flex;align-items:center;gap:6px;background:#1877F2;
-                           border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
-              <i class="bi bi-facebook"></i> Facebook
-            </button>
-            <button onclick="window.open('https://wa.me/?text='+encodeURIComponent(document.title+' '+location.href),'_blank')"
-                    style="display:inline-flex;align-items:center;gap:6px;background:#25D366;
-                           border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;">
-              <i class="bi bi-whatsapp"></i> WhatsApp
-            </button>
-            <button onclick="navigator.share ? navigator.share({title:document.title,url:location.href}) : navigator.clipboard?.writeText(location.href)"
-                    style="display:inline-flex;align-items:center;gap:6px;
-                           background:var(--bg-3,#333);border:none;border-radius:8px;padding:8px 14px;
-                           color:var(--text-1,#fff);cursor:pointer;font-size:13px;">
-              <i class="bi bi-share-fill"></i> Plus
-            </button>
-          </div>
+          <span style="font-size:12px;color:var(--body-muted,#555);">${related.length} contenus</span>
         </div>
-
-        <!-- Voir aussi -->
-        ${related.length > 0 ? `
-        <div style="margin-bottom:28px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <i class="bi ${cfg.icon}" style="color:${cfg.color};font-size:16px;"></i>
-            <h3 style="font-size:15px;font-weight:700;margin:0;
-                       color:var(--heading-color,#fff);">Voir aussi (${related.length})</h3>
-          </div>
-          ${related.map(rItem => {
+        <div id="sd-see-also-scroll">
+          ${related.map((rItem, idx) => {
             const rImg = rItem.image_url || rItem.thumbnail || rItem.image || '';
             const rId  = rItem.id || rItem._id;
             const rDur = rItem.duration ? `${Math.floor(rItem.duration/60)}min` : '';
             return `
-            <div style="display:flex;margin-bottom:12px;
-                        background:var(--bg-3,#1a1a1a);border-radius:10px;overflow:hidden;
-                        border:1px solid var(--divider,#2a2a2a);cursor:pointer;"
+            <div class="sd-related-card"
                  onclick="window.location.hash='#/show/${type}/${rId}'">
-              <div style="position:relative;flex-shrink:0;">
+              <div style="position:relative;width:100%;height:124px;overflow:hidden;background:#1a1a1a;">
                 ${rImg
-                  ? `<img src="${esc(rImg)}" alt="" style="width:110px;height:80px;object-fit:cover;">`
-                  : `<div style="width:110px;height:80px;background:var(--border,#2a2a2a);
-                                 display:flex;align-items:center;justify-content:center;">
-                       <i class="bi bi-image" style="color:var(--body-muted,#666);"></i>
+                  ? `<img src="${esc(rImg)}" alt=""
+                         style="width:100%;height:100%;object-fit:cover;display:block;"
+                         onerror="this.parentNode.style.background='#1a1a1a'">`
+                  : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                       <i class="bi bi-play-circle" style="font-size:28px;color:#444;"></i>
                      </div>`}
-                ${rDur ? `<span style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.75);
-                                        color:#fff;font-size:9px;border-radius:3px;padding:1px 4px;">${esc(rDur)}</span>` : ''}
+                <div style="position:absolute;bottom:6px;left:7px;
+                            width:24px;height:24px;border-radius:50%;
+                            background:rgba(226,62,62,.85);
+                            display:flex;align-items:center;justify-content:center;">
+                  <i class="bi bi-play-fill" style="color:#fff;font-size:11px;margin-left:1px;"></i>
+                </div>
+                ${rDur ? `<span style="position:absolute;bottom:6px;right:7px;
+                                      background:rgba(0,0,0,.75);color:#fff;
+                                      font-size:9px;font-weight:600;border-radius:4px;padding:2px 5px;">${esc(rDur)}</span>` : ''}
               </div>
-              <div style="padding:10px;flex:1;overflow:hidden;">
-                <p style="font-size:13px;font-weight:600;margin:0 0 6px;
-                           color:var(--heading-color,#fff);
+              <div style="padding:8px 10px 10px;">
+                <p style="font-size:12px;font-weight:700;margin:0 0 5px;
+                           color:var(--heading-color,#eee);line-height:1.4;
                            overflow:hidden;display:-webkit-box;
                            -webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(rItem.title || '')}</p>
-                <span style="font-size:11px;color:var(--body-muted,#666);">
-                  <i class="bi bi-clock"></i> ${formatRelative(rItem.created_at || rItem.date)}
+                <span style="font-size:10px;color:var(--body-muted,#555);display:inline-flex;align-items:center;gap:4px;">
+                  <i class="bi bi-clock" style="font-size:9px;"></i>${formatRelative(rItem.created_at || rItem.date)}
                 </span>
               </div>
             </div>`;
           }).join('')}
-        </div>` : ''}
+        </div>
+      </div>` : ''}
 
-      </div>`;
+    </div>`;
 
-    // Affichage section commentaires (hors modal)
     if (show.allow_comments !== false) {
-      // Appel de la fonction d'affichage des commentaires si elle existe
       if (typeof renderSdComments === 'function') {
         renderSdComments(comments, show, user, id, type);
       }
     }
-    // ── Toggle description ────────────────────────────────────────────────────
+
     window._sdToggleDesc = function() {
-      const wrap = document.getElementById('sd-desc-wrap');
-      const fade = document.getElementById('sd-desc-fade');
-      if (!wrap) return;
-      const open = wrap.style.maxHeight === 'none';
-      wrap.style.maxHeight = open ? 'calc(1.75em * 5)' : 'none';
-      if (fade) fade.style.display = open ? 'block' : 'none';
+      const inner  = document.getElementById('sd-desc-inner');
+      const toggle = document.getElementById('sd-desc-toggle');
+      if (!inner) return;
+      const expanded = inner.classList.toggle('expanded');
+      if (toggle) toggle.innerHTML = expanded
+        ? 'Voir moins <i class="bi bi-chevron-up"></i>'
+        : 'Lire plus <i class="bi bi-chevron-down"></i>';
     };
 
     requestAnimationFrame(() => {
-      const wrap = document.getElementById('sd-desc-wrap');
-      if (wrap && wrap.scrollHeight <= wrap.offsetHeight + 4) {
-        wrap.style.maxHeight = 'none';
-        const fade = document.getElementById('sd-desc-fade');
-        if (fade) fade.style.display = 'none';
+      const inner  = document.getElementById('sd-desc-inner');
+      const toggle = document.getElementById('sd-desc-toggle');
+      if (inner && inner.scrollHeight <= inner.offsetHeight + 4) {
+        inner.classList.add('expanded');
+        if (toggle) toggle.style.display = 'none';
       }
     });
 
-    // ── Toggle favori ─────────────────────────────────────────────────────────
     let currentlyFavorited = userFavorited;
     window.toggleSdFavorite = async function() {
       if (!localStorage.getItem('bf1_token')) {
@@ -559,16 +896,13 @@ export async function loadShowDetail(id, type) {
           await api.addFavorite(CONTENT_TYPE, id);
           currentlyFavorited = true;
         }
-        btn.style.background   = currentlyFavorited ? '#F59E0B' : 'var(--bg-3,#1a1a1a)';
-        btn.style.borderColor  = currentlyFavorited ? '#F59E0B' : 'var(--divider,#2a2a2a)';
-        btn.style.color        = currentlyFavorited ? '#fff'    : 'var(--body-muted,#888)';
+        btn.classList.toggle('active-amber', currentlyFavorited);
         const icon = btn.querySelector('i');
         if (icon) icon.className = 'bi ' + (currentlyFavorited ? 'bi-bookmark-fill' : 'bi-bookmark');
       } catch(e) { console.error('Erreur favori:', e); }
       btn.disabled = false;
     };
 
-    // ── Toggle like ───────────────────────────────────────────────────────────
     let currentlyLiked = userLiked;
     let currentLikesCount = likesCount;
     window.toggleSdLike = async function() {
@@ -584,9 +918,7 @@ export async function loadShowDetail(id, type) {
         const res = await api.toggleLike(CONTENT_TYPE, id);
         currentlyLiked = res?.liked ?? !currentlyLiked;
         currentLikesCount = res?.count ?? (currentlyLiked ? currentLikesCount + 1 : Math.max(0, currentLikesCount - 1));
-        btn.style.background  = currentlyLiked ? '#E23E3E' : 'var(--bg-3,#1a1a1a)';
-        btn.style.borderColor = currentlyLiked ? '#E23E3E' : 'var(--divider,#2a2a2a)';
-        btn.style.color       = currentlyLiked ? '#fff'    : 'var(--body-muted,#888)';
+        btn.classList.toggle('active-red', currentlyLiked);
         const icon = btn.querySelector('i');
         if (icon) icon.className = 'bi ' + (currentlyLiked ? 'bi-heart-fill' : 'bi-heart');
         if (countEl) countEl.textContent = Math.max(0, currentLikesCount);
@@ -594,7 +926,6 @@ export async function loadShowDetail(id, type) {
       btn.disabled = false;
     };
 
-    // ─── Modal Commentaires ───────────────────────────────────────────────────
     const _sdCmOrig = {};
 
     function renderSdCmList(cmts) {
@@ -613,14 +944,18 @@ export async function loadShowDetail(id, type) {
         const isOwn = user && String(c.user_id) === String(user.id);
         const uname = c.username || c.user?.username || 'Utilisateur';
         const cid = esc(String(c.id || c._id));
+        const av = _resolveAvatar(c.avatar_url || c.user?.avatar_url);
         return `
         <div class="sd-cm-comment" data-id="${cid}"
              style="display:flex;gap:10px;padding:12px 0;
                     border-bottom:1px solid var(--divider,#1a1a1a);">
           <div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;
                       background:#E23E3E;display:flex;align-items:center;justify-content:center;
-                      font-weight:700;font-size:13px;color:#fff;">
-            ${esc((uname[0]||'U').toUpperCase())}
+                      font-weight:700;font-size:13px;color:#fff;overflow:hidden;">
+            ${av
+              ? `<img src="${esc(av)}" style="width:100%;height:100%;object-fit:cover;"
+                      onerror="this.parentElement.innerHTML='${esc((uname[0]||'U').toUpperCase())}'">`
+              : esc((uname[0]||'U').toUpperCase())}
           </div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;
@@ -674,7 +1009,7 @@ export async function loadShowDetail(id, type) {
             </span>
             <button onclick="closeSdComments()"
                     style="background:none;border:none;color:var(--text-1,#fff);
-                           font-size:26px;cursor:pointer;line-height:1;padding:0 4px;">✕</button>
+                           font-size:26px;cursor:pointer;line-height:1;padding:0 4px;">&#10005;</button>
           </div>
           <div id="sd-cm-list" style="flex:1;overflow-y:auto;padding:0 16px;">
             <div style="text-align:center;padding:30px;">
@@ -740,6 +1075,17 @@ export async function loadShowDetail(id, type) {
       }
       const text = inp.value.trim();
       inp.disabled = true;
+      const sendBtn = inp.parentElement?.querySelector('button');
+      const origIcon = sendBtn?.innerHTML;
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin .8s linear infinite;"></i>';
+        if (!document.getElementById('sd-spin-style')) {
+          const st = document.createElement('style'); st.id = 'sd-spin-style';
+          st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+          document.head.appendChild(st);
+        }
+      }
       try {
         await api.addComment(CONTENT_TYPE, id, text);
         inp.value = ''; inp.style.height = '42px';
@@ -751,6 +1097,7 @@ export async function loadShowDetail(id, type) {
         if (btn) btn.textContent = `${cmts.length} commentaire${cmts.length !== 1 ? 's' : ''}`;
       } catch(e) { console.error('Erreur envoi:', e); }
       inp.disabled = false;
+      if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = origIcon; }
     };
 
     window.deleteSdCmComment = async function(commentId) {
@@ -821,7 +1168,6 @@ export async function loadShowDetail(id, type) {
       delete _sdCmOrig[commentId];
     };
 
-    // ── Plein écran vidéo native ──────────────────────────────────────────────
     window.toggleSdFullscreen = function() {
       const video = document.getElementById('sd-video');
       if (!video) return;
