@@ -45,7 +45,7 @@ function buildCategoryCard(cat, index = 0) {
 
   return `
     <div class="col-6" style="--card-index:${index};">
-      <a href="#/emission-category/${encodeURIComponent(name)}" class="bf1-emission-card" style="text-decoration:none;display:block;">
+      <a href="#/emission-category/${encodeURIComponent(name)}?fp=${btoa(unescape(encodeURIComponent(cat.filter_path || '')))}" class="bf1-emission-card" style="text-decoration:none;display:block;">
         <div class="bf1-emission-inner">
           <div class="bf1-emission-image-wrapper">
             <img src="${esc(image)}" alt="${esc(name)}" class="bf1-emission-image"

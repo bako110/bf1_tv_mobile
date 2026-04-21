@@ -1,6 +1,8 @@
 // shared/services/api.js
 import { http } from './http.js';
 
+export const LIVE_STREAM_URL = 'https://geo.dailymotion.com/player/xtv3w.html?video=xa4kdv6&ui-logo=0&ui-start-screen-info=0&sharing-enable=0&endscreen-enable=0&queue-enable=0&ui-theme=dark&syndication=0';
+
 export async function login(identifier, password) {
   const res = await http.post('/users/login', { identifier, password });
   if (res.access_token) {
@@ -204,6 +206,18 @@ export async function getSeasonEpisodes(seasonId) {
   return http.get(`/seasons/${seasonId}/episodes`).catch(() => []);
 }
 
+// Mapping endpoint → contentType pour getShowsByFilterPath
+const ENDPOINT_CONTENT_TYPE = {
+  '/magazine':       'magazine',
+  '/jtandmag':       'jtandmag',
+  '/divertissement': 'divertissement',
+  '/reportage':      'reportage',
+  '/tele-realite':   'tele_realite',
+  '/sport':          'sport',
+  '/sports':         'sport',
+  '/flash-infos':    'flash_infos',
+};
+
 export function getCategoryEndpoint(category) {
   const name = (category || '').toLowerCase();
   if (name.includes('sport')) return { endpoint: '/sports', contentType: 'sport' };
@@ -226,6 +240,29 @@ export async function getShowsByCategory(category, skip = 0, limit = 20) {
   const res = await http.get(`${endpoint}?skip=${skip}&limit=${limit}`).catch(() => ({}));
   const items = extract(res).map(item => ({ ...item, id: item._id || item.id, _contentType: contentType }));
   return { items, total: res.total || 0, contentType };
+}
+
+export async function getShowsByFilterPath(filterPath, categoryFallback, skip = 0, limit = 20) {
+  const extract = (res) => res?.items || (Array.isArray(res) ? res : []);
+
+  if (filterPath) {
+    // Supprimer le préfixe /api/v1 si présent (déjà ajouté par http.js)
+    const cleanPath = filterPath.replace(/^\/api\/v1/, '');
+    const baseUrl = cleanPath.split('?')[0];
+    // Remplacer skip/limit directement dans la string pour préserver l'encodage exact
+    let query = (cleanPath.split('?')[1] || '')
+      .replace(/(?:^|&)skip=[^&]*/,  '')
+      .replace(/(?:^|&)limit=[^&]*/, '')
+      .replace(/^&/, '');
+    query = `skip=${skip}&limit=${limit}${query ? '&' + query : ''}`;
+    const contentType = ENDPOINT_CONTENT_TYPE[baseUrl] || baseUrl.replace(/^\//, '').replace(/-/g, '_');
+    const res = await http.get(`${baseUrl}?${query}`).catch(() => ({}));
+    const items = extract(res).map(item => ({ ...item, id: item._id || item.id, _contentType: contentType }));
+    return { items, total: res.total || 0, contentType };
+  }
+
+  // Fallback si pas de filter_path
+  return getShowsByCategory(categoryFallback, skip, limit);
 }
 
 export async function getRelatedByType(type, excludeId) {
@@ -260,14 +297,14 @@ export async function getLive() {
 export async function getLiveStreamUrl() {
   try {
     const liveData = await getLive();
-    let url = liveData?.live_dailymotion_url || '';
-    
+    let url = liveData?.live_dailymotion_url || LIVE_STREAM_URL;
+
     // Ajouter des paramètres pour masquer les métadonnées Dailymotion
     if (url && url.includes('dailymotion')) {
       const separator = url.includes('?') ? '&' : '?';
       url += `${separator}ui-logo=0&ui-start-screen-info=0&sharing-enable=0&endscreen-enable=0&queue-enable=0&ui-theme=dark&syndication=0`;
     }
-    
+
     return url;
   } catch (error) {
     console.error('Erreur récupération URL stream:', error);

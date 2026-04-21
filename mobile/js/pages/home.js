@@ -1,4 +1,5 @@
 import * as api from '../services/api.js';
+import { LIVE_STREAM_URL } from '../services/api.js';
 import { injectCardStyles } from '../utils/cardStyles.js';
 
 const INITIAL_DISPLAY_COUNT = 10;
@@ -84,49 +85,61 @@ window._archiveClick = function(archiveId, requiredCat, isPremium) {
   _openPremiumModal(effectiveRequired);
 };
 
+export function pauseLive() {
+  if (!_liveIframe) return;
+  try { _liveIframe.contentWindow?.postMessage('{"command":"pause"}', '*'); } catch {}
+}
+
+export function resumeLive() {
+  if (!_liveIframe) return;
+  try { _liveIframe.contentWindow?.postMessage('{"command":"play"}', '*'); } catch {}
+}
+
 export function cleanupHome() {
-  // 1. Arrêter l'observateur scroll en premier
-  if (_liveScrollObserver) {
-    _liveScrollObserver.disconnect();
-    _liveScrollObserver = null;
-  }
+  if (_liveScrollObserver) { _liveScrollObserver.disconnect(); _liveScrollObserver = null; }
+  if (window._liveResizeObs) { window._liveResizeObs.disconnect(); window._liveResizeObs = null; }
 
-  // 2. Couper le flux : mettre src="" sur TOUTE iframe live trouvée (mini ou principale)
-  //    C'est la seule façon fiable d'arrêter l'audio dans un WebView Android/iOS
-  document.querySelectorAll('#bf1-mini-live-player iframe, #live-content iframe').forEach(f => {
-    f.src = '';
-  });
-
-  // 3. Supprimer le mini-player
-  const mini = document.getElementById('bf1-mini-live-player');
-  if (mini) mini.remove();
-
-  // 4. Supprimer le placeholder si présent
-  const placeholder = document.getElementById('bf1-iframe-placeholder');
-  if (placeholder) placeholder.remove();
-
-  // 5. Reset état
-  _miniPlayerDismissed = false;
-  _iframeOrigin = null;
-
-  // 6. Vider le container live
-  const container = document.getElementById('live-content');
-  if (container) {
-    container.innerHTML = `
-      <div style="margin:0 16px;border-radius:12px;overflow:hidden;position:relative;background:var(--bg);">
-        <div style="position:relative;width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:var(--bg-1);">
-          <i class="bi bi-broadcast" style="font-size:2rem;color:var(--text-3);"></i>
-        </div>
-      </div>
-    `;
+  // L'iframe vit dans body — si elle existe, la passer en mini pour que le stream continue
+  if (_liveIframe && document.body.contains(_liveIframe)) {
+    const hud = document.getElementById('bf1-mini-hud');
+    if (!hud) _showMini(); // passer en mode mini si pas déjà fait
   }
 }
 
+// Appelé au retour sur la page home (keep-alive) — cache le mini et replace l'iframe
+export function restoreHomeLive() {
+  if (!_liveIframe || !document.body.contains(_liveIframe)) return;
+
+  // Cacher le mini-hud immédiatement
+  const hud = document.getElementById('bf1-mini-hud');
+  if (hud) { hud.style.opacity = '0'; setTimeout(() => hud.remove(), 300); }
+  _miniPlayerDismissed = false;
+
+  // Re-sync l'iframe sur le player après que le DOM soit visible
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const liveContent = document.getElementById('live-content');
+    if (!liveContent) return;
+    const playerDiv = liveContent.querySelector('[data-live-player]');
+    if (playerDiv) _positionIframeOver(playerDiv);
+
+    // Re-attacher le scroll observer
+    _setupLiveScrollObserver(true);
+
+    // Deuxième sync après layout complet
+    setTimeout(() => {
+      if (!document.getElementById('bf1-mini-hud')) {
+        const pd = document.querySelector('[data-live-player]');
+        if (pd) _positionIframeOver(pd);
+      }
+    }, 200);
+  }));
+}
+
 export async function reloadHomeLive() {
+  if (_liveIframe && document.body.contains(_liveIframe)) return;
   try {
     const liveData = await api.getLive().catch(() => null);
     await loadLiveSection(liveData);
-    console.log('🔄 Live rechargé sur la page d\'accueil');
   } catch (error) {
     console.error('Erreur rechargement live home:', error);
   }
@@ -151,13 +164,17 @@ function showSkeletonLoaders() {
     }
   });
   
-  const liveContainer = document.getElementById('live-content');
-  if (liveContainer) {
-    liveContainer.innerHTML = `
-      <div style="margin:0;border-radius:0;overflow:hidden;position:relative;background:var(--card-bg);">
+  // Ne pas écraser live-content si l'iframe existe déjà dans body
+  const hasIframe = _liveIframe && document.body.contains(_liveIframe);
+  if (!hasIframe) {
+    const liveContainer = document.getElementById('live-content');
+    if (liveContainer) {
+      liveContainer.innerHTML = `
+        <div style="margin:0;border-radius:0;overflow:hidden;position:relative;background:var(--card-bg);">
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    }
   }
 
 }
@@ -193,7 +210,7 @@ export async function loadHome() {
       api.getTeleRealite?.(0, 20).catch((e) => { console.warn('TeleRealite error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
       api.getSports?.(0, 20).catch((e) => { console.warn('Sports error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
       api.getArchive?.(0, 20).catch((e) => { console.warn('Archive error:', e); return { items: [] }; }) || Promise.resolve({ items: [] }),
-      api.getLive().catch((e) => { console.warn('Live error:', e); return null; }),
+      Promise.resolve({ is_live: true }),
       api.getEmissions().catch((e) => { console.warn('Emissions error:', e); return []; }),
     ]);
 
@@ -207,7 +224,13 @@ export async function loadHome() {
     const sportsItems = sportsData.items || [];
     const archivesItems = archivesData.items || [];
 
-    await loadLiveSection(liveData);
+    // Ne recharger le live que si l'iframe n'existe pas encore dans body
+    const existingIframe = _liveIframe && document.body.contains(_liveIframe);
+    if (!existingIframe) {
+      await loadLiveSection(liveData);
+    } else {
+      _setupLiveScrollObserver(true);
+    }
 
     const sortedNews = _sortByDate(newsItems, 'created_at', 'published_at');
     const sortedMissed = _sortByDate(missedItems, 'aired_at', 'created_at', 'published_at');
@@ -318,147 +341,154 @@ export async function loadHome() {
   }
 }
 
-// ─── Mini-player flottant — déplace l'iframe existant (pas de double flux) ────
+// ─── Mini-player flottant ────────────────────────────────────────────────────
+// L'iframe vit dans document.body depuis sa création (position:fixed).
+// Elle se positionne par-dessus #live-content quand visible (mode plein),
+// et en petit coin bas-droite quand #live-content est hors viewport (mode mini).
+// ZÉRO déplacement DOM = zéro rechargement du flux.
 let _miniPlayerDismissed = false;
 let _liveScrollObserver  = null;
-let _iframeOrigin        = null; // placeholder dans le live principal
+let _liveIframe          = null; // référence unique à l'iframe
 
-function _getMainIframe() {
-  return document.querySelector('#live-content iframe');
+function _getOrCreateIframe(streamUrl) {
+  if (_liveIframe && document.body.contains(_liveIframe)) return _liveIframe;
+
+  const iframe = document.createElement('iframe');
+  iframe.src = streamUrl;
+  iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+  iframe.setAttribute('allowfullscreen', '');
+  iframe.style.cssText = 'position:fixed;border:0;z-index:800;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
+  document.body.appendChild(iframe);
+  _liveIframe = iframe;
+  return iframe;
 }
 
-function _getOrCreateMini(isOnAir) {
-  let mini = document.getElementById('bf1-mini-live-player');
-  if (mini) return mini;
-
-  mini = document.createElement('div');
-  mini.id = 'bf1-mini-live-player';
-  Object.assign(mini.style, {
-    position:     'fixed',
-    bottom:       '80px',
-    right:        '12px',
-    width:        '220px',
-    zIndex:       '9999',
-    borderRadius: '12px',
-    overflow:     'hidden',
-    boxShadow:    '0 8px 32px rgba(0,0,0,0.6)',
-    background:   '#000',
-    transform:    'translateY(20px)',
-    opacity:      '0',
-    transition:   'transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease',
-    pointerEvents:'auto',
+function _positionIframeOver(targetEl) {
+  if (!_liveIframe) return;
+  const r = targetEl.getBoundingClientRect();
+  Object.assign(_liveIframe.style, {
+    left:   r.left + 'px',
+    top:    r.top  + 'px',
+    width:  r.width  + 'px',
+    height: r.height + 'px',
+    borderRadius: '0',
+    boxShadow: 'none',
+    opacity: '1',
+    pointerEvents: 'auto',
   });
+}
 
-  // Header
-  const header = document.createElement('div');
-  Object.assign(header.style, {
+function _positionIframeMini() {
+  if (!_liveIframe) return;
+  Object.assign(_liveIframe.style, {
+    left:   'auto',
+    right:  '12px',
+    top:    'auto',
+    bottom: '116px',
+    width:  '220px',
+    height: '124px',
+    borderRadius: '10px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+    opacity: '1',
+    pointerEvents: 'auto',
+  });
+}
+
+// Repositionne l'iframe sur le player principal (utile au scroll/resize)
+function _syncIframeToPlayer() {
+  const liveContent = document.getElementById('live-content');
+  if (!liveContent || !_liveIframe) return;
+  const playerDiv = liveContent.querySelector('[data-live-player]');
+  if (playerDiv) _positionIframeOver(playerDiv);
+}
+
+function _showMini() {
+  if (_miniPlayerDismissed || !_liveIframe) return;
+  _positionIframeMini();
+
+  let hud = document.getElementById('bf1-mini-hud');
+  if (hud) { hud.style.opacity = '1'; hud.style.transform = 'translateY(0)'; return; }
+
+  hud = document.createElement('div');
+  hud.id = 'bf1-mini-hud';
+  Object.assign(hud.style, {
+    position:'fixed', bottom:'80px', right:'12px',
+    width:'220px', zIndex:'9999',
+    borderRadius:'10px 10px 0 0',
+    background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)',
     display:'flex', alignItems:'center', justifyContent:'space-between',
-    padding:'6px 8px', background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)',
+    padding:'5px 8px',
+    transform:'translateY(10px)', opacity:'0',
+    transition:'transform 0.3s ease, opacity 0.3s ease',
+    boxShadow:'0 8px 32px rgba(0,0,0,0.5)',
   });
-  header.innerHTML = `
+  hud.innerHTML = `
     <div style="display:flex;align-items:center;gap:6px;">
-      ${isOnAir
-        ? `<span style="width:7px;height:7px;background:#E23E3E;border-radius:50%;display:inline-block;animation:livePulse 1.4s ease-in-out infinite;flex-shrink:0;"></span>
-           <span style="color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">EN DIRECT</span>`
-        : `<span style="color:#999;font-size:11px;font-weight:600;">Hors antenne</span>`}
+      <span style="width:7px;height:7px;background:#E23E3E;border-radius:50%;display:inline-block;animation:livePulse 1.4s ease-in-out infinite;flex-shrink:0;"></span>
+      <span style="color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">EN DIRECT</span>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <button id="bf1-mini-goto-live" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
-        <i class="bi bi-fullscreen" style="font-size:13px;"></i>
+    <div style="display:flex;gap:6px;">
+      <button id="bf1-mini-goto" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+        <i class="bi bi-fullscreen" style="font-size:12px;"></i>
       </button>
-      <button id="bf1-mini-close" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
-        <i class="bi bi-x-lg" style="font-size:13px;"></i>
+      <button id="bf1-mini-close" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+        <i class="bi bi-x-lg" style="font-size:12px;"></i>
       </button>
     </div>`;
+  document.body.appendChild(hud);
 
-  // Zone vidéo (recevra l'iframe déplacée)
-  const videoWrap = document.createElement('div');
-  videoWrap.id = 'bf1-mini-video-wrap';
-  Object.assign(videoWrap.style, {
-    position:'relative', width:'100%', paddingBottom:'56.25%', background:'#000',
+  hud.querySelector('#bf1-mini-close').addEventListener('click', () => {
+    _miniPlayerDismissed = true;
+    hud.style.opacity = '0';
+    if (_liveIframe) _liveIframe.style.opacity = '0';
+    setTimeout(() => { hud.remove(); }, 300);
+  });
+  hud.querySelector('#bf1-mini-goto').addEventListener('click', () => {
+    const ls = document.getElementById('live-section');
+    if (ls) ls.scrollIntoView({ behavior:'smooth', block:'start' });
   });
 
-  mini.appendChild(header);
-  mini.appendChild(videoWrap);
-  document.body.appendChild(mini);
-
-  header.querySelector('#bf1-mini-close').addEventListener('click', _dismissMiniPlayer);
-  header.querySelector('#bf1-mini-goto-live').addEventListener('click', () => {
-    const liveSection = document.getElementById('live-section');
-    if (liveSection) liveSection.scrollIntoView({ behavior:'smooth', block:'start' });
-  });
-
-  return mini;
+  requestAnimationFrame(() => { hud.style.opacity = '1'; hud.style.transform = 'translateY(0)'; });
 }
 
-function _moveiFrameToMini(isOnAir) {
-  // Ne pas créer le mini si l'observer a été déconnecté (page quittée)
-  if (!_liveScrollObserver) return;
-  const iframe = _getMainIframe();
-  if (!iframe) return;
+function _hideMini() {
+  const hud = document.getElementById('bf1-mini-hud');
+  if (hud) { hud.style.opacity = '0'; hud.style.transform = 'translateY(10px)'; setTimeout(() => hud.remove(), 300); }
 
-  const mini     = _getOrCreateMini(isOnAir);
-  const videoWrap = mini.querySelector('#bf1-mini-video-wrap');
-  if (!videoWrap || videoWrap.contains(iframe)) return;
-
-  // Créer un placeholder dans le live principal pour récupérer l'iframe après
-  if (!_iframeOrigin) {
-    _iframeOrigin = document.createElement('div');
-    _iframeOrigin.id = 'bf1-iframe-placeholder';
-    iframe.parentNode.insertBefore(_iframeOrigin, iframe);
-  }
-
-  // Styler l'iframe pour le mini-player
-  Object.assign(iframe.style, {
-    position:'absolute', top:'0', left:'0',
-    width:'100%', height:'100%', border:'0',
-  });
-  videoWrap.appendChild(iframe);
-
-  // Afficher le mini
-  requestAnimationFrame(() => {
-    mini.style.transform = 'translateY(0)';
-    mini.style.opacity   = '1';
-  });
+  // Attendre que le scroll soit terminé avant de repositionner l'iframe
+  _syncIframeAfterScroll();
 }
 
-function _moveiFrameBack() {
-  const mini        = document.getElementById('bf1-mini-live-player');
-  const placeholder = document.getElementById('bf1-iframe-placeholder');
+function _syncIframeAfterScroll() {
+  // Annuler le timer précédent si appelé plusieurs fois
+  if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
 
-  // Remettre l'iframe à sa place si possible
-  if (mini && placeholder) {
-    const iframe = mini.querySelector('iframe');
-    if (iframe) {
-      Object.assign(iframe.style, {
-        position:'absolute', top:'0', left:'0',
-        width:'100%', height:'100%', border:'0',
-      });
-      placeholder.parentNode.insertBefore(iframe, placeholder);
-    }
-    placeholder.remove();
-    _iframeOrigin = null;
-  }
+  const doSync = () => {
+    const liveContent = document.getElementById('live-content');
+    if (!liveContent || !_liveIframe) return;
+    const playerDiv = liveContent.querySelector('[data-live-player]');
+    if (!playerDiv) return;
+    _positionIframeOver(playerDiv);
+  };
 
-  // Supprimer le mini dans tous les cas (même si placeholder absent)
-  if (mini) {
-    mini.style.transform = 'translateY(20px)';
-    mini.style.opacity   = '0';
-    setTimeout(() => mini.remove(), 300);
-  }
+  // Plusieurs rAF pour laisser le layout se stabiliser après le scroll
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    doSync();
+    // Re-sync encore après 300ms au cas où le scroll smooth est encore en cours
+    _syncTimer = setTimeout(doSync, 350);
+  }));
 }
+let _syncTimer = null;
 
 function _dismissMiniPlayer() {
-  // Fermeture manuelle : remettre l'iframe et marquer comme dismissed
-  _moveiFrameBack();
   _miniPlayerDismissed = true;
+  const hud = document.getElementById('bf1-mini-hud');
+  if (hud) { hud.style.opacity = '0'; setTimeout(() => hud.remove(), 300); }
+  if (_liveIframe) _liveIframe.style.opacity = '0';
 }
 
 function _setupLiveScrollObserver(isOnAir) {
-  if (_liveScrollObserver) {
-    _liveScrollObserver.disconnect();
-    _liveScrollObserver = null;
-  }
+  if (_liveScrollObserver) { _liveScrollObserver.disconnect(); _liveScrollObserver = null; }
   _miniPlayerDismissed = false;
 
   const liveContent = document.getElementById('live-content');
@@ -467,16 +497,12 @@ function _setupLiveScrollObserver(isOnAir) {
   _liveScrollObserver = new IntersectionObserver((entries) => {
     const visible = entries[0].isIntersecting;
     if (visible) {
-      // Player visible → remettre l'iframe en place, cacher le mini
-      _moveiFrameBack();
+      _hideMini();
       _miniPlayerDismissed = false;
     } else {
-      // Player hors écran → déplacer l'iframe dans le mini-player
-      if (!_miniPlayerDismissed) {
-        _moveiFrameToMini(isOnAir);
-      }
+      if (!_miniPlayerDismissed) _showMini();
     }
-  }, { threshold: 0.2 });
+  }, { threshold: 0.1 });
 
   _liveScrollObserver.observe(liveContent);
 }
@@ -496,31 +522,24 @@ window._bf1LockLandscape = _lockLandscape;
 
 async function loadLiveSection(liveData) {
   const container = document.getElementById('live-content');
-  if (!container) {
-    console.warn('⚠️ Container live-content non trouvé');
+  if (!container) return;
+
+  // Si l'iframe existe déjà dans body, juste re-synchroniser sa position
+  if (_liveIframe && document.body.contains(_liveIframe)) {
+    _setupLiveScrollObserver(liveData?.is_live !== false);
     return;
   }
+
   container.style.minHeight = '';
   container.style.display = 'block';
 
   const isOnAir = liveData?.is_live !== false;
-  const viewers = liveData?.viewers || 0;
-  const name = liveData?.name || 'BF1 TV - En direct';
 
   try {
-    const streamUrl = await api.getLiveStreamUrl();
-    console.log('📺 URL du flux live:', streamUrl);
-
+    // Injecter le placeholder dans le DOM (sans iframe — l'iframe vit dans body)
     container.innerHTML = `
       <div style="margin:0;border-radius:0;overflow:hidden;position:relative;background:var(--bg-1);">
-        <div style="position:relative;width:100%;aspect-ratio:16/9;">
-          <iframe
-            src="${streamUrl}"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowfullscreen
-            style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;">
-          </iframe>
-        </div>
+        <div data-live-player style="position:relative;width:100%;aspect-ratio:16/9;background:#000;"></div>
         <div style="position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:8px;z-index:10;pointer-events:none;">
           ${isOnAir
             ? `<div style="display:flex;align-items:center;gap:6px;background:rgba(226,62,62,0.95);padding:6px 12px;border-radius:20px;backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(226,62,62,0.4);">
@@ -532,6 +551,35 @@ async function loadLiveSection(liveData) {
         </div>
       </div>
     `;
+
+    // Créer l'iframe une seule fois dans document.body (jamais déplacée)
+    const playerDiv = container.querySelector('[data-live-player]');
+    const iframe = _getOrCreateIframe(LIVE_STREAM_URL);
+
+    // Positionner l'iframe par-dessus le player div
+    const syncPos = () => {
+      if (!playerDiv || !iframe) return;
+      const r = playerDiv.getBoundingClientRect();
+      Object.assign(iframe.style, {
+        left: r.left + 'px', top: r.top + 'px',
+        width: r.width + 'px', height: r.height + 'px',
+        borderRadius: '0', boxShadow: 'none', right: '', bottom: '',
+      });
+    };
+    syncPos();
+
+    // Re-sync l'iframe sur le player à chaque scroll (seulement si mode plein, pas mini)
+    const kaPage = container.closest('.ka-page');
+    if (kaPage) {
+      kaPage._liveSyncScroll = () => {
+        if (!document.getElementById('bf1-mini-hud')) syncPos();
+      };
+      kaPage.addEventListener('scroll', kaPage._liveSyncScroll, { passive: true });
+    }
+    window._liveResizeObs = new ResizeObserver(() => {
+      if (!document.getElementById('bf1-mini-hud')) syncPos();
+    });
+    window._liveResizeObs.observe(playerDiv);
 
     // Activer le scroll observer pour le mini-player flottant
     _setupLiveScrollObserver(isOnAir);

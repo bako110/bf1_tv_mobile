@@ -358,7 +358,16 @@ async function renderRoute(route) {
       detailParams = { type: 'series', id: decodeURIComponent(route.slice(16)) };
     } else if (route.startsWith('#/emission-category/')) {
       pagePath = 'pages/emission-category.html';
-      detailParams = { type: 'emission-category', name: decodeURIComponent(route.slice(20)) };
+      const rawSlice = route.slice(20);
+      const qIdx = rawSlice.indexOf('?');
+      const namePart = qIdx !== -1 ? rawSlice.slice(0, qIdx) : rawSlice;
+      const qPart = qIdx !== -1 ? rawSlice.slice(qIdx + 1) : '';
+      const fpMatch = qPart.match(/(?:^|&)fp=([^&]*)/);
+      let filterPath = '';
+      if (fpMatch) {
+        try { filterPath = decodeURIComponent(escape(atob(fpMatch[1]))); } catch { filterPath = decodeURIComponent(fpMatch[1]); }
+      }
+      detailParams = { type: 'emission-category', name: decodeURIComponent(namePart), filterPath };
     } else {
       renderNotFound();
       return;
@@ -490,15 +499,7 @@ async function renderRoute(route) {
     }
   }
 
-  // Toujours couper + supprimer le mini-player flottant si on n'est pas sur home
-  if (route !== '#/home' && route !== '#/') {
-    const _mini = document.getElementById('bf1-mini-live-player');
-    if (_mini) {
-      _mini.querySelectorAll('iframe').forEach(f => { f.src = ''; });
-      _mini.remove();
-    }
-    document.getElementById('bf1-iframe-placeholder')?.remove();
-  }
+  // Le mini-player flottant reste visible sur toutes les pages — ne pas le couper
 
   // S'assurer que le ka-container est visible
   const kaCont = _getKaContainer();
@@ -519,14 +520,12 @@ async function renderRoute(route) {
     const page = _kaPages.get(route);
     page.el.style.display = '';
     requestAnimationFrame(() => { page.el.scrollTop = page.scrollTop || 0; });
-    
-    // Recharger uniquement l'iframe du live si on revient sur home ou live
+
+    // Au retour sur home : replacer l'iframe sur le player (stream continue)
     if (route === '#/home') {
-      import('./pages/home.js').then(m => m.reloadHomeLive?.()).catch(e => console.warn('Erreur reload home live:', e));
-    } else if (route === '#/live') {
-      import('./pages/live.js').then(m => m.reloadLivePlayer?.()).catch(e => console.warn('Erreur reload live player:', e));
+      import('./pages/home.js').then(m => m.restoreHomeLive?.()).catch(() => {});
     }
-    
+
     return;
   }
 
@@ -620,7 +619,7 @@ async function loadPageScript(route, detailParams = null) {
         await loadSeriesDetail(detailParams.id);
       } else if (route.startsWith('#/emission-category/')) {
         const { loadEmissionCategory } = await import('./pages/emission-category.js');
-        await loadEmissionCategory(detailParams.name);
+        await loadEmissionCategory(detailParams.name, detailParams.filterPath);
       }
     }
   } catch (error) {
@@ -774,35 +773,41 @@ window.addEventListener('hashchange', async (e) => {
   const prev = e.oldURL ? (e.oldURL.split('#')[1] ? '#' + e.oldURL.split('#')[1] : '#/home') : '#/home';
   if (prev !== '#/premium') window._prevHash = prev;
 
-  // Arrêter le flux HLS si on quitte la page live (y compris vers les détails)
+  // Pages qui ont leur propre vidéo — le live doit être en pause pendant ces pages
+  const VIDEO_ROUTES = ['#/live', '#/show/', '#/movie/'];
+  const prevHasVideo = VIDEO_ROUTES.some(p => prev.startsWith(p));
+  const nextHasVideo = VIDEO_ROUTES.some(p => route.startsWith(p));
+
+  // Arrêter le flux HLS si on quitte la page live
   if (prev === '#/live') {
     try {
       const { cleanupLive } = await import('./pages/live.js');
       cleanupLive();
-    } catch (e) {
-      console.warn('Erreur cleanup live:', e);
-    }
+    } catch (e) {}
   }
 
-  // Arrêter le flux live si on quitte la page d'accueil
+  // Quitter home → passer le live en mini
   if (prev === '#/home' || prev === '#/') {
     try {
       const { cleanupHome } = await import('./pages/home.js');
       cleanupHome();
-    } catch (e) {
-      console.warn('Erreur cleanup home:', e);
-    }
+    } catch (e) {}
   }
 
-  // Failsafe : couper + supprimer le mini-player flottant si on n'est plus sur home
-  const _route = window.location.hash || '#/home';
-  if (_route !== '#/home' && _route !== '#/') {
-    const _miniFs = document.getElementById('bf1-mini-live-player');
-    if (_miniFs) {
-      _miniFs.querySelectorAll('iframe').forEach(f => { f.src = ''; });
-      _miniFs.remove();
-    }
-    document.getElementById('bf1-iframe-placeholder')?.remove();
+  // Quitter une page avec vidéo → reprendre le live (il est en mini)
+  if (prevHasVideo && route !== '#/live') {
+    try {
+      const { resumeLive } = await import('./pages/home.js');
+      resumeLive();
+    } catch (e) {}
+  }
+
+  // Entrer sur une page avec vidéo → mettre le live en pause
+  if (nextHasVideo) {
+    try {
+      const { pauseLive } = await import('./pages/home.js');
+      pauseLive();
+    } catch (e) {}
   }
 
   renderRoute(route);

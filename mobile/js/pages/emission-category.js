@@ -2,12 +2,13 @@ import * as api from '../services/api.js';
 import { createPageSpinner } from '../utils/snakeLoader.js';
 
 const LIMIT = 20;
-let _allShows   = [];
-let _skip       = 0;
-let _total      = 0;
+let _allShows    = [];
+let _skip        = 0;
+let _total       = 0;
 let _contentType = 'show';
 let _categoryName = '';
-let _observer   = null;
+let _filterPath  = '';
+let _observer    = null;
 
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -50,11 +51,11 @@ function buildCarousel(shows) {
     const views = s.views != null ? s.views : null;
     const time  = fmtRelative(s.created_at || s.date);
     return `
-      <div style="min-width:100%;position:relative;height:240px;flex-shrink:0;cursor:pointer;"
+      <div style="width:100vw;min-width:100vw;max-width:100vw;position:relative;height:50vh;min-height:220px;max-height:340px;flex-shrink:0;flex-grow:0;cursor:pointer;"
            onclick="window.location.hash='#/show/${esc(s._contentType||_contentType)}/${esc(s.id||s._id)}'">
         <img src="${esc(img)}" alt="" loading="lazy"
              style="width:100%;height:100%;object-fit:cover;display:block;"
-             onerror="this.src='https://via.placeholder.com/800x240/111/222?text=BF1'">
+             onerror="this.src='https://via.placeholder.com/800x400/111/222?text=BF1'">
         <!-- Gradient overlay -->
         <div style="position:absolute;inset:0;
                     background:linear-gradient(180deg,rgba(0,0,0,0) 20%,rgba(0,0,0,0.9) 100%);"></div>
@@ -98,8 +99,8 @@ function buildCarousel(shows) {
   ).join('');
 
   return `
-    <div id="emcat-carousel" style="position:relative;overflow:hidden;">
-      <div id="emcat-track" style="display:flex;transition:transform .42s cubic-bezier(.4,0,.2,1);">
+    <div id="emcat-carousel" style="position:relative;overflow:hidden;width:100%;height:50vh;min-height:220px;max-height:340px;">
+      <div id="emcat-track" style="display:flex;height:100%;transition:transform .42s cubic-bezier(.4,0,.2,1);will-change:transform;">
         ${slidesHtml}
       </div>
       <!-- Dots -->
@@ -117,7 +118,10 @@ function startCarousel(total) {
   function goTo(idx) {
     current = ((idx % total) + total) % total;
     const track = document.getElementById('emcat-track');
-    if (track) track.style.transform = `translateX(-${current*100}%)`;
+    if (track) {
+      const slideW = window.innerWidth;
+      track.style.transform = `translateX(-${current * slideW}px)`;
+    }
     document.querySelectorAll('.emcat-dot').forEach((dot, i) => {
       dot.style.width      = i===current ? '22px' : '4px';
       dot.style.background = i===current ? '#E23E3E' : 'rgba(255,255,255,0.28)';
@@ -276,7 +280,7 @@ function setupScrollPagination(listEl) {
     listEl.appendChild(skels);
 
     try {
-      const res = await api.getShowsByCategory(_categoryName, _skip, LIMIT);
+      const res = await api.getShowsByFilterPath(_filterPath, _categoryName, _skip, LIMIT);
       const newItems = res.items || [];
       if (res.total) _total = res.total;
       skels.remove();
@@ -309,11 +313,12 @@ function setupScrollPagination(listEl) {
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
-export async function loadEmissionCategory(categoryName) {
+export async function loadEmissionCategory(categoryName, filterPath) {
   if (window.__emcatTimer) { clearInterval(window.__emcatTimer); window.__emcatTimer = null; }
   if (_observer) { _observer.disconnect(); _observer = null; }
 
   _categoryName = categoryName || '';
+  _filterPath   = filterPath || '';
   _allShows = []; _skip = 0; _total = 0;
   _contentType = 'show';
 
@@ -329,7 +334,7 @@ export async function loadEmissionCategory(categoryName) {
   container.appendChild(createPageSpinner());
 
   try {
-    const res = await api.getShowsByCategory(categoryName, 0, LIMIT).catch(() => ({ items:[], total:0 }));
+    const res = await api.getShowsByFilterPath(_filterPath, categoryName, 0, LIMIT).catch(() => ({ items:[], total:0, contentType:'show' }));
     const list = res.items || [];
     _total = res.total || 0;
     _contentType = res.contentType || 'show';
