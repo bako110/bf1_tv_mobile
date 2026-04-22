@@ -151,12 +151,12 @@
       <style>
         @keyframes sd-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
         .sd-skeleton {
-          background:linear-gradient(90deg,#1a1a1a 25%,#2a2a2a 50%,#1a1a1a 75%);
+          background:linear-gradient(90deg,#141414 25%,#222 50%,#141414 75%);
           background-size:200% 100%;
-          animation:sd-shimmer 1.4s infinite;
-          border-radius:6px;
+          animation:sd-shimmer 1.6s ease-in-out infinite;
+          border-radius:8px;
         }
-        @keyframes sd-fadeIn  { from{opacity:0} to{opacity:1} }
+        @keyframes sd-fadeIn { from{opacity:0} to{opacity:1} }
         #sd-hero-back {
           position:fixed; top:env(safe-area-inset-top,12px); left:14px; z-index:50;
           width:38px; height:38px; border-radius:50%;
@@ -169,19 +169,45 @@
         }
         #sd-hero-back:active { transform:scale(.88); background:rgba(226,62,62,.7); }
       </style>
-      <div class="sd-skeleton" style="width:100%;height:240px;border-radius:0;"></div>
-      <div style="padding:22px 18px;background:var(--bg-1,#0a0a0a);border-radius:22px 22px 0 0;margin-top:-24px;">
-        <div class="sd-skeleton" style="height:14px;width:80px;margin-bottom:14px;"></div>
-        <div class="sd-skeleton" style="height:22px;width:90%;margin-bottom:8px;"></div>
-        <div class="sd-skeleton" style="height:22px;width:65%;margin-bottom:20px;"></div>
-        <div style="display:flex;gap:10px;margin-bottom:20px;">
-          <div class="sd-skeleton" style="height:38px;width:90px;border-radius:50px;"></div>
-          <div class="sd-skeleton" style="height:38px;width:110px;border-radius:50px;"></div>
-          <div class="sd-skeleton" style="height:38px;width:50px;border-radius:50px;"></div>
+      <!-- Hero skeleton -->
+      <div class="sd-skeleton" style="width:100%;height:290px;border-radius:0;"></div>
+      <!-- Content skeleton -->
+      <div style="padding:20px 18px 0;background:var(--bg-1,#0a0a0a);">
+        <!-- stats bar skeleton -->
+        <div style="display:flex;gap:14px;padding:14px 0 16px;border-bottom:1px solid rgba(255,255,255,.06);">
+          <div class="sd-skeleton" style="height:12px;width:70px;border-radius:50px;"></div>
+          <div class="sd-skeleton" style="height:12px;width:55px;border-radius:50px;"></div>
+          <div class="sd-skeleton" style="height:12px;width:45px;border-radius:50px;"></div>
         </div>
-        <div class="sd-skeleton" style="height:13px;width:100%;margin-bottom:8px;"></div>
-        <div class="sd-skeleton" style="height:13px;width:85%;margin-bottom:8px;"></div>
-        <div class="sd-skeleton" style="height:13px;width:70%;"></div>
+        <!-- host card skeleton -->
+        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);
+                    border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin:16px 0;">
+          <div class="sd-skeleton" style="width:42px;height:42px;border-radius:50%;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div class="sd-skeleton" style="height:9px;width:60px;margin-bottom:7px;border-radius:50px;"></div>
+            <div class="sd-skeleton" style="height:13px;width:110px;border-radius:50px;"></div>
+          </div>
+        </div>
+        <!-- accent bar -->
+        <div class="sd-skeleton" style="height:2px;width:100%;margin-bottom:18px;border-radius:2px;"></div>
+        <!-- actions skeleton -->
+        <div style="display:flex;gap:10px;margin-bottom:18px;">
+          <div class="sd-skeleton" style="height:42px;width:88px;border-radius:50px;"></div>
+          <div class="sd-skeleton" style="height:42px;width:78px;border-radius:50px;"></div>
+          <div class="sd-skeleton" style="height:42px;width:42px;border-radius:50%;"></div>
+        </div>
+        <!-- description skeleton -->
+        <div class="sd-skeleton" style="height:13px;width:100%;margin-bottom:9px;"></div>
+        <div class="sd-skeleton" style="height:13px;width:92%;margin-bottom:9px;"></div>
+        <div class="sd-skeleton" style="height:13px;width:75%;margin-bottom:24px;"></div>
+        <!-- share skeleton -->
+        <div style="display:flex;gap:10px;align-items:center;padding-bottom:20px;">
+          <div class="sd-skeleton" style="height:9px;width:50px;border-radius:50px;"></div>
+          <div class="sd-skeleton" style="height:36px;width:36px;border-radius:50%;"></div>
+          <div class="sd-skeleton" style="height:36px;width:36px;border-radius:50%;"></div>
+          <div class="sd-skeleton" style="height:36px;width:36px;border-radius:50%;"></div>
+          <div class="sd-skeleton" style="height:36px;width:36px;border-radius:50%;"></div>
+        </div>
       </div>
     </div>
   </div>

@@ -333,13 +333,16 @@ async function renderRoute(route) {
   }
 
   // Vérifier les routes protégées
-  if (PROTECTED_ROUTES.includes(route) && !isAuthenticated()) {
+  const routeBaseForAuth = route.split('?')[0];
+  if (PROTECTED_ROUTES.includes(routeBaseForAuth) && !isAuthenticated()) {
     window.location.hash = '#/login';
     return;
   }
 
   // Résoudre chemin HTML + params
-  let pagePath = routes[route];
+  // Stripper les query params (?cat=...) pour la lookup dans routes
+  const routeBase = route.split('?')[0];
+  let pagePath = routes[routeBase] || routes[route];
   let detailParams = null;
 
   if (!pagePath) {
@@ -499,7 +502,7 @@ async function renderRoute(route) {
     }
   }
 
-  // Le mini-player flottant reste visible sur toutes les pages — ne pas le couper
+  // Le mini-player et le stream live sont coupés quand on quitte home (voir cleanupHome)
 
   // S'assurer que le ka-container est visible
   const kaCont = _getKaContainer();
@@ -515,17 +518,26 @@ async function renderRoute(route) {
   // Cacher toutes les pages KA
   _kaPages.forEach(p => { p.el.style.display = 'none'; });
 
-  // ── Page déjà montée → juste réafficher (données intactes, scroll restauré) ─
-  if (_kaPages.has(route)) {
-    const page = _kaPages.get(route);
+  // ── Page déjà montée → juste réafficher, sans rappeler l'API ────────────
+  if (_kaPages.has(routeBase)) {
+    const page = _kaPages.get(routeBase);
     page.el.style.display = '';
-    requestAnimationFrame(() => { page.el.scrollTop = page.scrollTop || 0; });
+    requestAnimationFrame(() => {
+      page.el.scrollTop = 0;
 
-    // Au retour sur home : replacer l'iframe sur le player (stream continue)
-    if (route === '#/home') {
-      import('./pages/home.js').then(m => m.restoreHomeLive?.()).catch(() => {});
+      // Au retour sur home : replacer l'iframe APRÈS que la page soit visible et scrollée
+      if (routeBase === '#/home') {
+        requestAnimationFrame(() => {
+          import('./pages/home.js').then(m => m.restoreHomeLive?.()).catch(() => {});
+        });
+      }
+    });
+
+    // Ne recharger que si un filtre ?cat= est présent (navigation avec paramètre différent)
+    const hasFilter = route.includes('?');
+    if (hasFilter) {
+      await loadPageScript(route, detailParams);
     }
-
     return;
   }
 
@@ -550,7 +562,7 @@ async function renderRoute(route) {
     kaCont.appendChild(pageEl);
 
     const pageState = { el: pageEl, loaded: true, scrollTop: 0 };
-    _kaPages.set(route, pageState);
+    _kaPages.set(routeBase, pageState);
 
     if (loader) { loader.innerHTML = ''; loader.classList.add('d-none'); }
 
@@ -571,6 +583,7 @@ async function renderRoute(route) {
 }
 
 async function loadPageScript(route, detailParams = null) {
+  route = route.split('?')[0];
   const pageScripts = {
     '#/home':           () => import('./pages/home.js').then(m => m.loadHome()),
     '#/news':           () => import('./pages/news.js').then(m => m.loadNews()),

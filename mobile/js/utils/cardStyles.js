@@ -42,8 +42,8 @@ export function injectCardStyles() {
       text-decoration: none;
       display: block;
       cursor: pointer;
-      animation: cardFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      animation-delay: calc(var(--card-index) * 0.05s);
+      animation: cardFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-delay: calc(var(--card-index, 0) * 0.07s);
       opacity: 0;
       width: 42vw;
       max-width: 240px;
@@ -338,7 +338,7 @@ export function injectCardStyles() {
     @keyframes cardFadeIn {
       from {
         opacity: 0;
-        transform: translateY(30px) scale(0.95);
+        transform: translateY(22px) scale(0.94);
       }
       to {
         opacity: 1;

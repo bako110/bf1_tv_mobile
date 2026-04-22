@@ -19,9 +19,16 @@ export async function loadSports() {
   const toggleBtn = document.getElementById('sports-toggle-btn');
   if (!listEl) return;
 
+  const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+  const catFilter = hashParams.get('cat') || window._pendingCatFilter || null;
+  if (window._pendingCatFilter) window._pendingCatFilter = null;
+
   allSports = []; currentSkip = 0; currentTotal = 0; currentSort = 'recent';
   listEl.innerHTML = '';
   listEl.appendChild(createPageSpinner());
+
+  const pageTitle = document.querySelector('#sports-page .page-title');
+  if (pageTitle && catFilter) pageTitle.textContent = catFilter;
 
   injectSortBar('sports-page', (order) => {
     currentSort = order;
@@ -30,17 +37,17 @@ export async function loadSports() {
   });
 
   try {
-    const data = await api.getSports(0, LIMIT).catch(() => ({ items: [], total: 0 }));
+    const data = await api.getSports(0, LIMIT, catFilter).catch(() => ({ items: [], total: 0 }));
     allSports = data.items || [];
     currentSkip = allSports.length;
     currentTotal = data.total || 0;
 
-    // Extraire les types de sport uniques
+    // Extraire les catégories uniques
     const seen = new Set();
-    sportTypes = ['all'];
-    allSports.forEach(s => { if (s.sport_type) seen.add(s.sport_type); });
+    allSports.forEach(s => { if (s.sport_type) seen.add(s.sport_type); else if (s.category && s.category !== 'sport') seen.add(s.category); });
     sportTypes = ['all', ...seen];
 
+    injectCardStyles();
     if (catBar) renderCategories(catBar);
     renderList(listEl);
     attachInfiniteScroll(listEl);
@@ -54,9 +61,6 @@ export async function loadSports() {
         attachInfiniteScroll(listEl);
       });
     }
-
-    // Injecter les styles des cartes
-    injectCardStyles();
 
   } catch (err) {
     console.error('Erreur Sports:', err);
@@ -75,7 +79,10 @@ function attachInfiniteScroll(listEl) {
       currentSkip += items.length;
       if (total) currentTotal = total;
       // Mettre à jour les types de sport
-      items.forEach(s => { if (s.sport_type && !sportTypes.includes(s.sport_type)) sportTypes.push(s.sport_type); });
+      items.forEach(s => {
+        const t = s.sport_type || (s.category !== 'sport' ? s.category : null);
+        if (t && !sportTypes.includes(t)) sportTypes.push(t);
+      });
     },
     getMode: () => currentMode, gridCols: 2, limit: LIMIT
   });
@@ -105,7 +112,7 @@ function applyBtnStyle(btn, active) {
 }
 
 function renderList(container) {
-  const base = currentType === 'all' ? allSports : allSports.filter(s => s.sport_type === currentType);
+  const base = currentType === 'all' ? allSports : allSports.filter(s => s.sport_type === currentType || s.category === currentType);
   const filtered = applySortFilter(base, currentSort, 'created_at', 'date');
 
   if (!filtered.length) {
@@ -189,7 +196,7 @@ function buildListCard(item, index = 0) {
   const id = item.id || item._id;
 
   return `
-    <a href="#/show/sport/${id}" class="bf1-list-card-link" style="--card-index:${index};text-decoration:none;">
+    <a href="#/show/sport/${id}" class="bf1-list-card-link" style="--card-index:${index};text-decoration:none;display:block;animation:cardFadeIn 0.55s cubic-bezier(0.22,1,0.36,1) both;animation-delay:${index * 70}ms;opacity:0;">
       <div class="d-flex" style="background:#0a0a0a;border-radius:10px;overflow:hidden;cursor:pointer;box-shadow:0 2px 16px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.05);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);">
         <div style="flex-shrink:0;">
           ${img ? `<img src="${esc(img)}" alt="" style="width:120px;height:90px;object-fit:cover;transition:transform 0.3s ease;">` : placeholder('90px','120px')}

@@ -2,30 +2,24 @@ import * as api from '../services/api.js';
 import { createPageSpinner } from '../utils/snakeLoader.js';
 
 const LIMIT = 20;
-let _allShows    = [];
-let _skip        = 0;
-let _total       = 0;
+let _allShows  = [];
+let _skip      = 0;
+let _total     = 0;
 let _contentType = 'show';
 let _categoryName = '';
-let _filterPath  = '';
-let _observer    = null;
+let _filterPath   = '';
+let _observer  = null;
+let _activeTab = 0;
 
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function fmtRelative(d) {
+function fmtDate(d) {
   if (!d) return '';
   try {
-    const diff = Date.now() - new Date(d).getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 1)  return "À l'instant";
-    if (m < 60) return `${m}m`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h`;
-    const j = Math.floor(h / 24);
-    if (j < 7)  return `${j}j`;
-    return new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+    return 'Publiée le ' + new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'2-digit' })
+      + ' - ' + new Date(d).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
   } catch { return ''; }
 }
 
@@ -35,227 +29,132 @@ function fmtDur(s) {
   return m >= 60 ? `${Math.floor(m/60)}h${m%60 ? m%60+'m':''}` : `${m}min`;
 }
 
-function sortByDate(items) {
-  return [...items].sort((a,b) => new Date(b.created_at||b.date||0) - new Date(a.created_at||a.date||0));
-}
+// ─── HERO ─────────────────────────────────────────────────────────────────────
 
-// ─── Carousel premium ────────────────────────────────────────────────────────
-
-function buildCarousel(shows) {
-  const slides = shows.slice(0, 5);
-  if (!slides.length) return '';
-
-  const slidesHtml = slides.map((s, i) => {
-    const img   = s.thumbnail || s.image_url || s.image || '';
-    const title = s.title || '';
-    const views = s.views != null ? s.views : null;
-    const time  = fmtRelative(s.created_at || s.date);
-    return `
-      <div style="width:100vw;min-width:100vw;max-width:100vw;position:relative;height:50vh;min-height:220px;max-height:340px;flex-shrink:0;flex-grow:0;cursor:pointer;"
-           onclick="window.location.hash='#/show/${esc(s._contentType||_contentType)}/${esc(s.id||s._id)}'">
-        <img src="${esc(img)}" alt="" loading="lazy"
-             style="width:100%;height:100%;object-fit:cover;display:block;"
-             onerror="this.src='https://via.placeholder.com/800x400/111/222?text=BF1'">
-        <!-- Gradient overlay -->
-        <div style="position:absolute;inset:0;
-                    background:linear-gradient(180deg,rgba(0,0,0,0) 20%,rgba(0,0,0,0.9) 100%);"></div>
-        <!-- Badge numéro -->
-        <div style="position:absolute;top:14px;left:14px;
-                    width:28px;height:28px;border-radius:8px;
-                    background:rgba(226,62,62,0.9);backdrop-filter:blur(8px);
-                    display:flex;align-items:center;justify-content:center;">
-          <span style="color:#fff;font-size:12px;font-weight:800;">${i+1}</span>
-        </div>
-        <!-- Infos bas -->
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 16px;">
-          <p style="color:#fff;font-size:14px;font-weight:800;margin:0 0 6px;
-                    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;
-                    -webkit-box-orient:vertical;text-shadow:0 2px 8px rgba(0,0,0,0.8);
-                    line-height:1.3;">${esc(title)}</p>
-          <div style="display:flex;align-items:center;gap:10px;">
-            ${views != null ? `<span style="font-size:11px;color:rgba(255,255,255,0.7);display:flex;align-items:center;gap:4px;">
-              <i class="bi bi-eye-fill" style="font-size:10px;color:#E23E3E;"></i>${esc(String(views))}</span>` : ''}
-            ${time ? `<span style="font-size:11px;color:rgba(255,255,255,0.5);">${time}</span>` : ''}
-            <!-- Bouton play -->
-            <div style="margin-left:auto;
-                        width:36px;height:36px;border-radius:50%;
-                        background:linear-gradient(135deg,#E23E3E,#FF6B6B);
-                        display:flex;align-items:center;justify-content:center;
-                        box-shadow:0 4px 16px rgba(226,62,62,0.5);">
-              <i class="bi bi-play-fill" style="color:#fff;font-size:16px;margin-left:2px;"></i>
-            </div>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-
-  const dotsHtml = slides.map((_, i) =>
-    `<button class="emcat-dot" data-index="${i}" style="
-       height:4px;border-radius:2px;cursor:pointer;border:none;padding:0;
-       transition:width .35s cubic-bezier(.4,0,.2,1),background .35s ease;
-       width:${i===0?'22px':'4px'};
-       background:${i===0?'#E23E3E':'rgba(255,255,255,0.28)'};
-       margin:0 2px;"></button>`
-  ).join('');
+function buildHero(cat, firstItemImg) {
+  const img      = cat?.image_main || cat?.image_url || cat?.image || firstItemImg || '';
+  const name     = cat?.name || _categoryName || '';
+  const schedule = cat?.schedule || cat?.broadcast_time || '';
 
   return `
-    <div id="emcat-carousel" style="position:relative;overflow:hidden;width:100%;height:50vh;min-height:220px;max-height:340px;">
-      <div id="emcat-track" style="display:flex;height:100%;transition:transform .42s cubic-bezier(.4,0,.2,1);will-change:transform;">
-        ${slidesHtml}
+    <div id="emcat-hero">
+      ${img
+        ? `<img id="emcat-hero-img" src="${esc(img)}" alt="${esc(name)}" onerror="this.style.display='none'">`
+        : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+                        display:flex;align-items:center;justify-content:center;">
+             <i class="bi bi-tv-fill" style="font-size:64px;color:rgba(255,255,255,.12);"></i>
+           </div>`}
+      <div id="emcat-hero-gradient"></div>
+      <div id="emcat-hero-content">
+        <h1 id="emcat-hero-title">${esc(name)}</h1>
+        ${schedule ? `<p id="emcat-hero-schedule">${esc(schedule)}</p>` : ''}
       </div>
-      <!-- Dots -->
-      <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
-                  display:flex;align-items:center;">
-        ${dotsHtml}
+    </div>
+
+    <div id="emcat-tabs">
+      <button class="emcat-tab active" onclick="window._emcatTab(0,this)">Replay</button>
+      <button class="emcat-tab" onclick="window._emcatTab(1,this)">À voir aussi</button>
+    </div>
+
+    <div id="emcat-panel-episodes">
+      <div id="emcat-list-section">
+        <div id="emcat-list"></div>
       </div>
-    </div>`;
+    </div>
+
+    <div id="emcat-panel-discover" style="display:none;">
+      <div id="emcat-discover-section">
+        <div id="emcat-discover-scroll">
+          <div style="color:rgba(255,255,255,.3);font-size:13px;padding:16px;">Chargement…</div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
-function startCarousel(total) {
-  if (total < 2) return;
-  let current = 0;
+// ─── EPISODE ROW ──────────────────────────────────────────────────────────────
 
-  function goTo(idx) {
-    current = ((idx % total) + total) % total;
-    const track = document.getElementById('emcat-track');
-    if (track) {
-      const slideW = window.innerWidth;
-      track.style.transform = `translateX(-${current * slideW}px)`;
-    }
-    document.querySelectorAll('.emcat-dot').forEach((dot, i) => {
-      dot.style.width      = i===current ? '22px' : '4px';
-      dot.style.background = i===current ? '#E23E3E' : 'rgba(255,255,255,0.28)';
-    });
-  }
-
-  document.querySelectorAll('.emcat-dot').forEach(dot =>
-    dot.addEventListener('click', () => goTo(parseInt(dot.dataset.index, 10)))
-  );
-
-  const carousel = document.getElementById('emcat-carousel');
-  if (carousel) {
-    let tx = 0;
-    carousel.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive:true });
-    carousel.addEventListener('touchend',   e => {
-      const dx = e.changedTouches[0].clientX - tx;
-      if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1));
-    }, { passive:true });
-  }
-
-  if (window.__emcatTimer) clearInterval(window.__emcatTimer);
-  window.__emcatTimer = setInterval(() => goTo(current + 1), 5000);
-}
-
-// ─── Show card ultra-pro ──────────────────────────────────────────────────────
-
-function buildShowCard(show, idx = 0) {
+function buildEpisodeRow(show, idx = 0) {
   const id          = show.id || show._id;
   const contentType = show._contentType || _contentType || 'show';
   const img         = show.thumbnail || show.image_url || show.image || '';
   const title       = show.title || 'Sans titre';
   const dur         = show.duration ? fmtDur(show.duration) : null;
-  const time        = fmtRelative(show.created_at || show.date);
+  const pubDate     = fmtDate(show.created_at || show.date || show.published_at);
   const views       = show.views != null ? show.views : null;
-  const desc        = show.description || '';
+  const isNew       = show.is_new || (show.created_at && (Date.now() - new Date(show.created_at).getTime()) < 7*24*3600000);
 
   return `
-    <div onclick="window.location.hash='#/show/${esc(contentType)}/${esc(id)}'"
-         class="emcat-card-pro"
-         style="
-           display:flex;gap:0;
-           background:var(--surface,#141414);
-           border-radius:14px;overflow:hidden;cursor:pointer;
-           border:1px solid rgba(255,255,255,0.06);
-           opacity:0;transform:translateY(14px);
-           animation:emcat-fadein .35s ease ${idx*40}ms forwards;
-           box-shadow:0 2px 12px rgba(0,0,0,0.3);
-         ">
-
-      <!-- Thumbnail -->
-      <div style="position:relative;flex-shrink:0;width:120px;height:88px;">
+    <div class="emcat-ep-row" style="animation-delay:${idx*40}ms"
+         onclick="window.location.hash='#/show/${esc(contentType)}/${esc(id)}'">
+      <div class="emcat-ep-thumb">
         ${img
-          ? `<img src="${esc(img)}" alt="" loading="lazy"
-                  style="width:100%;height:100%;object-fit:cover;display:block;"
-                  onerror="this.style.display='none'">`
-          : `<div style="width:100%;height:100%;background:#1a1a1a;
-                          display:flex;align-items:center;justify-content:center;">
-               <i class="bi bi-tv" style="font-size:22px;color:#333;"></i>
+          ? `<img src="${esc(img)}" alt="" loading="lazy" onerror="this.parentNode.style.background='#1a1a1a'">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+               <i class="bi bi-play-circle-fill" style="font-size:28px;color:rgba(226,62,62,.3);"></i>
              </div>`}
-        <!-- Overlay gradient -->
-        <div style="position:absolute;inset:0;background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,0.5));"></div>
-        <!-- Durée badge -->
-        ${dur ? `<div style="position:absolute;bottom:6px;left:6px;
-                              background:rgba(0,0,0,0.82);backdrop-filter:blur(4px);
-                              color:#fff;font-size:9px;font-weight:700;
-                              border-radius:5px;padding:2px 6px;letter-spacing:0.3px;">
-                   ${esc(dur)}</div>` : ''}
-        <!-- Bouton play central -->
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-          <div style="
-            width:30px;height:30px;
-            background:linear-gradient(135deg,rgba(226,62,62,0.9),rgba(255,107,107,0.9));
-            border-radius:50%;
-            display:flex;align-items:center;justify-content:center;
-            box-shadow:0 2px 12px rgba(226,62,62,0.5);
-            backdrop-filter:blur(4px);
-          ">
-            <i class="bi bi-play-fill" style="color:#fff;font-size:13px;margin-left:2px;"></i>
-          </div>
-        </div>
+        ${dur ? `<div class="emcat-ep-dur">${esc(dur)}</div>` : ''}
+        <div class="emcat-ep-play"><i class="bi bi-play-fill"></i></div>
       </div>
-
-      <!-- Contenu -->
-      <div style="padding:12px;flex:1;overflow:hidden;
-                  display:flex;flex-direction:column;justify-content:space-between;
-                  border-left:1px solid rgba(255,255,255,0.04);">
-        <div>
-          <p style="font-size:13px;font-weight:700;color:#fff;margin:0 0 4px;
-                    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;
-                    -webkit-box-orient:vertical;line-height:1.4;letter-spacing:-0.1px;">${esc(title)}</p>
-          ${desc ? `<p style="font-size:11px;color:rgba(255,255,255,0.4);margin:0;
-                               overflow:hidden;display:-webkit-box;
-                               -webkit-line-clamp:1;-webkit-box-orient:vertical;
-                               line-height:1.4;">${esc(desc)}</p>` : ''}
+      <div class="emcat-ep-info">
+        <div class="emcat-ep-badges">
+          ${isNew ? `<span class="emcat-ep-new">Nouveau</span>` : ''}
+          ${views != null ? `<span class="emcat-ep-views">${esc(String(views))} vue${views !== 1 ? 's' : ''}</span>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-          ${views != null ? `
-            <div style="display:flex;align-items:center;gap:3px;
-                         background:rgba(226,62,62,0.1);border-radius:6px;padding:3px 7px;">
-              <i class="bi bi-eye-fill" style="font-size:9px;color:#E23E3E;"></i>
-              <span style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;">${esc(String(views))}</span>
-            </div>` : ''}
-          ${time ? `
-            <div style="display:flex;align-items:center;gap:3px;">
-              <i class="bi bi-clock" style="font-size:9px;color:rgba(255,255,255,0.3);"></i>
-              <span style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:500;">${time}</span>
-            </div>` : ''}
-          <!-- Chevron -->
-          <div style="margin-left:auto;">
-            <i class="bi bi-chevron-right" style="font-size:12px;color:rgba(255,255,255,0.2);"></i>
-          </div>
-        </div>
+        ${pubDate ? `<div class="emcat-ep-date">${pubDate}</div>` : ''}
+        <div class="emcat-ep-title">${esc(title)}</div>
       </div>
+      <button class="emcat-ep-plus"
+              onclick="event.stopPropagation();window._emcatToggleFav&&window._emcatToggleFav('${esc(id)}',this)">
+        <i class="bi bi-plus-lg"></i>
+      </button>
     </div>`;
 }
 
-// ─── Skeleton loader premium ──────────────────────────────────────────────────
+// ─── DISCOVER CARD ────────────────────────────────────────────────────────────
 
-function buildSkeleton(n = 3) {
-  const shimmer = `background:linear-gradient(90deg,#1a1a1a 25%,#242424 50%,#1a1a1a 75%);
-                   background-size:200% 100%;animation:emcat-shimmer 1.4s infinite;`;
+function buildDiscoverCard(emission) {
+  const img     = emission.image_main || emission.image_url || emission.image || '';
+  const name    = emission.name || emission.title || '';
+  const fp      = emission.filter_path || '';
+  const fpEnc   = fp ? btoa(unescape(encodeURIComponent(fp))) : '';
+  const nameEnc = encodeURIComponent(name);
+  const href    = fpEnc ? `#/emission-category/${nameEnc}?fp=${fpEnc}` : `#/emission-category/${nameEnc}`;
+
+  return `
+    <a href="${href}" class="emcat-discover-card">
+      <div class="emcat-discover-thumb">
+        ${img
+          ? `<img src="${esc(img)}" alt="${esc(name)}" loading="lazy">`
+          : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a2e,#16213e);
+                          display:flex;align-items:center;justify-content:center;">
+               <i class="bi bi-tv-fill" style="font-size:28px;color:rgba(255,255,255,.15);"></i>
+             </div>`}
+        <div class="emcat-discover-plus"><i class="bi bi-plus-lg"></i></div>
+      </div>
+      <div class="emcat-discover-name">${esc(name)}</div>
+    </a>`;
+}
+
+// ─── SKELETON ─────────────────────────────────────────────────────────────────
+
+function buildSkeleton(n = 4) {
+  const sk = (w, h, r = '5px') =>
+    `<div style="width:${w};height:${h}px;border-radius:${r};flex-shrink:0;
+                 background:linear-gradient(90deg,#161616 25%,#222 50%,#161616 75%);
+                 background-size:200% 100%;animation:emcat-shimmer 1.4s ease-in-out infinite;"></div>`;
   return Array(n).fill(null).map(() => `
-    <div style="display:flex;gap:0;background:#141414;border-radius:14px;overflow:hidden;
-                border:1px solid rgba(255,255,255,0.06);height:88px;">
-      <div style="width:120px;height:88px;flex-shrink:0;${shimmer}"></div>
-      <div style="flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;justify-content:center;">
-        <div style="height:12px;border-radius:6px;width:80%;${shimmer}"></div>
-        <div style="height:10px;border-radius:6px;width:50%;${shimmer}"></div>
-        <div style="height:8px;border-radius:6px;width:35%;${shimmer}"></div>
+    <div style="display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);">
+      ${sk('118px', 76, '10px')}
+      <div style="flex:1;display:flex;flex-direction:column;gap:7px;padding-top:4px;">
+        ${sk('50px', 9, '4px')}
+        ${sk('95%', 13, '4px')}
+        ${sk('70%', 13, '4px')}
       </div>
     </div>`).join('');
 }
 
-// ─── Pagination infinie ───────────────────────────────────────────────────────
+// ─── INFINITE SCROLL ──────────────────────────────────────────────────────────
 
 function setupScrollPagination(listEl) {
   if (_observer) _observer.disconnect();
@@ -274,8 +173,6 @@ function setupScrollPagination(listEl) {
     _observer.disconnect();
 
     const skels = document.createElement('div');
-    skels.id = 'emcat-skels';
-    skels.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
     skels.innerHTML = buildSkeleton(3);
     listEl.appendChild(skels);
 
@@ -288,147 +185,107 @@ function setupScrollPagination(listEl) {
       if (newItems.length) {
         _allShows = [..._allShows, ...newItems];
         _skip += newItems.length;
-
         newItems.forEach((item, i) => {
           const div = document.createElement('div');
-          div.innerHTML = buildShowCard(item, i);
-          const card = div.firstElementChild;
-          listEl.insertBefore(card, sentinel);
+          div.innerHTML = buildEpisodeRow(item, i);
+          listEl.insertBefore(div.firstElementChild, sentinel);
         });
-
-        const countEl = document.getElementById('emcat-count');
-        if (countEl) countEl.textContent = _allShows.length + (_skip < _total ? '+' : '');
       }
-
       sentinel.remove();
       if (_skip < _total) setupScrollPagination(listEl);
     } catch (e) {
       console.error('Erreur chargement suite:', e);
-      skels?.remove();
+      skels.remove();
     }
-  }, { rootMargin:'250px' });
+  }, { rootMargin: '300px' });
 
   _observer.observe(sentinel);
 }
 
-// ─── Entry point ──────────────────────────────────────────────────────────────
+// ─── TAB SWITCH ───────────────────────────────────────────────────────────────
+
+window._emcatTab = function(idx, btn) {
+  _activeTab = idx;
+  document.querySelectorAll('.emcat-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.getElementById('emcat-panel-episodes').style.display = idx === 0 ? '' : 'none';
+  document.getElementById('emcat-panel-discover').style.display = idx === 1 ? '' : 'none';
+};
+
+// ─── ENTRY POINT ──────────────────────────────────────────────────────────────
 
 export async function loadEmissionCategory(categoryName, filterPath) {
-  if (window.__emcatTimer) { clearInterval(window.__emcatTimer); window.__emcatTimer = null; }
   if (_observer) { _observer.disconnect(); _observer = null; }
 
   _categoryName = categoryName || '';
-  _filterPath   = filterPath || '';
+  _filterPath   = filterPath  || '';
   _allShows = []; _skip = 0; _total = 0;
-  _contentType = 'show';
+  _contentType = 'show'; _activeTab = 0;
 
-  const titleEl    = document.getElementById('emcat-title');
-  const subtitleEl = document.getElementById('emcat-subtitle');
-  const container  = document.getElementById('emcat-container');
+  const container = document.getElementById('emcat-container');
   if (!container) return;
-
-  if (titleEl) titleEl.textContent = categoryName || 'Émission';
-  if (subtitleEl) subtitleEl.textContent = 'Chargement…';
 
   container.innerHTML = '';
   container.appendChild(createPageSpinner());
 
   try {
-    const res = await api.getShowsByFilterPath(_filterPath, categoryName, 0, LIMIT).catch(() => ({ items:[], total:0, contentType:'show' }));
-    const list = res.items || [];
-    _total = res.total || 0;
-    _contentType = res.contentType || 'show';
+    const [res, allCats] = await Promise.all([
+      api.getShowsByFilterPath(_filterPath, _categoryName, 0, LIMIT).catch(() => ({ items:[], total:0, contentType:'show' })),
+      api.getEmissions ? api.getEmissions().catch(() => []) : Promise.resolve([]),
+    ]);
 
-    if (subtitleEl) subtitleEl.textContent = `${_total || list.length} vidéo${(_total || list.length) !== 1 ? 's' : ''}`;
+    const list     = res.items || [];
+    _total         = res.total || 0;
+    _contentType   = res.contentType || 'show';
+    _allShows      = [...list];
+    _skip          = list.length;
 
-    if (!list.length) {
-      container.innerHTML = `
-        <div style="padding:80px 20px;text-align:center;">
-          <div style="
-            width:72px;height:72px;border-radius:20px;margin:0 auto 16px;
-            background:rgba(226,62,62,0.1);
-            display:flex;align-items:center;justify-content:center;
-          ">
-            <i class="bi bi-tv" style="font-size:2rem;color:rgba(226,62,62,0.6);"></i>
-          </div>
-          <p style="color:rgba(255,255,255,0.5);font-size:14px;margin:0 0 6px;font-weight:600;">
-            Aucun contenu disponible
-          </p>
-          <p style="color:rgba(255,255,255,0.25);font-size:12px;margin:0;">
-            pour <span style="color:#E23E3E;font-weight:700;">${esc(categoryName)}</span>
-          </p>
-        </div>`;
-      return;
+    const catInfo  = (Array.isArray(allCats) ? allCats : []).find(c =>
+      (c.name || '').toLowerCase() === _categoryName.toLowerCase() ||
+      (c.filter_path || '') === filterPath
+    ) || null;
+
+    const firstImg = list[0] ? (list[0].thumbnail || list[0].image_url || list[0].image || '') : '';
+
+    container.innerHTML = buildHero(catInfo, firstImg);
+
+    // Episodes tab
+    const listEl = document.getElementById('emcat-list');
+    if (listEl) {
+      if (list.length) {
+        listEl.innerHTML = list.map((item, i) => buildEpisodeRow(item, i)).join('');
+        if (_skip < _total) setupScrollPagination(listEl);
+      } else {
+        listEl.innerHTML = '<p style="color:rgba(255,255,255,.3);font-size:13px;padding:24px 16px;">Aucun épisode disponible.</p>';
+      }
     }
 
-    const sorted = sortByDate(list);
-    _allShows = sorted;
-    _skip = sorted.length;
-
-    // Section liste
-    const listEl = document.createElement('div');
-    listEl.id = 'emcat-list';
-    listEl.style.cssText = 'display:flex;flex-direction:column;gap:10px;padding:0 14px 80px;';
-    sorted.forEach((item, i) => {
-      const div = document.createElement('div');
-      div.innerHTML = buildShowCard(item, i);
-      listEl.appendChild(div.firstElementChild);
-    });
-
-    container.innerHTML = `
-      ${buildCarousel(sorted)}
-      <div style="padding:16px 14px 12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:3px;height:16px;border-radius:2px;
-                        background:linear-gradient(180deg,#E23E3E,#FF6B6B);"></div>
-            <h2 style="font-size:14px;font-weight:800;color:#fff;margin:0;letter-spacing:-0.2px;">
-              Toutes les vidéos
-            </h2>
-          </div>
-          <div style="
-            background:rgba(226,62,62,0.12);
-            border:1px solid rgba(226,62,62,0.2);
-            border-radius:20px;padding:4px 12px;
-            display:flex;align-items:center;gap:5px;
-          ">
-            <i class="bi bi-play-circle-fill" style="font-size:10px;color:#E23E3E;"></i>
-            <span id="emcat-count" style="font-size:11px;color:#E23E3E;font-weight:700;">
-              ${sorted.length}${_skip < _total ? '+' : ''}
-            </span>
-          </div>
-        </div>
-      </div>`;
-    container.appendChild(listEl);
-
-    startCarousel(Math.min(sorted.length, 5));
-    setupScrollPagination(listEl);
+    // Discover tab
+    const discoverEl = document.getElementById('emcat-discover-scroll');
+    if (discoverEl) {
+      const others = (Array.isArray(allCats) ? allCats : [])
+        .filter(c => (c.name || '').toLowerCase() !== _categoryName.toLowerCase())
+        .slice(0, 16);
+      discoverEl.innerHTML = others.length
+        ? others.map(buildDiscoverCard).join('')
+        : '<p style="color:rgba(255,255,255,.3);font-size:13px;padding:16px;">Aucune autre émission.</p>';
+    }
 
   } catch (err) {
     console.error('Erreur loadEmissionCategory:', err);
     container.innerHTML = `
-      <div style="padding:80px 20px;text-align:center;">
-        <div style="
-          width:72px;height:72px;border-radius:20px;margin:0 auto 16px;
-          background:rgba(226,62,62,0.1);
-          display:flex;align-items:center;justify-content:center;
-        ">
-          <i class="bi bi-exclamation-circle" style="font-size:2rem;color:#E23E3E;"></i>
+      <div style="display:flex;flex-direction:column;align-items:center;
+                  justify-content:center;padding:80px 24px;text-align:center;">
+        <div style="width:64px;height:64px;border-radius:50%;margin:0 auto 14px;
+                    background:rgba(226,62,62,.1);border:1px solid rgba(226,62,62,.2);
+                    display:flex;align-items:center;justify-content:center;">
+          <i class="bi bi-exclamation-circle" style="font-size:26px;color:#E23E3E;"></i>
         </div>
-        <p style="color:rgba(255,255,255,0.5);font-size:14px;margin:0 0 16px;font-weight:600;">
-          Erreur lors du chargement
-        </p>
-        <button onclick="history.back()" style="
-          background:linear-gradient(135deg,#E23E3E,#FF6B6B);
-          color:#fff;border:none;border-radius:12px;
-          padding:11px 24px;cursor:pointer;
-          font-size:13px;font-weight:700;letter-spacing:0.2px;
-          box-shadow:0 4px 16px rgba(226,62,62,0.4);
-          transition:transform 0.2s ease,box-shadow 0.2s ease;
-        "
-        onmousedown="this.style.transform='scale(0.95)'"
-        onmouseup="this.style.transform='scale(1)'">
-          <i class="bi bi-arrow-left" style="margin-right:6px;"></i>Retour
+        <p style="color:#fff;font-size:15px;font-weight:800;margin:0 0 6px;">Erreur de chargement</p>
+        <p style="color:rgba(255,255,255,.35);font-size:13px;margin:0 0 22px;">Vérifiez votre connexion</p>
+        <button onclick="history.back()"
+                style="background:#E23E3E;color:#fff;border:none;border-radius:50px;
+                       padding:11px 28px;cursor:pointer;font-size:13px;font-weight:700;">
+          Retour
         </button>
       </div>`;
   }

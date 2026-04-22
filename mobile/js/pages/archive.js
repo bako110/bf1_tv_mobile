@@ -100,6 +100,7 @@ export async function loadArchive() {
     currentSkip = allItems.length;
     currentTotal = data.total || 0;
 
+    injectCardStyles();
     renderList(listEl);
     attachInfiniteScroll(listEl);
 
@@ -112,8 +113,6 @@ export async function loadArchive() {
         attachInfiniteScroll(listEl);
       });
     }
-    // Injecter les styles des cartes
-    injectCardStyles();
 
   } catch (err) {
     console.error('Erreur Archives:', err);
@@ -362,7 +361,7 @@ function buildListCard(item, index = 0) {
   const locked     = effCat && !canAccessContent(isLoggedIn ? userCat : null, effCat);
 
   return `
-    <a href="javascript:void(0)" onclick="window._archiveClick('${esc(String(id))}','${esc(String(reqCat||''))}',${isPremium})" class="bf1-list-card-link" style="--card-index:${index};text-decoration:none;">
+    <a href="javascript:void(0)" onclick="window._archiveClick('${esc(String(id))}','${esc(String(reqCat||''))}',${isPremium})" class="bf1-list-card-link" style="--card-index:${index};text-decoration:none;display:block;animation:cardFadeIn 0.55s cubic-bezier(0.22,1,0.36,1) both;animation-delay:${index * 70}ms;opacity:0;">
       <div class="d-flex" style="background:#0a0a0a;border-radius:10px;overflow:hidden;cursor:pointer;box-shadow:0 2px 16px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.05);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);">
         <div style="flex-shrink:0;position:relative;">
           ${img ? `<img src="${esc(img)}" alt="" style="width:120px;height:90px;object-fit:cover;transition:transform 0.3s ease;${locked ? 'filter:brightness(0.45);' : ''}">` : placeholder('90px','120px')}

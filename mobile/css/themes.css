@@ -349,12 +349,22 @@ textarea::placeholder {
 /* Skeleton Loader */
 .bf1-skeleton-card {
   flex-shrink: 0;
-  width: 200px;
-  height: 300px;
+  width: 42vw;
+  max-width: 240px;
+  min-width: 160px;
+  height: 320px;
   border-radius: 16px;
   background: var(--skeleton-bg);
   position: relative;
   overflow: hidden;
+}
+
+.bf1-skeleton-landscape {
+  width: 260px;
+  max-width: 260px;
+  min-width: 200px;
+  height: 216px;
+  border-radius: 12px;
 }
 
 .bf1-skeleton-shimmer {

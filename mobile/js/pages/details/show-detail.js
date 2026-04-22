@@ -613,204 +613,379 @@ export async function loadShowDetail(id, type) {
 
     container.innerHTML = `
     <style>
-      @keyframes sd-bar-anim  { from{width:0} to{width:100%} }
-      @keyframes sd-fadeUp    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-      @keyframes sd-fadeIn    { from{opacity:0} to{opacity:1} }
-      @keyframes sd-scaleIn   { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+      @keyframes sd-bar-anim   { from{width:0} to{width:100%} }
+      @keyframes sd-fadeUp     { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes sd-fadeIn     { from{opacity:0} to{opacity:1} }
+      @keyframes sd-scaleIn    { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
+      @keyframes sd-slideRight { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:translateX(0)} }
+      @keyframes sd-glow-pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
 
+      /* === HERO IMAGE avec overlay gradient sophistiqué === */
+      #sd-hero-wrap {
+        position:relative; width:100%; overflow:hidden;
+        background:#000;
+      }
+      #sd-hero-img {
+        width:100%; height:290px; object-fit:cover; display:block;
+        filter:brightness(.82);
+      }
+      #sd-hero-overlay {
+        position:absolute; inset:0;
+        background:linear-gradient(
+          to bottom,
+          rgba(0,0,0,.0)   0%,
+          rgba(0,0,0,.0)  35%,
+          rgba(0,0,0,.55) 65%,
+          rgba(0,0,0,.9)  85%,
+          var(--bg-1,#0a0a0a) 100%
+        );
+      }
+      /* Infos flottantes sur le hero (titre + badge) */
+      #sd-hero-info {
+        position:absolute; bottom:0; left:0; right:0;
+        padding:0 18px 20px;
+        animation:sd-fadeUp .5s .15s ease both;
+      }
+
+      /* === CONTENU CARD === */
       #sd-content-card {
         position:relative; z-index:5;
         background:var(--bg-1,#0a0a0a);
-        border-radius:22px 22px 0 0;
-        margin-top:-24px;
-        padding:22px 18px 0;
+        padding:0 18px 0;
+        margin-top:-2px;
       }
+
+      /* === STATS BAR (vues, likes, durée) === */
+      #sd-stats-bar {
+        display:flex; align-items:center; gap:16px;
+        padding:14px 0 16px;
+        border-bottom:1px solid rgba(255,255,255,.07);
+        animation:sd-fadeUp .4s .2s ease both;
+        opacity:0; animation-fill-mode:both;
+      }
+      .sd-stat-item {
+        display:flex; align-items:center; gap:5px;
+        font-size:12px; color:var(--body-muted,#777);
+      }
+      .sd-stat-item i { font-size:11px; }
+
+      /* === ACTIONS ROW === */
+      #sd-actions-row {
+        display:flex; align-items:center; gap:10px;
+        padding:16px 0 18px;
+        overflow-x:auto; scrollbar-width:none;
+        animation:sd-fadeUp .4s .3s ease both;
+        opacity:0; animation-fill-mode:both;
+      }
+      #sd-actions-row::-webkit-scrollbar { display:none; }
+
       .sd-action-pill {
         display:inline-flex; align-items:center; gap:7px;
-        background:var(--bg-3,rgba(255,255,255,.06));
-        border:1px solid rgba(255,255,255,.09);
-        border-radius:50px; padding:9px 16px;
-        font-size:13px; color:var(--body-muted,#999);
-        cursor:pointer; white-space:nowrap;
-        transition:background .2s,border-color .2s,color .2s,transform .15s;
+        background:rgba(255,255,255,.06);
+        border:1px solid rgba(255,255,255,.1);
+        border-radius:50px; padding:10px 18px;
+        font-size:13px; color:var(--body-muted,#aaa);
+        cursor:pointer; white-space:nowrap; flex-shrink:0;
+        transition:background .2s,border-color .2s,color .2s,transform .12s;
+        -webkit-tap-highlight-color:transparent;
+        font-weight:600;
+      }
+      .sd-action-pill:active { transform:scale(.91); }
+      .sd-action-pill.active-red   { background:rgba(226,62,62,.2); border-color:rgba(226,62,62,.7); color:#ff5f5f; }
+      .sd-action-pill.active-amber { background:rgba(245,158,11,.2); border-color:rgba(245,158,11,.7); color:#fbbf24; }
+
+      /* Bouton favori rond */
+      .sd-icon-btn {
+        display:inline-flex; align-items:center; justify-content:center;
+        width:42px; height:42px; border-radius:50%; flex-shrink:0;
+        border:1px solid rgba(255,255,255,.1);
+        background:rgba(255,255,255,.06);
+        color:var(--body-muted,#aaa); cursor:pointer; font-size:17px;
+        transition:background .2s,border-color .2s,color .2s,transform .12s;
         -webkit-tap-highlight-color:transparent;
       }
-      .sd-action-pill:active { transform:scale(.92); }
-      .sd-action-pill.active-red   { background:rgba(226,62,62,.18);  border-color:#E23E3E; color:#E23E3E; }
-      .sd-action-pill.active-amber { background:rgba(245,158,11,.18); border-color:#F59E0B; color:#F59E0B; }
+      .sd-icon-btn:active { transform:scale(.88); }
+      .sd-icon-btn.active-amber { background:rgba(245,158,11,.2); border-color:rgba(245,158,11,.7); color:#fbbf24; }
 
+      /* === PARTAGE === */
+      #sd-share-row {
+        display:flex; align-items:center; gap:8px;
+        padding-bottom:20px;
+        animation:sd-fadeUp .4s .35s ease both;
+        opacity:0; animation-fill-mode:both;
+      }
+      .sd-share-lbl { font-size:11px; color:var(--body-muted,#555); font-weight:700; text-transform:uppercase; letter-spacing:.7px; flex-shrink:0; }
       .sd-share-btn {
         display:inline-flex; align-items:center; justify-content:center;
-        width:38px; height:38px; border-radius:50%;
-        border:1px solid rgba(255,255,255,.09);
-        background:var(--bg-3,rgba(255,255,255,.06));
-        color:#fff; cursor:pointer; font-size:16px; flex-shrink:0;
-        transition:background .2s,transform .15s;
+        width:38px; height:38px; border-radius:50%; flex-shrink:0;
+        border:1px solid rgba(255,255,255,.08);
+        background:rgba(255,255,255,.05);
+        color:#fff; cursor:pointer; font-size:15px;
+        transition:background .2s,transform .12s;
         -webkit-tap-highlight-color:transparent;
       }
       .sd-share-btn:active { transform:scale(.88); }
-      .sd-share-btn.fb    { background:rgba(24,119,242,.2);  border-color:rgba(24,119,242,.4);  color:#1877F2; }
-      .sd-share-btn.wa    { background:rgba(37,211,102,.2);  border-color:rgba(37,211,102,.4);  color:#25D366; }
-      .sd-share-btn.tw    { background:rgba(29,161,242,.2);  border-color:rgba(29,161,242,.4);  color:#1DA1F2; }
-      .sd-share-btn.share { background:rgba(226,62,62,.15);  border-color:rgba(226,62,62,.35);  color:#E23E3E; }
+      .sd-share-btn.fb  { background:rgba(24,119,242,.18); border-color:rgba(24,119,242,.4); color:#1877F2; }
+      .sd-share-btn.wa  { background:rgba(37,211,102,.18); border-color:rgba(37,211,102,.4); color:#25D366; }
+      .sd-share-btn.tw  { background:rgba(29,161,242,.18); border-color:rgba(29,161,242,.4); color:#1DA1F2; }
+      .sd-share-btn.nat { background:rgba(226,62,62,.15);  border-color:rgba(226,62,62,.4); color:#ff6b6b; }
 
+      /* === DESCRIPTION === */
+      #sd-desc-wrap {
+        margin-bottom:24px;
+        animation:sd-fadeUp .4s .4s ease both;
+        opacity:0; animation-fill-mode:both;
+      }
+      #sd-desc-inner {
+        overflow:hidden; max-height:calc(1.72em * 3);
+        transition:max-height .4s cubic-bezier(.22,1,.36,1);
+      }
+      #sd-desc-inner.expanded { max-height:2000px; }
+      #sd-desc-toggle {
+        margin-top:8px; background:none; border:none;
+        color:${cfg.color}; font-size:12.5px; font-weight:700;
+        cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:4px;
+        transition:opacity .15s;
+      }
+
+      /* === PRÉSENTATEUR CARD === */
+      #sd-host-card {
+        display:flex; align-items:center; gap:12px;
+        background:rgba(255,255,255,.04);
+        border:1px solid rgba(255,255,255,.07);
+        border-radius:14px;
+        padding:12px 14px;
+        margin-bottom:20px;
+        animation:sd-fadeUp .4s .45s ease both;
+        opacity:0; animation-fill-mode:both;
+      }
+      #sd-host-avatar {
+        width:42px; height:42px; border-radius:50%; object-fit:cover; flex-shrink:0;
+        background:${cfg.color};
+        display:flex; align-items:center; justify-content:center;
+        font-weight:800; font-size:16px; color:#fff;
+        border:2px solid ${cfg.color}40;
+        overflow:hidden;
+      }
+
+      /* === DIVIDER === */
+      .sd-divider { height:1px; background:rgba(255,255,255,.07); margin:20px 0; }
+
+      /* === SECTION TITRE === */
+      .sd-section-hd {
+        display:flex; align-items:center; justify-content:space-between;
+        margin-bottom:14px;
+      }
+      .sd-section-hd-left {
+        display:flex; align-items:center; gap:8px;
+      }
+      .sd-section-accent { width:3px; height:18px; background:${cfg.color}; border-radius:2px; }
+      .sd-section-title {
+        font-size:13px; font-weight:800;
+        color:var(--text-1,#fff);
+        text-transform:uppercase; letter-spacing:.7px;
+        margin:0;
+      }
+      .sd-section-count {
+        font-size:11px; color:var(--body-muted,#555);
+        background:rgba(255,255,255,.06);
+        border-radius:50px; padding:2px 9px;
+      }
+
+      /* === RELATED CARDS === */
       #sd-see-also-scroll {
         display:flex; gap:12px;
-        overflow-x:auto; padding:4px 0 14px;
-        scrollbar-width:none;
-        -webkit-overflow-scrolling:touch;
+        overflow-x:auto; padding:4px 2px 16px;
+        scrollbar-width:none; -webkit-overflow-scrolling:touch;
       }
       #sd-see-also-scroll::-webkit-scrollbar { display:none; }
 
       .sd-related-card {
-        flex-shrink:0; width:148px;
-        border-radius:12px; overflow:hidden;
-        background:var(--bg-3,#161616);
-        border:1px solid rgba(255,255,255,.07);
+        flex-shrink:0; width:152px;
+        border-radius:14px; overflow:hidden;
+        background:var(--bg-3,#111);
+        border:1px solid rgba(255,255,255,.08);
         cursor:pointer;
-        transition:transform .2s;
+        transition:transform .18s, box-shadow .18s;
+        animation:sd-scaleIn .35s ease both;
       }
-      .sd-related-card:active { transform:scale(.95); }
+      .sd-related-card:active { transform:scale(.94); box-shadow:none; }
+      .sd-related-card:hover  { box-shadow:0 4px 20px rgba(0,0,0,.4); }
 
-      .sd-section-title {
-        font-size:13px; font-weight:700;
-        color:var(--body-muted,#666);
-        text-transform:uppercase; letter-spacing:.8px;
-        margin:0;
+      /* === TYPE BADGE HERO === */
+      .sd-type-badge {
+        display:inline-flex; align-items:center; gap:5px;
+        background:${cfg.color}; color:#fff;
+        border-radius:6px; padding:4px 10px;
+        font-size:10px; font-weight:800; letter-spacing:.5px;
+        text-transform:uppercase;
+        box-shadow:0 2px 12px ${cfg.color}55;
       }
-      #sd-desc-inner {
-        overflow:hidden;
-        max-height:calc(1.7em * 4);
-        transition:max-height .4s cubic-bezier(.22,1,.36,1);
+
+      /* === LIVE / NOUVEAU indicator (si applicable) === */
+      .sd-new-dot {
+        display:inline-block; width:6px; height:6px; border-radius:50%;
+        background:#E23E3E; margin-right:5px;
+        animation:sd-glow-pulse 1.5s ease-in-out infinite;
+        box-shadow:0 0 6px #E23E3E;
+        vertical-align:middle;
       }
-      #sd-desc-inner.expanded { max-height:2000px; }
-      .sd-divider { height:1px; background:rgba(255,255,255,.07); margin:20px 0; }
     </style>
 
-    <!-- --- HERO --- -->
-    <div style="position:relative;width:100%;overflow:hidden;">
-
-      ${videoUrl ? buildVideoPlayer(videoUrl, img) : img ? `
-      <div style="position:relative;width:100%;">
-        <img src="${esc(img)}" alt=""
-             style="width:100%;height:260px;object-fit:cover;display:block;"
-             onerror="this.style.display='none'">
-        ${duration ? `
-        <div style="position:absolute;bottom:34px;right:14px;
-                    background:rgba(0,0,0,.72);backdrop-filter:blur(6px);
-                    -webkit-backdrop-filter:blur(6px);
-                    border:1px solid rgba(255,255,255,.12);border-radius:6px;
-                    padding:3px 9px;color:#fff;font-size:11px;font-weight:600;">
-          <i class="bi bi-clock" style="margin-right:4px;"></i>${esc(duration)}
-        </div>` : ''}
-      </div>` : `<div style="height:100px;"></div>`}
+    <!-- ===== HERO ===== -->
+    <div id="sd-hero-wrap">
+      ${videoUrl
+        ? buildVideoPlayer(videoUrl, img)
+        : img
+          ? `<img id="sd-hero-img" src="${esc(img)}" alt="" onerror="this.style.display='none'">
+             <div id="sd-hero-overlay"></div>
+             <div id="sd-hero-info">
+               <div style="margin-bottom:10px;">
+                 <span class="sd-type-badge">
+                   <i class="bi ${cfg.icon}" style="font-size:9px;"></i>${esc(cfg.label.toUpperCase())}
+                 </span>
+                 ${duration ? `<span style="margin-left:8px;display:inline-flex;align-items:center;gap:4px;
+                   background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+                   border:1px solid rgba(255,255,255,.15);border-radius:6px;
+                   padding:3px 9px;color:#fff;font-size:10px;font-weight:600;">
+                   <i class="bi bi-clock" style="font-size:9px;"></i>${esc(duration)}
+                 </span>` : ''}
+               </div>
+               <h1 style="font-size:20px;font-weight:800;line-height:1.25;margin:0;
+                          color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7);">
+                 ${esc(title)}
+               </h1>
+             </div>`
+          : `<div style="height:80px;"></div>`
+      }
     </div>
 
-    <!-- --- CONTENT CARD --- -->
+    <!-- ===== CONTENT CARD ===== -->
     <div id="sd-content-card">
 
-      <!-- -- Ligne badges meta -- -->
-      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-        <span style="display:inline-flex;align-items:center;gap:5px;
-                     background:${cfg.color};color:#fff;border-radius:6px;
-                     padding:4px 11px;font-size:11px;font-weight:700;letter-spacing:.3px;">
-          <i class="bi ${cfg.icon}" style="font-size:10px;"></i>${esc(cfg.label.toUpperCase())}
+      ${!videoUrl ? `
+      <!-- Titre hors hero si pas d'image -->
+      <div style="padding-top:20px;margin-bottom:6px;">
+        <span class="sd-type-badge" style="margin-bottom:10px;display:inline-flex;">
+          <i class="bi ${cfg.icon}" style="font-size:9px;"></i>${esc(cfg.label.toUpperCase())}
         </span>
-        ${date ? `<span style="font-size:12px;color:var(--body-muted,#666);display:inline-flex;align-items:center;gap:4px;">
-          <i class="bi bi-calendar3" style="font-size:10px;"></i>${date}</span>` : ''}
-        ${show.channel ? `<span style="font-size:11px;color:var(--body-muted,#555);display:inline-flex;align-items:center;gap:4px;">
-          <i class="bi bi-tv" style="font-size:10px;"></i>${esc(show.channel)}</span>` : ''}
+        <h1 style="font-size:21px;font-weight:800;line-height:1.3;margin:8px 0 0;
+                   color:var(--heading-color,#fff);">${esc(title)}</h1>
+      </div>` : ''}
+
+      <!-- === STATS BAR === -->
+      <div id="sd-stats-bar">
+        ${date ? `<span class="sd-stat-item">
+          <i class="bi bi-calendar3" style="color:${cfg.color};"></i>
+          <span>${date}</span>
+        </span>` : ''}
+        ${show.views_count ? `<span class="sd-stat-item">
+          <i class="bi bi-eye" style="color:${cfg.color};"></i>
+          <span>${show.views_count} vues</span>
+        </span>` : ''}
+        ${duration ? `<span class="sd-stat-item">
+          <i class="bi bi-clock" style="color:${cfg.color};"></i>
+          <span>${esc(duration)}</span>
+        </span>` : ''}
+        ${show.channel ? `<span class="sd-stat-item">
+          <i class="bi bi-tv" style="color:${cfg.color};"></i>
+          <span>${esc(show.channel)}</span>
+        </span>` : ''}
       </div>
 
-      <!-- -- Titre -- -->
-      <h1 style="font-size:21px;font-weight:800;line-height:1.3;margin:0 0 6px;
-                 color:var(--heading-color,#fff);">
-        ${esc(title)}
-      </h1>
-
+      <!-- === PRÉSENTATEUR CARD === -->
       ${show.host ? `
-      <!-- -- Présentateur -- -->
-      <p style="font-size:14px;color:var(--body-muted,#999);margin:0 0 10px;display:inline-flex;align-items:center;gap:6px;">
-        <i class="bi bi-person-fill" style="font-size:13px;color:${cfg.color};"></i>
-        <span style="font-weight:600;">${esc(show.host)}</span>
-      </p>` : ''}
+      <div id="sd-host-card" style="margin-top:16px;">
+        <div id="sd-host-avatar">
+          <i class="bi bi-person-fill" style="font-size:18px;"></i>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:${cfg.color};text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Présentateur</div>
+          <div style="font-size:14px;font-weight:700;color:var(--heading-color,#fff);">${esc(show.host)}</div>
+        </div>
+      </div>` : ''}
 
-      <!-- -- Ligne catégorie -- -->
-      ${show.category ? `
-      <p style="font-size:13px;color:${cfg.color};margin:0 0 16px;font-weight:600;
-                display:inline-flex;align-items:center;gap:5px;">
-        <i class="bi bi-tag-fill" style="font-size:11px;"></i>${esc(show.category)}
-      </p>` : '<div style="margin-bottom:16px;"></div>'}
-
-      <!-- -- Barre accent -- -->
-      <div style="height:2px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:18px;overflow:hidden;">
-        <div style="height:100%;width:100%;background:linear-gradient(90deg,${cfg.color},transparent);animation:sd-bar-anim .8s .4s ease both;"></div>
+      <!-- === BARRE ACCENT ANIMÉE === -->
+      <div style="height:2px;background:rgba(255,255,255,.05);border-radius:2px;
+                  margin:${show.host ? '0' : '18px'} 0 0;overflow:hidden;">
+        <div style="height:100%;background:linear-gradient(90deg,${cfg.color},${cfg.color}55,transparent);
+                    animation:sd-bar-anim .9s .3s ease both;"></div>
       </div>
 
-      <!-- -- ACTIONS -- -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;
-                  overflow-x:auto;scrollbar-width:none;">
-
+      <!-- === ACTIONS PILLS === -->
+      <div id="sd-actions-row">
         <!-- Like -->
         <button id="sd-like-btn" onclick="toggleSdLike()"
                 class="sd-action-pill ${userLiked ? 'active-red' : ''}">
           <i class="bi ${userLiked ? 'bi-heart-fill' : 'bi-heart'}" style="font-size:15px;"></i>
-          <span id="sd-like-count" style="font-weight:700;">${likesCount}</span>
+          <span id="sd-like-count">${likesCount}</span>
         </button>
 
         <!-- Commentaires -->
-        <button onclick="${show.allow_comments === false ? `window._detailToast('Les commentaires sont désactivés')` : 'openSdComments()'}"
-                class="sd-action-pill" style="${show.allow_comments === false ? 'opacity:.45;' : ''}">
+        <button onclick="${show.allow_comments === false ? `window._detailToast&&window._detailToast('Les commentaires sont désactivés')` : 'openSdComments()'}"
+                class="sd-action-pill" style="${show.allow_comments === false ? 'opacity:.4;pointer-events:none;' : ''}">
           <i class="bi ${show.allow_comments === false ? 'bi-chat-slash' : 'bi-chat-dots'}" style="font-size:15px;"></i>
-          <span id="sd-cm-count-btn" style="font-weight:600;">${comments.length}</span>
+          <span id="sd-cm-count-btn">${comments.length}</span>
         </button>
 
-        <!-- Favori -->
+        <!-- Favori (round icon) -->
         <button id="sd-fav-btn" onclick="toggleSdFavorite()"
-                class="sd-action-pill ${userFavorited ? 'active-amber' : ''}" title="Favoris">
-          <i class="bi ${userFavorited ? 'bi-bookmark-fill' : 'bi-bookmark'}" style="font-size:15px;"></i>
+                class="sd-icon-btn ${userFavorited ? 'active-amber' : ''}" title="Favoris">
+          <i class="bi ${userFavorited ? 'bi-bookmark-fill' : 'bi-bookmark'}"></i>
         </button>
 
-        <!-- Espaceur -->
-        <div style="flex:1;"></div>
+        <div style="flex:1;min-width:8px;"></div>
 
-        <!-- Share rapide -->
+        <!-- Catégorie -->
+        ${show.category ? `
+        <span style="display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
+                     background:${cfg.color}18;border:1px solid ${cfg.color}40;
+                     border-radius:50px;padding:8px 14px;
+                     font-size:12px;color:${cfg.color};font-weight:700;">
+          <i class="bi bi-tag-fill" style="font-size:11px;"></i>${esc(show.category)}
+        </span>` : ''}
+      </div>
+
+      <!-- === DESCRIPTION === -->
+      ${desc ? `
+      <div id="sd-desc-wrap">
+        <div id="sd-desc-inner">
+          <p style="font-size:14.5px;color:var(--body-color,#bbb);line-height:1.78;
+                    white-space:pre-wrap;margin:0;">${esc(desc)}</p>
+        </div>
+        <button onclick="_sdToggleDesc()" id="sd-desc-toggle">
+          Lire plus <i class="bi bi-chevron-down" style="font-size:11px;"></i>
+        </button>
+      </div>` : ''}
+
+      <!-- === PARTAGE === -->
+      <div id="sd-share-row">
+        <span class="sd-share-lbl">Partager</span>
         <button class="sd-share-btn fb" onclick="shareContent('facebook','${esc(show.title)}',location.href)" title="Facebook">
           <i class="bi bi-facebook"></i>
         </button>
         <button class="sd-share-btn wa" onclick="shareContent('whatsapp','${esc(show.title)}',location.href)" title="WhatsApp">
           <i class="bi bi-whatsapp"></i>
         </button>
-        <button class="sd-share-btn share" onclick="shareContent('native','${esc(show.title)}',location.href)" title="Plus">
+        <button class="sd-share-btn tw" onclick="shareContent('twitter','${esc(show.title)}',location.href)" title="Twitter/X">
+          <i class="bi bi-twitter"></i>
+        </button>
+        <button class="sd-share-btn nat" onclick="shareContent('native','${esc(show.title)}',location.href)" title="Plus">
           <i class="bi bi-share-fill"></i>
         </button>
       </div>
 
-      <!-- -- Description -- -->
-      ${desc ? `
-      <div style="margin-bottom:24px;">
-        <div id="sd-desc-inner">
-          <p style="font-size:14.5px;color:var(--body-color,#ccc);line-height:1.75;
-                    white-space:pre-wrap;margin:0;">${esc(desc)}</p>
-        </div>
-        <button onclick="_sdToggleDesc()"
-                id="sd-desc-toggle"
-                style="margin-top:8px;background:none;border:none;
-                       color:${cfg.color};font-size:13px;font-weight:700;
-                       cursor:pointer;padding:0;">Lire plus <i class="bi bi-chevron-down"></i></button>
-      </div>` : ''}
+      <div class="sd-divider" style="margin-top:4px;"></div>
 
-      <div class="sd-divider"></div>
-
-      <!-- -- VOIR AUSSI (horizontal scroll) -- -->
+      <!-- === VOIR AUSSI === -->
       ${related.length > 0 ? `
-      <div style="margin-bottom:26px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:3px;height:18px;background:${cfg.color};border-radius:2px;"></div>
-            <span class="sd-section-title" style="margin:0;">Voir aussi</span>
+      <div style="margin-bottom:28px;animation:sd-fadeUp .4s .5s ease both;opacity:0;animation-fill-mode:both;">
+        <div class="sd-section-hd">
+          <div class="sd-section-hd-left">
+            <div class="sd-section-accent"></div>
+            <span class="sd-section-title">Voir aussi</span>
           </div>
-          <span style="font-size:12px;color:var(--body-muted,#555);">${related.length} contenus</span>
+          <span class="sd-section-count">${related.length} contenus</span>
         </div>
         <div id="sd-see-also-scroll">
           ${related.map((rItem, idx) => {
@@ -818,32 +993,37 @@ export async function loadShowDetail(id, type) {
             const rId  = rItem.id || rItem._id;
             const rDur = rItem.duration ? `${Math.floor(rItem.duration/60)}min` : '';
             return `
-            <div class="sd-related-card"
+            <div class="sd-related-card" style="animation-delay:${idx * 55}ms"
                  onclick="window.location.hash='#/show/${type}/${rId}'">
-              <div style="position:relative;width:100%;height:124px;overflow:hidden;background:#1a1a1a;">
+              <div style="position:relative;width:100%;height:102px;overflow:hidden;background:#1a1a1a;">
                 ${rImg
                   ? `<img src="${esc(rImg)}" alt=""
-                         style="width:100%;height:100%;object-fit:cover;display:block;"
+                         style="width:100%;height:100%;object-fit:cover;display:block;
+                                transition:transform .3s;" loading="lazy"
                          onerror="this.parentNode.style.background='#1a1a1a'">`
                   : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-                       <i class="bi bi-play-circle" style="font-size:28px;color:#444;"></i>
+                       <i class="bi bi-play-circle" style="font-size:26px;color:#444;"></i>
                      </div>`}
-                <div style="position:absolute;bottom:6px;left:7px;
-                            width:24px;height:24px;border-radius:50%;
-                            background:rgba(226,62,62,.85);
-                            display:flex;align-items:center;justify-content:center;">
-                  <i class="bi bi-play-fill" style="color:#fff;font-size:11px;margin-left:1px;"></i>
+                <!-- gradient overlay -->
+                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%);"></div>
+                <!-- play btn -->
+                <div style="position:absolute;bottom:7px;left:8px;
+                            width:22px;height:22px;border-radius:50%;
+                            background:rgba(226,62,62,.9);
+                            display:flex;align-items:center;justify-content:center;
+                            box-shadow:0 2px 8px rgba(226,62,62,.5);">
+                  <i class="bi bi-play-fill" style="color:#fff;font-size:10px;margin-left:1px;"></i>
                 </div>
-                ${rDur ? `<span style="position:absolute;bottom:6px;right:7px;
-                                      background:rgba(0,0,0,.75);color:#fff;
-                                      font-size:9px;font-weight:600;border-radius:4px;padding:2px 5px;">${esc(rDur)}</span>` : ''}
+                ${rDur ? `<span style="position:absolute;bottom:7px;right:8px;
+                                      background:rgba(0,0,0,.8);color:#fff;
+                                      font-size:9px;font-weight:700;border-radius:4px;padding:2px 6px;">${esc(rDur)}</span>` : ''}
               </div>
-              <div style="padding:8px 10px 10px;">
-                <p style="font-size:12px;font-weight:700;margin:0 0 5px;
+              <div style="padding:9px 10px 11px;">
+                <p style="font-size:11.5px;font-weight:700;margin:0 0 5px;
                            color:var(--heading-color,#eee);line-height:1.4;
                            overflow:hidden;display:-webkit-box;
                            -webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(rItem.title || '')}</p>
-                <span style="font-size:10px;color:var(--body-muted,#555);display:inline-flex;align-items:center;gap:4px;">
+                <span style="font-size:10px;color:var(--body-muted,#555);display:inline-flex;align-items:center;gap:3px;">
                   <i class="bi bi-clock" style="font-size:9px;"></i>${formatRelative(rItem.created_at || rItem.date)}
                 </span>
               </div>
@@ -933,53 +1113,71 @@ export async function loadShowDetail(id, type) {
       if (!listEl) return;
       if (!cmts.length) {
         listEl.innerHTML = `
-          <p style="color:var(--body-muted,#666);font-size:14px;text-align:center;padding:30px 0;">
-            <i class="bi bi-chat-dots" style="font-size:28px;display:block;
-               color:var(--border,#333);margin-bottom:10px;"></i>
-            Aucun commentaire. Soyez le premier !
-          </p>`;
+          <div style="display:flex;flex-direction:column;align-items:center;
+                      justify-content:center;padding:48px 24px;text-align:center;">
+            <div style="width:60px;height:60px;border-radius:50%;
+                        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+                        display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+              <i class="bi bi-chat-dots" style="font-size:24px;color:var(--body-muted,#444);"></i>
+            </div>
+            <p style="color:var(--heading-color,#ddd);font-size:15px;font-weight:700;margin:0 0 6px;">Aucun commentaire</p>
+            <p style="color:var(--body-muted,#555);font-size:13px;margin:0;">Soyez le premier à réagir !</p>
+          </div>`;
         return;
       }
-      listEl.innerHTML = cmts.map(c => {
+      listEl.innerHTML = cmts.map((c, ci) => {
         const isOwn = user && String(c.user_id) === String(user.id);
         const uname = c.username || c.user?.username || 'Utilisateur';
         const cid = esc(String(c.id || c._id));
         const av = _resolveAvatar(c.avatar_url || c.user?.avatar_url);
+        const initials = esc((uname[0]||'U').toUpperCase());
         return `
         <div class="sd-cm-comment" data-id="${cid}"
-             style="display:flex;gap:10px;padding:12px 0;
-                    border-bottom:1px solid var(--divider,#1a1a1a);">
-          <div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;
-                      background:#E23E3E;display:flex;align-items:center;justify-content:center;
-                      font-weight:700;font-size:13px;color:#fff;overflow:hidden;">
+             style="display:flex;gap:11px;padding:14px 0;
+                    border-bottom:1px solid rgba(255,255,255,.06);
+                    animation-delay:${ci * 40}ms;">
+          <!-- Avatar -->
+          <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;
+                      background:${cfg.color}22;border:1.5px solid ${cfg.color}50;
+                      display:flex;align-items:center;justify-content:center;
+                      font-weight:800;font-size:13px;color:${cfg.color};overflow:hidden;">
             ${av
               ? `<img src="${esc(av)}" style="width:100%;height:100%;object-fit:cover;"
-                      onerror="this.parentElement.innerHTML='${esc((uname[0]||'U').toUpperCase())}'">`
-              : esc((uname[0]||'U').toUpperCase())}
+                      onerror="this.parentElement.innerHTML='${initials}'">`
+              : initials}
           </div>
           <div style="flex:1;min-width:0;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;
-                        gap:6px;margin-bottom:4px;">
-              <span style="font-size:13px;font-weight:600;
-                           color:var(--heading-color,#fff);">${esc(uname)}</span>
-              <div class="sd-cm-actions" style="display:flex;gap:6px;flex-shrink:0;align-items:center;">
-                <span style="font-size:11px;color:var(--body-muted,#555);">${formatRelative(c.created_at)}</span>
+            <!-- Header commentaire -->
+            <div style="display:flex;justify-content:space-between;align-items:center;
+                        gap:6px;margin-bottom:5px;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <span style="font-size:13px;font-weight:700;
+                             color:var(--heading-color,#fff);">${esc(uname)}</span>
+                ${isOwn ? `<span style="font-size:9px;font-weight:700;color:${cfg.color};
+                                       background:${cfg.color}18;border-radius:4px;padding:1px 6px;
+                                       text-transform:uppercase;letter-spacing:.3px;">Vous</span>` : ''}
+              </div>
+              <div class="sd-cm-actions" style="display:flex;gap:4px;flex-shrink:0;align-items:center;">
+                <span style="font-size:10px;color:var(--body-muted,#555);">${formatRelative(c.created_at)}</span>
                 ${isOwn ? `
                 <button onclick="editSdCmComment('${cid}')"
-                        style="background:none;border:none;color:var(--body-muted,#888);
-                               cursor:pointer;padding:2px;font-size:14px;line-height:1;" title="Modifier">
+                        style="background:rgba(255,255,255,.06);border:none;border-radius:6px;
+                               color:var(--body-muted,#888);cursor:pointer;padding:4px 6px;
+                               font-size:12px;line-height:1;transition:background .15s;" title="Modifier">
                   <i class="bi bi-pencil"></i>
                 </button>
                 <button onclick="deleteSdCmComment('${cid}')"
-                        style="background:none;border:none;color:#E23E3E;
-                               cursor:pointer;padding:2px;font-size:14px;line-height:1;" title="Supprimer">
+                        style="background:rgba(226,62,62,.1);border:none;border-radius:6px;
+                               color:#E23E3E;cursor:pointer;padding:4px 6px;font-size:12px;
+                               line-height:1;transition:background .15s;" title="Supprimer">
                   <i class="bi bi-trash"></i>
                 </button>` : ''}
               </div>
             </div>
+            <!-- Texte -->
             <p class="sd-cm-text"
                style="font-size:14px;color:var(--body-color,#ccc);margin:0;
-                      line-height:1.5;word-break:break-word;">${esc(c.text)}</p>
+                      line-height:1.55;word-break:break-word;">${esc(c.text)}</p>
           </div>
         </div>`;
       }).join('');
@@ -996,47 +1194,96 @@ export async function loadShowDetail(id, type) {
       modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end;';
       modal.innerHTML = `
         <style>
-          #sd-comments-modal .sd-cm-sheet { animation: sdSlideUp 0.3s ease; }
-          @keyframes sdSlideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
+          #sd-comments-modal .sd-cm-sheet { animation: sdSlideUp 0.32s cubic-bezier(.22,1,.36,1); }
+          @keyframes sdSlideUp { from { transform:translateY(100%);opacity:.4 } to { transform:translateY(0);opacity:1 } }
+          #sd-cm-list .sd-cm-comment { animation:sdCmFadeIn .25s ease both; }
+          @keyframes sdCmFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
         </style>
         <div class="sd-cm-sheet"
-             style="background:var(--bg-1,#000);border-radius:20px 20px 0 0;
-                    height:80vh;display:flex;flex-direction:column;">
-          <div style="display:flex;justify-content:space-between;align-items:center;
-                      padding:16px;border-bottom:1px solid var(--divider,#1e1e1e);">
-            <span style="color:var(--heading-color,#fff);font-size:17px;font-weight:700;">
-              Commentaires (<span id="sd-cm-count">...</span>)
-            </span>
-            <button onclick="closeSdComments()"
-                    style="background:none;border:none;color:var(--text-1,#fff);
-                           font-size:26px;cursor:pointer;line-height:1;padding:0 4px;">&#10005;</button>
+             style="background:var(--bg-1,#0b0b0b);border-radius:22px 22px 0 0;
+                    height:82vh;display:flex;flex-direction:column;
+                    border-top:1px solid rgba(255,255,255,.08);">
+
+          <!-- Handle bar -->
+          <div style="display:flex;justify-content:center;padding:10px 0 0;">
+            <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);"></div>
           </div>
-          <div id="sd-cm-list" style="flex:1;overflow-y:auto;padding:0 16px;">
-            <div style="text-align:center;padding:30px;">
-              <i class="bi bi-hourglass-split" style="color:#E23E3E;font-size:28px;"></i>
+
+          <!-- Header -->
+          <div style="display:flex;justify-content:space-between;align-items:center;
+                      padding:12px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <i class="bi bi-chat-dots-fill" style="color:${cfg.color};font-size:16px;"></i>
+              <span style="color:var(--heading-color,#fff);font-size:16px;font-weight:800;">
+                Commentaires
+              </span>
+              <span style="background:rgba(255,255,255,.08);border-radius:50px;
+                           padding:2px 10px;font-size:12px;font-weight:700;color:var(--body-muted,#888);">
+                <span id="sd-cm-count">...</span>
+              </span>
+            </div>
+            <button onclick="closeSdComments()"
+                    style="background:rgba(255,255,255,.08);border:none;
+                           width:32px;height:32px;border-radius:50%;
+                           color:var(--text-1,#fff);font-size:16px;cursor:pointer;
+                           display:flex;align-items:center;justify-content:center;
+                           transition:background .15s;">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <!-- List -->
+          <div id="sd-cm-list" style="flex:1;overflow-y:auto;padding:0 16px;
+                                       -webkit-overflow-scrolling:touch;">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;">
+              <svg viewBox="0 0 40 40" width="36" height="36" style="margin-bottom:12px;">
+                <circle cx="20" cy="20" r="16" fill="none" stroke="#1a1a1a" stroke-width="3.5"/>
+                <circle cx="20" cy="20" r="16" fill="none" stroke="${cfg.color}" stroke-width="3.5"
+                  stroke-dasharray="100" stroke-dashoffset="100" stroke-linecap="round"
+                  transform="rotate(-90 20 20)"
+                  style="animation:_sdSnake .9s linear infinite;"/>
+              </svg>
+              <span style="font-size:13px;color:var(--body-muted,#555);">Chargement…</span>
             </div>
           </div>
+
+          <!-- Input zone -->
           ${user ? `
-          <div style="padding:10px 16px;border-top:1px solid var(--divider,#1e1e1e);
-                      background:var(--bg-1,#000);display:flex;align-items:flex-end;gap:10px;">
-            <textarea id="sd-cm-input" maxlength="1000" placeholder="Ajouter un commentaire..."
-                      style="flex:1;background:var(--bg-3,#1a1a1a);border-radius:20px;
-                             border:1px solid var(--divider,#2a2a2a);padding:10px 16px;
-                             color:var(--text-1,#fff);font-size:14px;resize:none;
-                             height:42px;max-height:100px;outline:none;line-height:1.4;"></textarea>
-            <button onclick="submitSdCmComment()"
-                    style="flex-shrink:0;background:var(--bg-3,#1a1a1a);
-                           border:1px solid var(--divider,#2a2a2a);border-radius:50%;
-                           width:42px;height:42px;color:#E23E3E;cursor:pointer;
-                           font-size:18px;display:flex;align-items:center;justify-content:center;">
-              <i class="bi bi-send-fill"></i>
-            </button>
+          <div style="padding:10px 14px 14px;border-top:1px solid rgba(255,255,255,.07);
+                      background:var(--bg-1,#0b0b0b);display:flex;align-items:flex-end;gap:10px;">
+            <!-- Avatar initiale -->
+            <div style="width:34px;height:34px;border-radius:50%;background:${cfg.color};flex-shrink:0;
+                        display:flex;align-items:center;justify-content:center;
+                        font-weight:800;font-size:13px;color:#fff;">
+              ${esc((user.username?.[0] || user.email?.[0] || 'U').toUpperCase())}
+            </div>
+            <div style="flex:1;background:rgba(255,255,255,.06);border-radius:22px;
+                        border:1px solid rgba(255,255,255,.1);
+                        display:flex;align-items:flex-end;gap:0;overflow:hidden;">
+              <textarea id="sd-cm-input" maxlength="1000" placeholder="Écrire un commentaire…"
+                        style="flex:1;background:transparent;border:none;padding:10px 14px;
+                               color:var(--text-1,#fff);font-size:14px;resize:none;
+                               height:42px;max-height:110px;outline:none;line-height:1.45;
+                               font-family:inherit;"></textarea>
+              <button onclick="submitSdCmComment()"
+                      style="flex-shrink:0;background:${cfg.color};
+                             border:none;border-radius:50%;margin:5px;
+                             width:32px;height:32px;color:#fff;cursor:pointer;
+                             font-size:14px;display:flex;align-items:center;justify-content:center;
+                             transition:opacity .15s,transform .12s;box-shadow:0 2px 10px ${cfg.color}55;">
+                <i class="bi bi-send-fill"></i>
+              </button>
+            </div>
           </div>` : `
-          <div style="padding:14px 16px;border-top:1px solid var(--divider,#1e1e1e);text-align:center;">
+          <div style="padding:16px 18px;border-top:1px solid rgba(255,255,255,.07);text-align:center;">
+            <p style="font-size:13px;color:var(--body-muted,#666);margin:0 0 12px;">
+              Connectez-vous pour rejoindre la conversation
+            </p>
             <button onclick="closeSdComments();setTimeout(()=>window._showLoginModal?.('Connectez-vous pour laisser un commentaire'),350);"
-                    style="background:#E23E3E;border:none;border-radius:8px;padding:9px 24px;
-                           color:#fff;cursor:pointer;font-size:14px;font-weight:600;">
-              Se connecter pour commenter
+                    style="background:${cfg.color};border:none;border-radius:50px;padding:10px 28px;
+                           color:#fff;cursor:pointer;font-size:14px;font-weight:700;
+                           box-shadow:0 3px 14px ${cfg.color}44;">
+              <i class="bi bi-person-fill" style="margin-right:6px;"></i>Se connecter
             </button>
           </div>`}
         </div>`;

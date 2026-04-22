@@ -7,6 +7,7 @@ export async function login(identifier, password) {
   const res = await http.post('/users/login', { identifier, password });
   if (res.access_token) {
     http.setToken(res.access_token);
+    http.clearCache();
     try {
       localStorage.setItem('bf1_token', res.access_token);
       localStorage.setItem('bf1_user', JSON.stringify(res.user));
@@ -33,6 +34,7 @@ export async function register(username, email, password) {
 
 export function logout() {
   http.setToken(null);
+  http.clearCache();
   try {
     localStorage.removeItem('bf1_token');
     localStorage.removeItem('bf1_user');
@@ -120,23 +122,27 @@ export async function getProgramGrid(startDate = null, endDate = null, type = nu
   return http.get(`/programs/grid/daily?${params.toString()}`).catch(() => ({ days: [] }));
 }
 
-export async function getSports(skip = 0, limit = 20) {
-  const res = await http.get(`/sports?skip=${skip}&limit=${limit}`).catch(() => ({}));
+export async function getSports(skip = 0, limit = 20, category = null) {
+  const cat = category ? `&category=${encodeURIComponent(category)}` : '';
+  const res = await http.get(`/sports?skip=${skip}&limit=${limit}${cat}`).catch(() => ({}));
   return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
-export async function getDivertissement(skip = 0, limit = 20) {
-  const res = await http.get(`/divertissement?skip=${skip}&limit=${limit}`).catch(() => ({}));
+export async function getDivertissement(skip = 0, limit = 20, category = null) {
+  const cat = category ? `&category=${encodeURIComponent(category)}` : '';
+  const res = await http.get(`/divertissement?skip=${skip}&limit=${limit}${cat}`).catch(() => ({}));
   return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
-export async function getTeleRealite(skip = 0, limit = 20) {
-  const res = await http.get(`/tele-realite?skip=${skip}&limit=${limit}`).catch(() => ({}));
+export async function getTeleRealite(skip = 0, limit = 20, category = null) {
+  const cat = category ? `&category=${encodeURIComponent(category)}` : '';
+  const res = await http.get(`/tele-realite?skip=${skip}&limit=${limit}${cat}`).catch(() => ({}));
   return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
-export async function getReportages(skip = 0, limit = 20) {
-  const res = await http.get(`/reportage?skip=${skip}&limit=${limit}`).catch(() => ({}));
+export async function getReportages(skip = 0, limit = 20, category = null) {
+  const cat = category ? `&category=${encodeURIComponent(category)}` : '';
+  const res = await http.get(`/reportage?skip=${skip}&limit=${limit}${cat}`).catch(() => ({}));
   return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
@@ -149,13 +155,15 @@ export async function checkArchiveAccess(id) {
   return http.get(`/archives/${id}/check-access`);
 }
 
-export async function getJTandMag(skip = 0, limit = 20) {
-  const res = await http.get(`/jtandmag?skip=${skip}&limit=${limit}`).catch(() => ({}));
+export async function getJTandMag(skip = 0, limit = 20, category = null) {
+  const cat = category ? `&category=${encodeURIComponent(category)}` : '';
+  const res = await http.get(`/jtandmag?skip=${skip}&limit=${limit}${cat}`).catch(() => ({}));
   return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 
-export async function getMagazine(skip = 0, limit = 20) {
-  const res = await http.get(`/magazine?skip=${skip}&limit=${limit}`).catch(() => ({}));
+export async function getMagazine(skip = 0, limit = 20, category = null) {
+  const cat = category ? `&category=${encodeURIComponent(category)}` : '';
+  const res = await http.get(`/magazine?skip=${skip}&limit=${limit}${cat}`).catch(() => ({}));
   return { items: res.items || (Array.isArray(res) ? res : []), total: res.total || 0, skip, limit };
 }
 

@@ -9,11 +9,7 @@
   <script>
     // App Capacitor compilée (Android/iOS) → mobile
     // Navigateur (desktop ou mobile) → web (sans /web/ dans l'URL)
-    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-      window.location.replace('/mobile/index.html');
-    } else {
-      window.location.replace('/pages/accueil.html');
-    }
+    window.location.replace('/mobile/index.html');
   </script>
 </body>
 </html>

@@ -32,6 +32,7 @@ export async function loadMissed() {
     currentSkip = allItems.length;
     currentTotal = data.total || 0;
 
+    injectCardStyles();
     renderList(listEl);
     attachInfiniteScroll(listEl);
 
@@ -44,8 +45,6 @@ export async function loadMissed() {
         attachInfiniteScroll(listEl);
       });
     }
-
-    injectCardStyles();
 
   } catch (err) {
     console.error('Erreur Rattrapage:', err);

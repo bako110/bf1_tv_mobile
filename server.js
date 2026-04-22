@@ -56,7 +56,6 @@ const mimeTypes = {
 };
 
 const server = http.createServer(async (req, res) => {
-  // Parse URL keeping query string for deeplink handling
   const reqUrl = new URL(req.url, `http://localhost:${PORT}`);
   const cleanUrl = reqUrl.pathname;
   let filePath;
@@ -67,7 +66,7 @@ const server = http.createServer(async (req, res) => {
     // Validate: MongoDB ObjectId is 24 hex chars — prevent SSRF
     if (/^[0-9a-fA-F]{24}$/.test(reelId)) {
       try {
-        const htmlPath = path.join(__dirname, 'web', 'pages', 'reels.html');
+        const htmlPath = path.join(__dirname, 'mobile', 'pages', 'reels.html');
         const [htmlRaw, reel] = await Promise.all([
           fs.promises.readFile(htmlPath, 'utf8'),
           fetchJson(`${API_BASE_URL}/reels/${encodeURIComponent(reelId)}`)
@@ -85,34 +84,20 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ── Static file handler ─────────────────────────────────────────────────
-  // Route racine -> index.html de détection
   if (cleanUrl === '/') {
     filePath = path.join(__dirname, 'index.html');
-  }
-  // Fichiers partagés (shared/)
-  else if (cleanUrl.startsWith('/shared/')) {
+  } else if (cleanUrl.startsWith('/mobile/')) {
     filePath = path.join(__dirname, cleanUrl);
+  } else {
+    filePath = path.join(__dirname, 'mobile', cleanUrl);
   }
-  // Fichiers mobile (mobile/)
-  else if (cleanUrl.startsWith('/mobile/')) {
-    filePath = path.join(__dirname, cleanUrl);
-  }
-  // Fichiers web (web/)
-  else if (cleanUrl.startsWith('/web/')) {
-    filePath = path.join(__dirname, cleanUrl);
-  }
-  // Tout le reste -> web/
-  else {
-    filePath = path.join(__dirname, 'web', cleanUrl);
-  }
-  
+
   let extname = path.extname(filePath);
   let contentType = mimeTypes[extname] || 'application/octet-stream';
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
-      // Rediriger vers la page 404 personnalisée
-      const page404 = path.join(__dirname, 'web', 'pages', '404.html');
+      const page404 = path.join(__dirname, 'mobile', 'pages', '404.html');
       fs.readFile(page404, (err2, content404) => {
         res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(err2 ? '<h1>404 - Page introuvable</h1>' : content404);
