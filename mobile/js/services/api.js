@@ -357,11 +357,15 @@ export async function getComments(contentType, contentId) {
 }
 
 export async function addComment(contentType, contentId, text) {
-  return http.post('/comments', { content_type: contentType, content_id: contentId, text });
+  const res = await http.post('/comments', { content_type: contentType, content_id: contentId, text });
+  http.invalidatePrefix(`/comments/content/${contentType}/${contentId}`);
+  return res;
 }
 
 export async function deleteComment(commentId) {
-  return http.delete(`/comments/${commentId}`);
+  const res = await http.delete(`/comments/${commentId}`);
+  http.invalidatePrefix('/comments/content/');
+  return res;
 }
 
 // ===== COMMENTAIRES LIVE =====
@@ -415,7 +419,9 @@ export async function getLikesCount(contentType, contentId) {
 }
 
 export async function toggleLike(contentType, contentId) {
-  return http.post('/likes/toggle', { content_type: contentType, content_id: contentId });
+  const res = await http.post('/likes/toggle', { content_type: contentType, content_id: contentId });
+  http.invalidatePrefix(`/likes/content/${contentType}/${contentId}`);
+  return res;
 }
 
 export async function checkLiked(contentType, contentId) {

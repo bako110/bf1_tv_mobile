@@ -569,8 +569,10 @@ async function renderRoute(route) {
     await loadPageScript(route, detailParams);
     animateContainer(pageEl);
 
-    // ── Pull-to-refresh : glisser vers le bas depuis le top pour rafraîchir ──
+    // ── Pull-to-refresh : vide le cache puis recharge la page ────────────────
     attachPullToRefresh(pageEl, async () => {
+      const { http } = await import('./services/http.js');
+      http.clearCache();
       await loadPageScript(route, detailParams);
       animateContainer(pageEl);
     });
